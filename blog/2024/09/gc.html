@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Garbage Collection Makes YSH Different</title>
+  <meta name="twitter:title" content="Garbage Collection Makes YSH Different">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v6.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Garbage Collection Makes YSH Different</h1>
+<div class="date">
+  2024-09-11
+</div>
+<p>I made a table to emphasize a point I made <a href="line-counts.html">in the last post</a>: Most &quot;Unix sludge&quot; is <strong>string-ish</strong>, but <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> has garbage-collected data structures.</p>
+<p>That is, <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> moves shell from the <strong>left</strong> to the <strong>right</strong> — from less powerful to more powerful.</p>
+<p> </p>
+<style>
+table { text-align: center; font-size: x-large }
+thead { background-color: #eee; font-size: large }
+.table-note { color: darkgreen; font-size: large }
+.table-emph { color: darkblue; font-weight: bold }
+</style>
+<table cellpadding=5 cellspacing=0>
+<thead>
+<tr>
+  <th>No Garbage Collection</th>
+  <th> </th>
+  <th>Garbage Collection</th>
+</tr>
+</thead>
+<tr>
+   <td>
+    <span class="table-note">(string-ish languages, often cursed by users)</span><br/>
+     Traditional Unix Shell
+   </td>
+   <td style="font-size: 4em">&rarr;</td>
+   <td>
+    <span class="table-note">(GC implies general data structures)</span><br/>
+    <span class="table-emph"> YSH </span>
+   </td>
+</tr>
+<tr>
+   <td>
+    Make<br/>
+    CMake<br/>
+    m4 (autoconf)<br/>
+   </td>
+   <td></td>
+   <td>
+    Lisp and Scheme,<br/>
+    Python,
+    JavaScript,<br/>
+    Ruby, Lua<br/>
+   </td>
+</tr>
+<tr>
+    <td>
+    <span class="table-note">(arrays that can't be nested)</span><br/>
+    awk<br/>
+    fish<br/>
+    </td>
+    <td></td>
+    <td>
+    <span class="table-note">(mixed value/reference semantics)</span><br/>
+    Perl<br/>
+    PHP<br/>
+    </td>
+  </tr>
+</table>
+<p>Garbage-collected data structures lets you express a larger range of programs naturally, like ones that deal with build graphs.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#the-main-point">The Main Point</a></div>
+  <div class="toclevel1"><a href="#examples-of-ysh">Examples of YSH</a></div>
+  <div class="toclevel1"><a href="#what-about-other-shells">What About Other Shells?</a></div>
+  <div class="toclevel1"><a href="#next">Next</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+</div>
+<a name="the-main-point"></a>
+<h2>The Main Point</h2>
+<p>Yesterday, I published:</p>
+<ul>
+<li><a href="line-counts.html">After 8 Years, Oils Is Still Small and Flexible</a> - Oils is ~<strong>64 K</strong> lines, while bash is ~<strong>142 K</strong> lines</li>
+</ul>
+<p>So it's <strong>not</strong> just <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> that's smaller than <a href="/cross-ref.html?tag=bash#bash">bash</a>, but <strong>all of Oils</strong>.</p>
+<p>That includes <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, and that's despite its greater power, which is due in part to <a href="../../2023/01/garbage-collector.html">garbage collection</a>.</p>
+<p> </p>
+<p>Note that I'm measuring lines of source, not binary size, and the <code>oils-for-unix</code> binary is currently ~2x larger than <a href="/cross-ref.html?tag=bash#bash">bash</a>.</p>
+<p>But lines of source is a more stable metric, and <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a> gives us leverage to make the binary smaller, if we want to.  (It's more important to make it faster, but ideally we do both.)</p>
+<a name="examples-of-ysh"></a>
+<h2>Examples of YSH</h2>
+<p>Here are two long docs, with many examples:</p>
+<ul>
+<li><a href="/release/0.23.0/doc/ysh-tour.html">A Tour of YSH</a></li>
+<li><a href="/release/0.23.0/doc/idioms.html">YSH vs. Shell Idioms</a></li>
+</ul>
+<p>And here's a short example, extracted from <a href="https://github.com/oilshell/oil/blob/master/demo/url-search-params.ysh">demo/url-search-params.ysh</a>, a messy but real piece of code inspired by a problem that Samuel had.  (We need syntax highlighting!)</p>
+<pre><code>proc test-query() {
+  <span class="sh-comment">### Oracle test for parsing URL: foo?name=foo+bar&amp;k=v</span>
+
+  for s in (QUERY_CASES) {
+    echo 'INPUT'
+    echo &quot;  $s&quot;
+
+    <span class="sh-comment"># Shell out to node.js as an oracle</span>
+    js-decode-query $s | json read (&amp;js_pairs)
+    echo 'JS'
+    pp value (js_pairs)
+
+    <span class="sh-comment"># Call YSH function</span>
+    var ysh_pairs = URLSearchParams(s)
+    echo 'YSH'
+    pp value (ysh_pairs)
+
+    <span class="sh-comment"># Are they equal?  This compares structured data</span>
+    assert [ysh_pairs === js_pairs]
+    echo
+  }
+}
+</code></pre>
+<a name="what-about-other-shells"></a>
+<h2>What About Other Shells?</h2>
+<p>There are other shells with structured data, like PowerShell, nushell, Elvish, and dozens of other projects:</p>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/Alternative-Shells">Alternative Shells</a> (wiki)</li>
+</ul>
+<p> </p>
+<p>The main difference is that the design of Oils is <strong>&quot;exterior&quot;</strong> like POSIX shell and <a href="/cross-ref.html?tag=bash#bash">bash</a>, not <strong>&quot;interior&quot;</strong>.</p>
+<p>This is a fancy way of saying that we use normal Unix <strong>processes and files</strong>, like <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> over Unix pipes.</p>
+<p>We <strong>don't</strong> invent our own <a href="/cross-ref.html?tag=narrow-waist#narrow-waist">narrow waist</a> of say Powershell <a href="https://learn.microsoft.com/en-us/powershell/scripting/developer/cmdlet/cmdlet-overview?view=powershell-7.4">cmdlets</a> and objects. †</p>
+<p> </p>
+<p>I wrote two blog posts about this:</p>
+<ul>
+<li><a href="../../2023/06/narrow-waist.html">Narrow Waists Can be Interior or Exterior - PyObject vs. Unix Files</a> (2023)</li>
+<li><a href="../../2023/06/ysh-design.html">Oils Is Exterior-First (Code, Text, and Structured Data)</a> (2023)</li>
+</ul>
+<p>These ideas will continue to appear on the blog.</p>
+<p> </p>
+<p>† Based on feedback, I'll sometimes call a <em>narrow waist</em> an <strong>M × N waist</strong>.</p>
+<a name="next"></a>
+<h2>Next</h2>
+<p>This is where we are in the current series:</p>
+<ol>
+<li><a href="project-overview.html">What Oils Looks Like in 2024</a></li>
+<li><a href="line-counts.html">After 8 Years, Oils Is Still Small and Flexible</a></li>
+<li><strong>Garbage Collection Makes YSH Different</strong> - this post</li>
+<li>Missing Retrospectives on Oils</li>
+<li>Oils - Grand Ideas and Fiddly Details</li>
+<li>Oils 0.23.0 - User Feedback, Bug Bounty, and Writing YSH Code</li>
+</ol>
+<p>The next post will be a bit critical!</p>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<ul>
+<li><a href="https://lobste.rs/s/lkxfwn/almost_all_fish_shell_has_been_rewritten#c_20rxzb">Comments related to fish shell, line counts, and GC</a> - I based this post on my own comments
+<ul>
+<li>They are jumbled, but the overall point is that Oils is small, despite having the power of GC.</li>
+<li>Oils and <a href="/cross-ref.html?tag=fish#fish">fish</a> still don't overlap very much: one is more interactive, and the other is more for programming.  I'd still like to change that, e.g. with a separate project on top of our <a href="/blog/tags.html?tag=headless#headless">headless mode</a>!</li>
+</ul>
+</li>
+<li><a href="../../2023/06/ysh-sketches.html#review-of-awk-and-make-after-6-years">Review of Awk and Make after 6 years</a>
+<ul>
+<li>I've been making the point about Awk and GC for awhile, and readers have found it helpful.</li>
+</ul>
+</li>
+</ul>
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/stream/392989-blog-comments/topic/Garbage.20Collection.20Makes.20YSH.20Different">Discuss This Post on Zulip</a>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=ysh#ysh">ysh</a> </li>
+  <li><a href="../..">Back to the Blog Index</a>
+</ul>
+</div>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oils</title>
+  <meta name="twitter:title" content="Oils">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v6.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width40">
+  <!-- INSERT LATCH HTML -->
+<h1>Oils</h1>
+<style>
+
+a {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.lang-name {
+  font-size: xx-large;
+}
+
+.lang-desc {
+  text-align: center;
+}
+
+.osh-cell {
+  background-color: rgb(90% 90% 95%);
+  width: 100%;
+  /*padding: 0.5em;*/
+  /* border-right: solid black 1px; */
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+.ysh-cell {
+  background-color: rgb(90% 95% 90%);
+  width: 100%;
+  /*padding: 0.5em;*/
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+.code-snippet {
+  font-family: monospace;
+  white-space: pre;
+  text-align: left;
+}
+
+.pp {
+  color: darkgreen;
+}
+
+.two-shells {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.one-shell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 45%; /* Allows two items per row on wider screens */
+}
+
+@media (max-width: 600px) {
+    .two-shells {
+        flex-direction: column;
+        align-items: center;
+    }
+    .one-shell {
+        width: 100%;
+    }
+}
+
+#why-sponsor {
+  font-size: x-large;
+  text-align: center;
+}
+
+</style>
+<div style="text-align: center">
+<p>Our upgrade path from <a href="/cross-ref.html?tag=bash#bash">bash</a> to a better language and runtime.</p>
+</div>
+<div class="two-shells">
+  <div class="one-shell">
+   <div class="osh-cell">
+     <div class="shell-name">
+       <span class="lang-name"><a href="cross-ref.html#OSH">OSH</a></span>
+     </div>
+     <div class="lang-desc">runs your existing shell scripts <br/> &nbsp; </div>
+   </div>
+   <div class="code-snippet">
+  echo "hello $oops"
+              ^~~~~
+fatal: Undefined variable 'oops'
+   </div>
+  </div>
+  <div class="one-shell">
+   <div class="ysh-cell">
+     <div class="shell-name">
+       <span class="lang-name"><a href="cross-ref.html#YSH">YSH</a></span>
+     </div>
+     <div class="lang-desc">is for Python and JavaScript users who avoid shell!</div>
+   </div>
+   <div class="code-snippet">
+<b>ysh$</b> json read < x.json
+<b>ysh$</b> = _reply
+<span class="pp">(Dict)</span>   {shell: "ysh", fun: true}
+   </div>
+  </div>
+</div>
+<p> </p>
+<style>
+.left-label {
+  font-size: x-large;
+  width: 25%;
+  text-align: center;
+}
+.linked-label {
+  background-color: #eee;
+}
+#link-table {
+  width: 90%;
+  margin: 0 auto;
+}
+#link-table td {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+
+  vertical-align: top;
+  /* same color as <hr/> */
+  border-top: solid #bbb 1px;
+  /* border-top: solid black 1px; */
+}
+</style>
+<table id=link-table cellpadding=0 cellspacing=0>
+  <tr>
+   <td class="left-label linked-label">
+<p><a href="/release/0.24.0/">Latest Release</a></p>
+   </td>
+   <td>
+<p>OSH and YSH live inside the same 2 MB <code>oils-for-unix</code> binary</p>
+<p><a href="releases.html">All Releases</a>   <a href="/release/latest/">/release/latest/</a><br/>
+<a href="/release/0.24.0/doc/ref/"><strong>Oils Reference</strong></a>   <a href="https://github.com/oils-for-unix/oils/wiki/Where-To-Send-Feedback">Where To Send Feedback</a></p>
+   </td/>
+  </tr>
+  <tr>
+   <td class="left-label linked-label">
+<p><a href="blog/">Read the Blog</a></p>
+   </td>
+   <td>
+<p>Get notified about new blog posts:</p>
+<p>follow <a href="https://hachyderm.io/@oilsforunix">@oilsforunix on Mastodon</a><br/>
+follow <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a><br/>
+by <a href="https://www.reddit.com/r/oilshell/.rss">RSS via Reddit</a>   Visit
+<a href="https://old.reddit.com/r/oilshell/">/r/oilshell</a><br/></p>
+   </td>
+  </tr>
+  <tr>
+   <td class="left-label">
+<p>Highlights</p>
+   </td>
+   <td>
+<p><a href="blog/2023/03/faq.html">Oils 2023 FAQ</a>   <a href="blog/2021/01/why-a-new-shell.html">Why Create a New Unix Shell?</a><br/>
+Posts Tagged #<a href="/blog/tags.html?tag=FAQ#FAQ">FAQ</a>   <a href="blog/2020/01/simplest-explanation.html">The Simplest Explanation</a></p>
+<p><a href="release/latest/doc/ysh-tour.html"><strong>A Tour of YSH</strong></a>  
+<a href="release/latest/doc/idioms.html">YSH vs. Shell Idioms</a></p>
+   </td>
+  </tr>
+  <tr>
+   <td class="left-label">
+<p>Repo</p>
+   </td>
+   <td>
+<p><a href="https://github.com/oils-for-unix/oils"><strong>oils-for-unix/oils</strong></a> on GitHub<br/>
+<a href="blog/2023/03/roadmap.html">What We Can Use Help With</a><br/>
+#<a href="https://oilshell.zulipchat.com/#narrow/stream/417617-help-wanted">help-wanted</a> suggests places to start changing the code</p>
+<p>Build results are published to one of:<br/>
+<a href="https://ci.oilshell.org/uuu/github-jobs/">ci.oilshell.org</a>  
+<a href="https://mb.oilshell.org/uuu/github-jobs/">mb.oilshell.org</a>  
+<a href="https://op.oilshell.org/uuu/github-jobs/">op.oilshell.org</a></p>
+   </td>
+  <tr>
+  <tr>
+   <td class="left-label">
+<p>Discuss</p>
+   </td>
+   <td>
+<p>Zulip: <a href="https://oilshell.zulipchat.com/">oilshell.zulipchat.com</a></p>
+<p>#<a href="https://oilshell.zulipchat.com/#narrow/stream/264891-oil-help">oil-help</a> is for users to ask questions.  We welcome you!<br/>
+#<a href="https://oilshell.zulipchat.com/#narrow/stream/325160-oil-discuss-public">oil-discuss-public</a> is for general discussion<br/>
+#<a href="https://oilshell.zulipchat.com/#narrow/stream/121539-oil-dev">oil-dev</a> is for changing the code (please login)<br/></p>
+   </td>
+  <tr>
+  <tr>
+   <td class="left-label">
+<p>More</p>
+   </td>
+   <td>
+<p>Topic <a href="cross-ref.html">Cross Reference</a></p>
+<p><a href="http://andychu.net">My Home Page</a><br/>
+e-mail: <code>andy at oilshell dot org</code> (talk to me about shells and programming
+languages)</p>
+   </td>
+  <tr>
+</table>
+<hr />
+<div id="why-sponsor">
+<p><a href="why-sponsor.html">Why Sponsor Oils?</a></p>
+</div>
+<div style="font-style: italic; text-align: center;">
+<p>Thank you to <a href="https://nlnet.nl">NLnet</a> for generous grants in 2022, 2023, and 2024!</p>
+</div>
+<p> 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </p>
+</body>
+</html>

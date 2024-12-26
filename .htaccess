@@ -1,0 +1,17 @@
+RewriteEngine On
+
+# 2024-06: Dreamhost FastCGI is broken on Ubuntu - fall back to CGI
+
+#RewriteRule ^.*\.wwz/(.*)$ /wwz-bin/dispatch.fcgi/$1 [L]
+
+RewriteRule ^.*\.wwz/(.*)$ /wwz-bin/wwz.cgi/$1 [L]
+# Stupid guy spamming me once a minute for weeks.  This gives him a 403 but
+# doesn't get him out of my logs!
+deny from 45.33.78.24
+deny from 176.58.120.63
+deny from 139.162.107.44
+
+# 2019/01: bash_completion.txt has UTF-8 characters!  Rendered incorrectly by
+# Dreamhost by default.
+# https://help.dreamhost.com/hc/en-us/articles/215747598-Setting-headers-with-an-htaccess-file
+AddDefaultCharset UTF-8
