@@ -1,0 +1,15 @@
+.*.swp
+*.wwz
+download/
+spec-debug/
+
+# We want to view blog/2019/12/_foo.html locally under _unpublished.html, so we
+# need in this repo.
+# But the deploy script already excludes them, so ignore them in git status.
+
+blog/*/*/_*.html
+blog/_unpublished.html
+
+# These are symlinks
+analytics
+analytics-data
