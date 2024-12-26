@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oils Cross Reference</title>
+  <meta name="twitter:title" content="Oils Cross Reference">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v6.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="skinny">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/">oils.pub</a></p>
+<h1>Oils Cross Reference</h1>
+<p>A list of topics and anchors that the <a href="blog/">blog</a> and other docs link to.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel2"><a href="#project-components">Project Components</a></div>
+  <div class="toclevel2"><a href="#adjacent-projects">Adjacent Projects</a></div>
+  <div class="toclevel2"><a href="#research-projects">Research Projects</a></div>
+  <div class="toclevel2"><a href="#unix-system-calls">Unix System Calls</a></div>
+  <div class="toclevel2"><a href="#relevant-software-libraries">Relevant Software Libraries</a></div>
+  <div class="toclevel2"><a href="#tools">Tools</a></div>
+  <div class="toclevel3"><a href="#for-shell-scripts">For Shell Scripts</a></div>
+  <div class="toclevel3"><a href="#for-implementing-programming-languages">For Implementing Programming Languages</a></div>
+  <div class="toclevel3"><a href="#for-code-improvement">For Code Improvement</a></div>
+  <div class="toclevel3"><a href="#containers-os-virtualization">Containers / OS Virtualization</a></div>
+  <div class="toclevel2"><a href="#the-unix-shell">The Unix Shell</a></div>
+  <div class="toclevel3"><a href="#useful-documents">Useful Documents</a></div>
+  <div class="toclevel3"><a href="#shell-language-terms">Shell Language Terms</a></div>
+  <div class="toclevel3"><a href="#oils-terms">Oils Terms</a></div>
+  <div class="toclevel3"><a href="#shell-implementations">Shell Implementations</a></div>
+  <div class="toclevel2"><a href="#programming-languages">Programming Languages</a></div>
+  <div class="toclevel3"><a href="#language-concepts">Language Concepts</a></div>
+  <div class="toclevel3"><a href="#little-languages-dsls">Little Languages / DSLs</a></div>
+  <div class="toclevel3"><a href="#related-languages">Related Languages</a></div>
+  <div class="toclevel3"><a href="#algorithms-and-data-structures">Algorithms and Data Structures</a></div>
+  <div class="toclevel2"><a href="#software-architecure">Software Architecure</a></div>
+  <div class="toclevel3"><a href="#architecture-concepts">Architecture Concepts</a></div>
+  <div class="toclevel3"><a href="#protocols">Protocols</a></div>
+  <div class="toclevel3"><a href="#interchange-formats">Interchange Formats</a></div>
+  <div class="toclevel2"><a href="#books">Books</a></div>
+  <div class="toclevel2"><a href="#project-infrastructure">Project Infrastructure</a></div>
+</div> 
+<a name="project-components"></a>
+<a name="toc_0"></a>
+<h3>Project Components</h3>
+<p><a name=YSH>#YSH</a><br/>
+<a href="release/latest/doc/oil-language-tour.html">YSH</a> —
+A <strong>legacy-free</strong> dialect of shell with:</p>
+<ul>
+<li>Python-like expressions over typed data, e.g. with the <code>var</code> keyword</li>
+<li>Ruby-like blocks, which enable DSLs and declarative configuration</li>
+<li>Procs: enhanced shell functions, which <a href="/blog/tags.html?tag=shell-the-good-parts#shell-the-good-parts">compose in unique
+ways</a></li>
+<li>New word syntax like <code>echo $[join(mylist)]</code></li>
+<li>New shell builtins like <code>try</code> and <code>append</code></li>
+</ul>
+<p>You run it with <code>bin/ysh</code>.</p>
+<p><strong>Important</strong>: Before March 2023, this shell language was called <strong>Oil</strong>.  We
+will clean up the many references to the old name over time.</p>
+<p>For a taste of the syntax, see <a href="blog/2020/01/simplest-explanation.html">The Simplest Explanation of
+Oil</a> and <a href="release/latest/doc/ysh-tour.html">A Tour of
+YSH</a>.</p>
+<p>It shares the same runtime as OSH, so it's a smooth upgrade from both
+<a href="/cross-ref.html?tag=bash#bash">bash</a> and OSH.  Compatibility is selectively broken with <a href="release/latest/doc/options.html">Shell
+Options</a>.</p>
+<p><a name=OSH>#OSH</a><br/>
+<a href="/">OSH</a> —
+A <strong>compatible</strong> shell language based on the common use of shell (including
+POSIX, <a href="#bash">bash</a>, and others).  The design criteria for the language are:</p>
+<ul>
+<li>It runs real shell programs, including <a href="blog/2018/01/15.html">distro build
+scripts</a> and <a href="blog/2019/02/05.html">completion
+plugins</a>.  The former are completely unmodified, while
+the latter require small patches.</li>
+<li>We should able to write a manual &quot;with a straight face&quot;.  This can't be done
+with <a href="#bash">bash</a>.</li>
+</ul>
+<p>You run it with <code>bin/osh</code>.</p>
+<p>In addition, it has <a href="blog/2020/10/osh-features.html">four features that justify a new
+shell</a>: reliable error handling, safe
+processing of user-supplied data, lack of &quot;quoting hell&quot;, and better error
+messages and tools.  These features are <strong>opt-in</strong>, as OSH is compatible by
+default.</p>
+<p><a name=oil-language>#oil-language</a><br/>
+<a href="blog/2017/02/05.html">Oil Language</a> —
+The <strong>old name</strong> for the shell language influenced by Python, JavaScript, and Ruby.</p>
+<p>In March 2023, Oil was <strong>renamed</strong> to <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.  We will no longer refer to
+the &quot;Oil language&quot;, but there are still many links that point to this entry.</p>
+<p><a name=osh-language>#osh-language</a><br/>
+<a href="/">OSH Language</a> —
+A synonym for <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, or <code>bin/osh</code>.</p>
+<p><a name=headless-shell>#headless-shell</a><br/>
+<a href="https://github.com/oilshell/oil/wiki/Headless-Mode">Headless Shell</a> —
+A mechanism to move the interactive shell into another process, outside of
+the Oils core.  The Oils project is focused on a language for automation and
+glue, as opposed to a user interface.</p>
+<p>Also see blog posts tagged #<a href="/blog/tags.html?tag=headless#headless">headless</a>.</p>
+<p><a name=FANOS>#FANOS</a><br/>
+<a href="https://github.com/oilshell/oil/wiki/Headless-Mode">FANOS: File descriptors And Netstrings Over Sockets</a> —
+A protocol we invented for shells and GUIs to communicate.  Key idea: the GUI passes file descriptors pointing to a <strong>terminal</strong> to the shell via a Unix domain socket.  The shell's child processes will inherit those descriptors, which allows <code>ls --color</code> to work as usual.  That is, when <code>ls</code> calls <code>isatty()</code>, it will work correctly and return <code>true</code>.</p>
+<p><a name=eggex>#eggex</a><br/>
+<a href="//oilshell.org/release/latest/doc/eggex.html">Egg Expression</a> —
+The regular expression syntax for YSH, which has pattern composition and
+seamless integration with <a href="#grep">egrep</a>, <a href="#awk">awk</a>, and other Unix tools.
+It resembles Perl-style regex syntax, but literals are quoted and you can use
+whitespace to make patterns more readable.</p>
+<p><a name=hay>#hay</a><br/>
+<a href="//oilshell.org/release/latest/doc/hay.html">Hay - Hay Ain't YAML</a> —
+A YSH feature that lets you declare <strong>data</strong> with the same syntax as code, in a Lisp-like fashion.  Code and data can be interleaved, which is useful for config files and internal DSLs.</p>
+<p><a name=mycpp>#mycpp</a><br/>
+<a href="https://github.com/oilshell/oil/blob/master/mycpp/README.md">mycpp</a> —
+A tool that translates a subset of statically-typed Python to C++.  It
+translates a large part of the Oils interpreter, but it's <strong>not</strong> a
+general-purpose translator.</p>
+<p>It depends on <a href="#mypy">MyPy</a>, and you can think of it as a hybrid between the
+recent <a href="https://github.com/python/mypy/blob/master/mypyc/README.md">mypyc</a>
+compiler and the old <a href="https://en.wikipedia.org/wiki/Shed_Skin">Shed Skin</a>
+compiler.</p>
+<p><a name=opy>#opy</a><br/>
+<a href="blog/2018/03/04.html">OPy</a> —
+A Python bytecode compiler based on <a href="#pgen2">pgen2</a> and
+<a href="#compiler2">compiler2</a>.  This small piece of code allows us to adapt Python to
+the needs of the Oils project.  See <a href="/blog/2018/03/04.html">Building Oil with the OPy Bytecode
+Compiler</a>.</p>
+<p>As of December 2019, we expect OPy to be replaced by <a href="#mycpp">mycpp</a>, which
+generates faster code.</p>
+<p><a name=boil>#boil</a><br/>
+<a href="/">Boil</a> —
+<em>(obsolete)</em>
+The working name for the part of Oils that subsumes GNU Make.  No code for this
+exists yet.</p>
+<p><a name=oil-native>#oil-native</a><br/>
+<a href="blog/2019/12/09.html">oil-native</a> —
+The build of Oils translated to C++ with <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a>.  The resulting shell
+is 100% native code: i.e. there's no bytecode.  When it's done, it will be the
+only Oils build, and we'll just call it &quot;Oils&quot;.</p>
+<p><a name=OVM>#OVM</a><br/>
+<a href="blog/2017/04/24.html">OVM</a> —
+<em>(obsolete)</em>
+A slice of the <a href="#cpython">CPython</a> interpreter, used as the Oils VM while it's
+being prototyped.  It will be replaced with C++ code &quot;metaprogrammed&quot; with
+Python.</p>
+<p><a name=OVM2>#OVM2</a><br/>
+<a href="blog/2018/11/15.html">OVM2</a> —
+<em>(obsolete)</em>
+A nascent VM to replace our use of the <a href="#cpython">CPython</a> VM.</p>
+<p><a name=OHeap2>#OHeap2</a><br/>
+<a href="blog/2018/12/16.html#toc_3">OHeap2</a> —
+A data format for <a href="#OVM2">OVM2</a> that is like a <a href="https://stackoverflow.com/questions/3561145/what-is-a-smalltalk-image">SmallTalk image</a> or <a href="https://v8.dev/blog/custom-startup-snapshots">v8 snapshot</a>.
+Inspired by the <a href="/blog/tags.html?tag=oheap#oheap">first version of oheap</a>.</p>
+<p><a name=readline>#readline</a><br/>
+<a href="https://tiswww.case.edu/php/chet/readline/rltop.html">readline</a> —
+A line-editing library derived from <a href="#bash">bash</a>.  It has <code>emacs</code> and <code>vi</code>
+modes.</p>
+<p><a name=pylibc>#pylibc</a><br/>
+<a href="https://github.com/oilshell/oil/blob/master/core/libc.c">pylibc</a> —
+An extension module to expose
+<a href="https://en.wikipedia.org/wiki/C_standard_library">libc</a> functions to Python.
+Python implements its own <code>glob()</code> or <code>fnmatch()</code> that are different from the
+ones in <code>libc</code>.  We may also need <code>libc</code>'s locale-aware string functions.</p>
+<p><a name=wwz>#wwz</a><br/>
+<a href="https://github.com/oilshell/wwz/">wwz</a> —
+A FastCGI program that serves the contents of a zip file.  It makes it easy and
+fast to deploy thousands of small files to a web server, and back them up.  We
+use it for test results, benchmarks, and continuous build logs.  This <a href="https://news.ycombinator.com/item?id=24684563">Hacker
+News comment</a> provides some
+color.  It's a simple Unix-y solution.</p>
+<a name="adjacent-projects"></a>
+<a name="toc_1"></a>
+<h3>Adjacent Projects</h3>
+<p><a name=aboriginal-linux>#aboriginal-linux</a><br/>
+<a href="http://landley.net/aboriginal/">Aboriginal Linux</a> —
+Shell scripts that implement the minimal Linux system that can rebuild
+itself (discontinued as of April 2017.)</p>
+<p><a name=abuild>#abuild</a><br/>
+<a href="https://wiki.alpinelinux.org/wiki/Abuild_and_Helpers">abuild</a> —
+A 2500-line shell script that builds <a href="#alpine-linux">Alpine Linux</a> packages.</p>
+<p><a name=alpine-linux>#alpine-linux</a><br/>
+<a href="https://alpinelinux.org/">Alpine Linux</a> —
+A minimal Linux distribution based on <a href="https://www.musl-libc.org/">musl
+libc</a> and <a href="#busybox">busybox</a>.</p>
+<p><a name=bash-completion>#bash-completion</a><br/>
+<a href="https://github.com/scop/bash-completion">bash-completion</a> —
+A companion project to <a href="#bash">bash</a> that provides interactive completion for
+the common Unix commands.  Most Linux distros use it, including Debian and
+Ubuntu.  It consists of <strong>tens of thousands</strong> of lines of bash code.</p>
+<p><a name=ble.sh>#ble.sh</a><br/>
+<a href="https://github.com/akinomyoga/ble.sh">Bash Line Editor</a> —
+<code>ble.sh</code> gives you a <a href="#fish">fish</a>-like interactive experience in bash, with
+syntax highlighting, completion, and vim-style editing.  It's written in pure
+bash, and is likely <a href="https://github.com/oilshell/oil/wiki/The-Biggest-Shell-Programs-in-the-World">the biggest and most sophisticated shell
+program</a>
+in the world!</p>
+<p>A long-term goal for Oils is to allow users to customize their shell this way,
+rather than hard-coding the UI in C++ or Python.</p>
+<p><a name=bwk>#bwk</a><br/>
+<a href="https://github.com/andychu/bwk">bwk</a> —
+Some software archaeology I did on Kernighan's Awk, to research how Awk
+relates to the shell.  (One interesting thing: they both don't implement
+first-class compound data structures, and thus lack garbage collection.)</p>
+<p><a name=autotools>#autotools</a><br/>
+<a href="https://www.gnu.org/software/automake/manual/html_node/Autotools-Introduction.html">GNU autotools</a> —
+A meta-build system that generates <code>configure</code> shell scripts and Makefiles
+from <code>m4</code> macros.</p>
+<p><a name=busybox>#busybox</a><br/>
+<a href="http://busybox.net/about.html">BusyBox</a> —
+A reimplementation of standard Unix command line utilities, commonly used on
+embedded Linux systems.</p>
+<p><a name=debian>#debian</a><br/>
+<a href="https://www.debian.org/">debian</a> —
+One of the oldest and most popular Linux distributions.  It uses the <code>apt</code>
+package manager, which wraps <code>dpkg</code>.  Ubuntu is based on Debian.</p>
+<p><a name=debootstrap>#debootstrap</a><br/>
+<a href="https://wiki.debian.org/Debootstrap">debootstrap</a> —
+<a href="#debian">Debian</a> uses this large shell program to construct its base image
+from binary packages.</p>
+<p><a name=nix>#nix</a><br/>
+<a href="https://nixos.org/">Nix</a> —
+A purely-functional package manager and Linux distribution.  As with nearly
+all distributions, <a href="#bash">bash</a> plays a fundamental role in building binary
+packages.</p>
+<p><a name=pypy>#pypy</a><br/>
+<a href="https://www.pypy.org/">PyPy</a> —
+A Python interpreter written in Python (including a restricted subset RPython).
+It has novel JIT technology and a focus on speed.</p>
+<p><a name=tinypy>#tinypy</a><br/>
+<a href="http://www.tinypy.org/">tinypy</a> —
+A interpreter for a subset of Python written in just ~2K lines of C and ~2K
+lines of Python (using a very dense style).  I used some tinypy code for my
+<a href="https://github.com/andychu/pratt-parsing-demo">pratt-parsing-demo</a>, and it inspired the plan for Oils to have a Python
+interpreter.</p>
+<p><a name=toybox>#toybox</a><br/>
+<a href="http://landley.net/toybox/">Toybox</a> —
+A reimplementation of standard Unix command line utilities, by the former
+maintainer of <a href="#busybox">busybox</a>.</p>
+<p><a name=ninja>#ninja</a><br/>
+<a href="https://ninja-build.org/">Ninja</a> —
+A &quot;low-level&quot; build system focused on incremental build speed.  High level
+languages like CMake generate Ninja build files.</p>
+<p><a name=tmux>#tmux</a><br/>
+<a href="https://github.com/tmux/tmux">tmux</a> —
+A Unix terminal multiplexer which provides a better interactive interface than
+shell job control.  <a href="https://www.gnu.org/software/screen/">GNU Screen</a> is
+another popular option.</p>
+<a name="research-projects"></a>
+<a name="toc_2"></a>
+<h3>Research Projects</h3>
+<p><a name=smoosh>#smoosh</a><br/>
+<a href="http://shell.cs.pomona.edu/">Smoosh - The Symbolic, Mechanized, Observable, Operational Shell</a> —
+A formalization of the POSIX shell standard.  <a href="https://github.com/mgree/smoosh">Source
+code</a> (in
+<a href="https://www.cl.cam.ac.uk/%7Epes20/lem/">Lem</a> and OCaml) is available.</p>
+<a name="unix-system-calls"></a>
+<a name="toc_3"></a>
+<h3>Unix System Calls</h3>
+<p><a name=chroot>#chroot</a><br/>
+<a href="https://en.wikipedia.org/wiki/Chroot">chroot</a> —
+A system call that gives a process a view of its own &quot;virtual&quot; file system.
+Linux container technology like Docker or
+<a href="https://en.wikipedia.org/wiki/LXC">LXC</a> can be thought of as a &quot;chroot on
+steroids&quot;.</p>
+<a name="relevant-software-libraries"></a>
+<a name="toc_4"></a>
+<h3>Relevant Software Libraries</h3>
+<p><a name=libc>#libc</a><br/>
+<a href="https://en.wikipedia.org/wiki/C_standard_library">The C Standard Library</a> —
+The shell communicates with the kernel through the C standard library.  Popular
+implementations include <a href="https://www.gnu.org/software/libc/">GNU libc</a> and
+<a href="https://www.musl-libc.org/">musl libc</a>.</p>
+<p><a name=tokenize>#tokenize</a><br/>
+<a href="https://docs.python.org/2/library/tokenize.html">Python tokenize module</a> —
+A reimplementation of <code>Parser/tokenizer.c</code> in pure Python.  Part of the Python
+standard library.</p>
+<p><a name=pgen2>#pgen2</a><br/>
+<a href="https://pypi.python.org/pypi/pgen2/0.1.0">pgen2</a> —
+A reimplementation of <code>Parser/pgen.c</code> in Python, done for <a href="https://docs.python.org/2/library/2to3.html">lib2to3</a>.</p>
+<p><a name=compiler2>#compiler2</a><br/>
+<a href="https://docs.python.org/2/library/compiler.html">compiler2</a> —
+<code>compiler2</code> is my name for the deprecated Python 2.7
+<a href="https://docs.python.org/2/library/compiler.html">compiler module</a>. It does the same thing as <code>Parser/compile.c</code>, but in
+Python.</p>
+<p><a name=byterun>#byterun</a><br/>
+<a href="https://github.com/nedbat/byterun">byterun</a> —
+A Python bytecode interpreter loop written in Python, <a href="http://aosabook.org/en/500L/a-python-interpreter-written-in-python.html">described in the AOSA
+Book</a>.  It does the same thing as <code>ceval.c</code> in CPython.</p>
+<p><a name=dplyr>#dplyr</a><br/>
+<a href="https://dplyr.tidyverse.org/">dplyr</a> —
+A &quot;modern&quot; <a href="#data-frame">data frame</a> library for R.  Part of the
+<a href="#tidyverse">Tidyverse</a>.  I use it to analyze Oils code and dependencies.</p>
+<p><a name=tidyverse>#tidyverse</a><br/>
+<a href="https://www.tidyverse.org/">TidyVerse</a> —
+Hadley Wickham created this set of R packages.  They reinvent R's data
+structures and standard library through <a href="#metaprogramming">metaprogramming</a>!</p>
+<p><a name=yajl>#yajl</a><br/>
+<a href="https://lloyd.github.io/yajl/">Yet Another JSON Library</a> —
+<em>(obsolete)</em>
+Oils uses this C library to parse and print JSON.  Because Oils has Python's
+data structures, we use a <a href="https://github.com/oilshell/py-yajl">fork of the py-yajl Python
+binding</a> to wrap yajl's nice streaming
+API.</p>
+<p><a name=pexpect>#pexpect</a><br/>
+<a href="https://pexpect.readthedocs.io/en/stable/">pexpect</a> —
+A Python library to automate terminal applications like shells, <code>ssh</code>,
+<code>passwd</code>, etc.  We use it to test the interactive shell.</p>
+<a name="tools"></a>
+<a name="toc_5"></a>
+<h3>Tools</h3>
+<a name="for-shell-scripts"></a>
+<a name="toc_6"></a>
+<h4>For Shell Scripts</h4>
+<p><a name=coreutils>#coreutils</a><br/>
+<a href="https://www.gnu.org/software/coreutils/coreutils.html">coreutils</a> —
+The GNU implementation of <code>ls</code>, <code>cp</code>, <code>mv</code>, etc.  It also has versions of
+<code>test</code>, <code>time</code>, and <code>kill</code>, which are typically shadowed by
+similar-but-different shell builtins.</p>
+<p><a name=grep>#grep</a><br/>
+<a href="https://en.wikipedia.org/wiki/Grep">grep</a> —
+A tool to search files for patterns.  Prefer using <code>egrep</code> (<code>grep -E</code>) to
+<code>grep</code>, because repetition looks like <code>[0-9]+</code> rather than <code>[0-9]\+</code>.  The
+former is more consistent with all other regular expression dialects, including
+<a href="#eggex">Eggex</a>.</p>
+<p><a name=find>#find</a><br/>
+<a href="https://en.wikipedia.org/wiki/Find">find</a> —
+A classic Unix tool that walks a directory tree, filters its entries, and
+performs actions.  GNU findutils implements it.</p>
+<p>Many users don't realize that <code>find</code> is  an expression language like
+<a href="#expr">expr</a> or <a href="blog/2017/08/31.html">test</a>.  It looks nothing like
+<a href="#awk">Awk</a>, but they both apply predicates and actions to a stream.</p>
+<p><a name=xargs>#xargs</a><br/>
+<a href="https://en.wikipedia.org/wiki/Xargs">xargs</a> —
+A tool that builds and executes command lines from <code>stdin</code>.  A very useful
+GNU extension is <code>xargs -P</code>, which starts processes in parallel.</p>
+<p><a name=expr>#expr</a><br/>
+<a href="https://en.wikipedia.org/wiki/Expr">expr</a> —
+An external tool that implements mathematical expressions for shell.  It has
+been mostly subsumed by the POSIX <code>$((1+2))</code> construct, and the
+<code>[[ $mystr =~ $myregex ]]</code> construct.  GNU <a href="#autotools">autotools</a> still
+generates code that uses it.)</p>
+<p><a name=strace>#strace</a><br/>
+<a href="https://wizardzines.com/zines/strace/">strace</a> —
+A tool that prints the system calls that another process makes.  For example,
+<code>strace echo hi</code> will show the <code>write()</code> syscall, among others.  The <code>-e</code> flag
+contains a small expression language to filter what's printed.</p>
+<a name="for-implementing-programming-languages"></a>
+<a name="toc_7"></a>
+<h4>For Implementing Programming Languages</h4>
+<p><a name=antlr>#antlr</a><br/>
+<a href="http://www.antlr.org">ANTLR</a> —
+A tool to generate top-down parsers (<code>LL(k)</code>, <code>LL(*)</code>).  I ported the POSIX
+shell grammar to ANTLR to machine check it, but it's not used to generate code.</p>
+<p><a name=yacc>#yacc</a><br/>
+<a href="http://dinosaur.compilertools.net/">yacc</a> —
+A tool to generate bottom-up parsers.  <a href="#bash">Bash</a> uses yacc, which is a
+mistake discussed in <a href="#aosa-book-bash">this AOSA Book chapter on Bash</a>.</p>
+<p><a name=semantic-action>#semantic-action</a><br/>
+<a href="https://www.gnu.org/software/bison/manual/html_node/Semantic-Actions.html">Semantic Action</a> —
+The &quot;right hand side&quot; of a rule in a parser specification is a <strong>semantic
+action</strong>.  It's typically a block of in the host language, e.g. C or OCaml.</p>
+<p><a href="#yacc">Yacc</a> and <a href="#re2c">re2c</a> both use the model of semantic actions.
+<a href="#antlr">ANTLR</a> and Python's <code>pgen.c</code> and <a href="#pgen2">pgen2</a> prefer to materialize
+a parse tree.  This means that there's an extra step to construct an
+<a href="#AST">AST</a>.</p>
+<p><a name=re2c>#re2c</a><br/>
+<a href="http://re2c.org/">re2c</a> —
+A tool that compiles regular expressions first to a <a href="#DFA">DFA</a>, and then
+<strong>efficient C code</strong> consisting of mostly <code>switch</code> and <code>goto</code> statements.  I
+use it to express multiple lexers in the Oils project.</p>
+<p>The best part of it is that it's a <strong>library</strong> and not a <strong>framework</strong>.</p>
+<p><a name=zephyr-asdl>#zephyr-asdl</a><br/>
+<a href="https://www.cs.princeton.edu/research/techreps/TR-554-97">Zephyr ASDL</a> —
+Oils uses this domain-specific language to declare <a href="#adt">algebraic data types</a>
+in Python and C++.  We use it to represent both the syntax of shell programs
+and the interpreter's runtime data structures. See <a href="blog/2016/12/11.html">What is Zephyr
+ASDL?</a> and <a href="blog/tags.html?tag=ASDL#ASDL">posts tagged
+ASDL</a>.</p>
+<p><a href="http://eli.thegreenplace.net/2014/06/04/using-asdl-to-describe-asts-in-compilers">This article</a> describes its use in Python.  <a href="http://asdl.sourceforge.net/">This SourceForge
+project</a> contains the code.</p>
+<p><a name=clang>#clang</a><br/>
+<a href="http://clang.llvm.org/">Clang</a> —
+A modular front end for C and C++ that supports IDEs and other tools (as
+well as the code-generating compiler).  Oils has some similarities because we
+have multiple uses cases for the parser: execution, interactive completion, a
+tool to convert the osh language to the oil language, and more.</p>
+<p><a name=protobuf>#protobuf</a><br/>
+<a href="https://developers.google.com/protocol-buffers/">Protocol Buffers</a> —
+A schema language, serialization format, and set of APIs created and
+open-sourced by Google.</p>
+<p><a name=spec-test>#spec-test</a><br/>
+<a href="https://github.com/oilshell/oil/blob/master/test/sh_spec.py">sh_spec.py</a> —
+A test framework written for <code>osh</code> that runs shell snippets against many
+shells.  See <a href="https://github.com/oilshell/oil/wiki/Spec-Tests">Spec Tests</a> and <a href="blog/2017/06/22.html">How I Use Tests</a> (2017).</p>
+<p><a name=wild-test>#wild-test</a><br/>
+<a href="https://github.com/oilshell/oil/blob/master/test/wild-runner.sh">Wild Tests</a> —
+A test framework that tortures the OSH parser with real-world shell scripts.</p>
+<p><a name=gold-test>#gold-test</a><br/>
+<a href="https://github.com/oilshell/oil/blob/master/test/gold.sh">Gold Tests</a> —
+A type of test that compares the output of OSH and bash (or another existing
+shell).  The assertions are implicit so you don't have to write them.</p>
+<a name="for-code-improvement"></a>
+<a name="toc_8"></a>
+<h4>For Code Improvement</h4>
+<p>Themes: Correctness, security, performance.</p>
+<p><a name=asan>#asan</a><br/>
+<a href="https://clang.llvm.org/docs/AddressSanitizer.html">AddressSanitizer</a> —
+A compiler tool for detecting memory errors at runtime.  That is, it's a kind
+of dynamic analysis.  It solves roughly the same problem as <a href="http://valgrind.org/">Valgrind</a>, but
+it's faster.  Also known as ASAN.</p>
+<p><a name=afl>#afl</a><br/>
+<a href="http://lcamtuf.coredump.cx/afl/">American Fuzzy Lop</a> —
+A fuzzer that uses compiler technology to efficiently explore code paths.  In
+the last few years, it's been used to surface hundreds of bugs in ubiquitous
+and already well-tested pieces of open-source software.  Its <a href="https://en.wikipedia.org/wiki/American_fuzzy_lop_(fuzzer)">Wikipedia
+page</a> is also
+helpful.</p>
+<p><a name=perf>#perf</a><br/>
+<a href="https://en.wikipedia.org/wiki/Perf_(Linux)">Linux perf</a> —
+User-space tools and kernel APIs for Linux performance analysis.  Uses
+CPU-specific features for accurate measurements.</p>
+<p><a name=flame-graph>#flame-graph</a><br/>
+<a href="http://www.brendangregg.com/flamegraphs.html">Flame Graph</a> —
+A relatively new technique for visualizing profiler output.  It shows how much
+execution <strong>time</strong> can be attributed to a particular call stack.  Note that a
+set of function call stacks forms a <strong>tree</strong>: a function may call multiple
+functions.</p>
+<p>This explains why flame graphs can also be used like <a href="https://en.wikipedia.org/wiki/Treemapping">treemaps</a>, i.e.
+to visualize <strong>space</strong> used <a href="http://www.brendangregg.com/blog/2017-02-05/file-system-flame-graph.html">in a file system hierarchy</a>.</p>
+<p><a name=bloaty>#bloaty</a><br/>
+<a href="https://github.com/google/bloaty">Bloaty McBloatyFace</a> —
+A code size profiler for compiled binaries.  I used it to measure progress in
+stripping down the CPython interpreter.</p>
+<p><a name=mypy>#mypy</a><br/>
+<a href="http://mypy-lang.org/">mypy</a> —
+A type checker for Python.  You can gradually add types to Python 2 or 3 code,
+and MyPy will check them for consistency before execution.  There are some
+limitations to the code it understands, but many Python idioms are supported.</p>
+<p><a name=pyannotate>#pyannotate</a><br/>
+<a href="https://github.com/dropbox/pyannotate">PyAnnotate</a> —
+A tool that records the types of Python variables <strong>at runtime</strong>, and then
+generates approximate static type annotations.</p>
+<p><a name=uftrace>#uftrace</a><br/>
+<a href="https://github.com/namhyung/uftrace">uftrace</a> —
+A unique and useful tool for <strong>user-space function tracing</strong>.  You tell your C
+compiler to instrument a binary, run it under <code>uftrace record</code>, and query the
+results.  I used it to speed up the Oils parser.  I use shell so I can use <em>and
+automate</em> tools like <code>uftrace</code>.  Shell helps you write better native code.</p>
+<a name="containers-os-virtualization"></a>
+<a name="toc_9"></a>
+<h4>Containers / OS Virtualization</h4>
+<p><a name=OCI>#OCI</a><br/>
+<a href="https://opencontainers.org/">Open Container Initiative</a> —
+A standard for containers based on Docker.  Docker is being &quot;refactored away&quot;
+into something less monolithic and more Unix-y.</p>
+<p><a name=docker>#docker</a><br/>
+<a href="https://docker.com">Docker</a> —
+A monolithic toolkit for containers.  It has a build tool based on a shell-like
+DSL, registry push/pull, and a container runtime.</p>
+<p><a name=podman>#podman</a><br/>
+<a href="https://podman.io/">Podman</a> —
+A container runtime that's part of Red Hat's rewrite / refactoring of the
+Docker ecosystem.  They are making Docker more modular and Unix-y, e.g.  by
+eliminating superfluous daemon.</p>
+<a name="the-unix-shell"></a>
+<a name="toc_10"></a>
+<h3>The Unix Shell</h3>
+<a name="useful-documents"></a>
+<a name="toc_11"></a>
+<h4>Useful Documents</h4>
+<p><a name=posix-shell-spec>#posix-shell-spec</a><br/> <a href="http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html">POSIX Shell
+Spec</a>: POSIX specification for the shell (<code>sh</code>).  It seems
+that <code>ksh</code> was the dominant shell at the time of standardization, so <code>bash</code>
+implemented POSIX + a lot of ksh.</p>
+<p><a name=posix-grammar>#posix-grammar</a><br/> <a href="http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_10_02">POSIX Shell
+Grammar</a>: Subsection of the spec which has a BNF-style grammar.</p>
+<p><a name=google-style-guide>#google-style-guide</a><br/> <a href="https://google.github.io/styleguide/shell.xml#Test,_%5B_and_%5B%5B">Google Shell Style
+Guide</a> -- Unofficial shell style guide at Google, which
+points out some deficiencies in the shell language.  (Not all shell scripts at
+Google attempt to conform to this style.)</p>
+<p><a name=aosa-book-bash>#aosa-book-bash</a><br/>
+<a href="http://www.aosabook.org/en/bash.html">Chapter on Bash in the Architecture of Open Source Applications</a> —
+An excellent article by <a href="#bash">bash</a> maintainer Chet Ramey on bash's internal
+structure.</p>
+<a name="shell-language-terms"></a>
+<a name="toc_12"></a>
+<h4>Shell Language Terms</h4>
+<p>Trivia about the Unix shell language, including the common ksh/bash extensions.</p>
+<p><a name=here-doc>#here-doc</a><br/>
+<a href="http://tldp.org/LDP/abs/html/here-docs.html">Here Document</a> —
+A construct in shell for writing lines of text to be fed to <code>stdin</code> of a
+process.  Perl, Ruby, and PHP borrowed here docs from shell.</p>
+<p><a name=shell-builtin>#shell-builtin</a><br/>
+<a href="https://www.gnu.org/software/bash/manual/html_node/Shell-Builtin-Commands.html">Shell Builtin</a> —
+A shell builtin is just like an external command, e.g.  <code>/bin/ls</code>, except it's
+linked into the <code>sh</code> binary.  It takes an <code>argv</code> array, returns an exit code,
+and uses <code>stdin</code>, <code>stdout</code>, and <code>stderr</code>.</p>
+<p><a name=dynamic-scope>#dynamic-scope</a><br/>
+<a href="https://stackoverflow.com/questions/22394089/static-lexical-scoping-vs-dynamic-scoping-pseudocode">Dynamic Scope</a> —
+A method of resolving variable names.  In the case of Unix shell, it means
+that you look up the stack for variable references, rather than looking only in
+the current stack frame.  Early Lisps used these semantics, but later Lisps
+switched to <em>lexical scope</em>.</p>
+<p><a name=job-control>#job-control</a><br/>
+<a href="https://en.wikipedia.org/wiki/Job_control_%28Unix%29">Job Control</a> —
+A feature of the interactive POSIX shell that's deeply intertwined with the Unix kernel.
+It lets you hit Ctrl-Z to suspend <code>vim</code> and get a shell.  It lets you cancel <strong>all</strong> the processes
+in a pipeline with Ctrl-C.</p>
+<a name="oils-terms"></a>
+<a name="toc_13"></a>
+<h4>Oils Terms</h4>
+<p><a name=proc>#proc</a><br/>
+<a href="//oilshell.org/release/latest/doc/oil-proc-func-block.html">YSH Procs</a> —
+In YSH, shell-like functions are declared with the <code>proc</code> keyword.  Think of
+them as &quot;procedures&quot; or &quot;processes&quot;.</p>
+<ul>
+<li>Like shell functions, they have <code>stdin</code>, <code>stdout</code>, and return an exit code.</li>
+<li>Unlike shell functions, they have named parameters and lack <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic
+scope</a>.</li>
+</ul>
+<a name="shell-implementations"></a>
+<a name="toc_14"></a>
+<h4>Shell Implementations</h4>
+<p><a name=thompson-shell>#thompson-shell</a><br/>
+<a href="https://www.gnu.org/software/bash/">Thompson Shell</a> —
+The first Unix shell, written by Ken Thompson.  It had pipelines and redirects,
+but it's not a programming language.  It's an interactive tool that is notably
+separate from the Unix kernel.</p>
+<p>See the paper in <a href="//www.oilshell.org/blog/2021/08/history-trivia.html">Unix Shell: History and
+Trivia</a>.</p>
+<p><a name=bourne-shell>#bourne-shell</a><br/>
+<a href="https://www.gnu.org/software/bash/">Bourne Shell</a> —
+A seminal upgrade to the Thompson shell, written by Stephen Bourne.  It turned
+shell into a programming language with loops, conditionals, and functions.  It
+allows you to redirect and pipe the I/O of these compound structures.</p>
+<p>All modern Unix shells are descendants of the Bourne shell.  That is, it &quot;won&quot;
+over other efforts like Bill Joy's C shell.</p>
+<p><a href="https://www.youtube.com/watch?v=2kEJoWfobpA">Stephen Bourne: Early Days of Unix and design of
+sh</a> (2015, YouTube) is a nice
+historical overview of the project.</p>
+<p><a name=bash>#bash</a><br/>
+<a href="https://www.gnu.org/software/bash/">GNU Bash</a> —
+The most popular implementation of Unix shell.  It was the first program to run
+on the Linux kernel, circa 1991.  <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> is <a href="/release/latest/doc/known-differences.html">largely
+compatible</a> with it.  Also see the <a href="https://en.wikipedia.org/wiki/Bash_(Unix_shell)">Wikipedia page for
+bash</a>.</p>
+<p><a name=dash>#dash</a><br/>
+<a href="https://wiki.ubuntu.com/DashAsBinSh">Debian Almquist Shell</a> —
+A fork of the Almquist Shell that Debian and Ubuntu use for shell scripts, but
+not the default login shell.  If you look at the busybox <code>ash</code> source code, it
+is apparent that they are similar.  The things I notice most about it are that
+<code>kebab-case</code> function names aren't allowed, and it has a bug related to
+<code>readonly</code> and tilde expansion.</p>
+<p><a name=fish>#fish</a><br/>
+<a href="https://fishshell.com/">fish</a> —
+Probably the most popular non-POSIX shell.  It has a rich interactive
+experience.</p>
+<p><a name=mksh>#mksh</a><br/>
+<a href="https://www.mirbsd.org/mksh.htm">MirBSD Korn Shell</a> —
+A fork of <a href="#pdksh">pdksh</a> (Public Domain Korn Shell).  This is the default
+shell on Android.  Testing this shell against others has taught me that many
+&quot;bash-isms&quot; are actually &quot;ksh-isms&quot;.  <code>bash</code> implemented many <code>ksh</code> extensions
+for compatibility.</p>
+<p><a name=zsh>#zsh</a><br/>
+<a href="https://www.zsh.org/">zsh</a> —
+<code>zsh</code> is probably the second most popular interactive shell, after bash.  It's
+not POSIX-compliant by default, although it has options to make it POSIX
+compliant.  Apparently, it doesn't split words by default.</p>
+<p><a name=ksh>#ksh</a><br/>
+<a href="https://en.wikipedia.org/wiki/KornShell">Korn Shell</a> —
+ksh was an extension of the Bourne shell, developed at Bell Labs.
+<a href="#pdksh">pdksh</a> and <a href="#bash">bash</a> cloned many of its features.</p>
+<p><a name=pdksh>#pdksh</a><br/>
+<a href="https://directory.fsf.org/wiki/Pdksh">Public Domain Korn Shell</a> —
+A defunct clone of AT&amp;T's Korn shell that survives in at least two forks: the
+OpenBSD shell and <a href="#mksh">mksh</a>.</p>
+<a name="programming-languages"></a>
+<a name="toc_15"></a>
+<h3>Programming Languages</h3>
+<a name="language-concepts"></a>
+<a name="toc_16"></a>
+<h4>Language Concepts</h4>
+<p><a name=metaprogramming>#metaprogramming</a><br/>
+<a href="blog/2017/12/17.html">Metaprogramming</a> —
+A very general term for <strong>code that operates on code</strong>.  Textual code
+generation, C macros, C++ templates, Python reflection, non-standard evaluation
+in R, and Lisp macros are all examples of metaprogramming.</p>
+<p>In dynamic languages, the metaprogramming language is typically the language
+itself, while statically-typed languages require a different metaprogramming
+language.  See <a href="blog/2016/12/05.html">Type Checking vs. Metaprogramming; ML vs.
+Lisp</a>.</p>
+<p><a name=metalanguage>#metalanguage</a><br/>
+<a href="https://en.wikipedia.org/wiki/Metalanguage">Metalanguage</a> —
+In programming, a metalanguage is the language used to <strong>describe or
+implement</strong> another language.  <a href="#DSL">DSLs</a> are often used as metalanguages.
+For example,</p>
+<ul>
+<li>CPython's metalanguage is mostly C, but also includes <a href="#pgen2">pgen</a> and
+<a href="#zephyr-asdl">ASDL</a>.</li>
+<li><a href="#pypy">PyPy</a>'s metalanguages are Python and RPython.</li>
+<li>Oils' metalanguages are the dialect of statically-typed Python that
+<a href="#mycpp">mycpp</a> accepts, <a href="#zephry-asdl">ASDL</a> and the regex syntax in
+Python's <code>re</code> module.  It's an abstract program but we cobbled together some
+concrete tools to express it.</li>
+</ul>
+<p><a name=language-composition>#language-composition</a><br/>
+<a href="blog/2017/12/17.html">Language Composition</a> —
+When parsing almost any language, it's useful to think of it as a composition
+of <strong>sublanguages</strong>.  Shell is an extreme case of this, but it's true for
+Python, JavaScript, HTML, etc.</p>
+<p><a name=DSL>#DSL</a><br/>
+<a href="http://wiki.c2.com/?LittleLanguage">Domain-Specific Language</a> —
+The Unix shell is glue for DSLs like <a href="#sed">sed</a>, <a href="#awk">awk</a>, <a href="#find">find</a>,
+<a href="#expr">expr</a>, regexes, globs, and more.  Oils is implemented with DSLs like
+<a href="#re2c">re2c</a> and <a href="#zephyr-asdl">Zephyr ASDL</a>.</p>
+<p><a name=dependency-inversion>#dependency-inversion</a><br/>
+<a href="https://en.wikipedia.org/wiki/Dependency_inversion_principle">Dependency Inversion</a> —
+A style of programming that makes programs more modular.  Most of the
+program is initialized in <code>main()</code> and &quot;wired together&quot;.</p>
+<ul>
+<li>Oils uses dependency inversion of I/O and state, which is like functional
+programming in an OO language.</li>
+<li>Reusable C libraries also use this style.  For example,
+<a href="https://sqlite.org">sqlite</a> uses it for the file system interface and
+<a href="https://lua.org">Lua</a> uses it for the interpreter state.</li>
+<li>There are no &quot;DI frameworks&quot; in Oils, which is why I now use the term
+&quot;dependency inversion&quot; over &quot;dependency injection&quot;.</li>
+</ul>
+<p><a name=string-hygiene>#string-hygiene</a><br/>
+<a href="TODO">String Hygiene</a> -- A property of programs that means that <strong>code</strong> isn't
+confused with <strong>data</strong>.  This is critical for security in distributed systems.
+Shell injection, SQL injection, and HTML injection (XSS) are examples of
+security problems arising from the lack of string hygiene.  Solutions to the
+problem include avoiding string concatenation and proper language-specific escaping.
+avoiding strings.</p>
+<p><a name=whipupitude>#whipupitude</a><br/>
+<a href="https://www.shlomifish.org/humour/fortunes/show.cgi?id=larry-wall-big-divide">Whipupitude</a> —
+The aptitude for whipping things up, coined by Perl creator Larry Wall.  Shell and Perl both have this property!</p>
+<p><a name=data-language>#data-language</a><br/>
+<a href="https://www.oilshell.org/">Data Language</a> —
+TODO: Add link.  A language for denoting data, like <a href="/cross-ref.html?tag=TSV#TSV">TSV</a>, <a href="/cross-ref.html?tag=HTML#HTML">HTML</a>, or Clojure's EDN.
+Data languages can be tied to a specific language, or &quot;polyglot&quot;.  In the latter case, it's also an &quot;interchange format&quot;, like <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>.</p>
+<a name="little-languages-dsls"></a>
+<a name="toc_17"></a>
+<h4>Little Languages / DSLs</h4>
+<p><a name=sed>#sed</a><br/>
+<a href="https://en.wikipedia.org/wiki/Sed">sed</a> —
+A text stream editor using a batch execution model.</p>
+<p><a name=awk>#awk</a><br/>
+<a href="https://en.wikipedia.org/wiki/AWK">Awk</a> —
+A classic Unix programming language for text processing.</p>
+<p><a name=extended-glob>#extended-glob</a><br/>
+<a href="https://askubuntu.com/questions/889744/what-is-the-purpose-of-shopt-s-extglob">Extended Glob</a> —
+An unusual syntax in <a href="#ksh">ksh</a> and <a href="#bash">bash</a> that gives <strong>globs</strong> the
+power of <strong>regular expressions</strong>.</p>
+<ul>
+<li>For example, <code>*.@(sh|py)</code> is like matching <code>*.py</code> or <code>*.sh</code>.  The
+<code>@(foo|bar)</code> construct allows <em>alternation</em>.</li>
+</ul>
+<p><a name=ERE>#ERE</a><br/>
+<a href="https://en.wikipedia.org/wiki/Regular_expression#POSIX_basic_and_extended">POSIX Extended Regular Expressions</a> —
+The flavor of regex that <a href="#bash">bash</a> supports.</p>
+<ul>
+<li><a href="#awk">awk</a> only supports EREs</li>
+<li><code>grep</code> supports it with <code>-E</code>, or <code>egrep</code></li>
+<li>GNU <a href="#sed">sed</a> supports it with <code>--regexp-extended</code></li>
+</ul>
+<p><a name=make>#make</a><br/>
+<a href="https://en.wikipedia.org/wiki/Make_(software)">Make</a> —
+A classic Unix build tool that is also a Turing-complete programming language.</p>
+<p><a name=shell>#shell</a><br/>
+<a href="https://en.wikipedia.org/wiki/Unix_shell">Shell</a> —
+An interactive program to control the Unix operating system, as well as a
+programming language.  Oils aims treat shell as a serious programming language.</p>
+<p><a name=M4>#M4</a><br/>
+<a href="https://en.wikipedia.org/wiki/M4_(computer_language)">M4</a> —
+GNU <a href="#autotools">Autotools</a> is written in the text preprocessor language M4.
+It's similar to the C preprocessor, except that it's Turing-complete.  It was
+designed to support a dialect of Fortran.</p>
+<a name="related-languages"></a>
+<a name="toc_18"></a>
+<h4>Related Languages</h4>
+<p><a name=algol-like>#algol-like</a><br/>
+<a href="http://wiki.c2.com/?AlgolFamily">ALGOL Family of Languages</a> —
+C-like imperative languages with functions, loops, conditionals, etc.</p>
+<p><a name=tcl>#tcl</a><br/>
+<a href="https://en.wikipedia.org/wiki/Tcl">Tcl</a> —
+An embedded scripting language that's influenced some alternative shells.  It
+has Lisp-like properties.</p>
+<p><a name=lua>#lua</a><br/>
+<a href="https://www.lua.org">Lua</a> —
+Lua is an <strong>embedded</strong> scripting language, which means that the interpreter is
+a <strong>library</strong>.  It has no global variables, and requires explicit capabilities
+to I/O.  While the Lua language has some deficiencies, this aspect of Lua will
+influence Oils.</p>
+<p><a name=r-language>#r-language</a><br/>
+<a href="https://www.r-project.org/">R language</a> —
+A language for statistical computing, including data manipulation, modelling,
+and visualization.</p>
+<p><a name=ML>#ML</a><br/>
+<a href="https://en.wikipedia.org/wiki/ML_(programming_language)">ML</a> —
+ML stands for &quot;meta-language&quot;: a language for manipulating languages.
+The ML family of languages includes OCaml and Haskell, and its distinguishing
+feature is the data model of <a href="#adt">algebraic data types</a>.  The domain-specific
+language <a href="#zephyr-asdl">ASDL</a> uses this data model.</p>
+<p><a name=cpython>#cpython</a><br/>
+<a href="https://en.wikipedia.org/wiki/CPython">CPython</a> —
+The standard implementation of the Python programming language, written in C.</p>
+<p><a name=python>#python</a><br/>
+<a href="https://en.wikipedia.org/wiki/Python_(programming_language)">Python</a> —
+The popular language that I wrote OSH in.</p>
+<p><a name=ocaml>#ocaml</a><br/>
+<a href="http://ocaml.org/">OCaml</a> —
+A popular modern implementation of <a href="#ML">ML</a>.  If I hadn't prototyped
+OSH in Python, OCaml would have been a good choice.  The compiler and runtime
+are well-engineered and well-documented.  They may influence
+<a href="#opy">OPy</a>.</p>
+<a name="algorithms-and-data-structures"></a>
+<a name="toc_19"></a>
+<h4>Algorithms and Data Structures</h4>
+<p><a name=cfg>#cfg</a><br/>
+<a href="https://en.wikipedia.org/wiki/Context-free_grammar">Context-Free Grammar</a> -- A formalism for expressing the syntax of
+programming languages.  Shell can only be partially specified using a CFG; the
+POSIX grammar is incomplete.</p>
+<p><a name=DFA>#DFA</a><br/>
+<a href="https://en.wikipedia.org/wiki/Deterministic_finite_automaton">DFA</a> —
+A deterministic finite automaton is a mathematical notion of a state machine.
+A regular expression can be translated to a DFA via an <a href="#NFA">NFA</a>.  You feed
+the string to the DFA and see if you end up in an &quot;accept&quot; state.  That happens
+if any only if the string matches the regular expressions.</p>
+<p><a name=NFA>#NFA</a><br/>
+<a href="https://en.wikipedia.org/wiki/Nondeterministic_finite_automaton">NFA</a> —
+Every regular expression can be translated to an equivalent nondeterministic
+finite automaton.  You can think of it as a state machine which magically
+&quot;knows&quot; which transition to take at each step.  It's unintuitive to many
+programmers; a <a href="#DFA">DFA</a> is closer to our notion of computation.</p>
+<p><a name=regular-language>#regular-language</a><br/>
+<a href="https://en.wikipedia.org/wiki/Regular_language">Regular Language</a> —
+The class of formal languages that &quot;regexes&quot; are based on.  Perl-style regexes
+have many non-regular constructs, making them <a href="https://swtch.com/%7Ersc/regexp/regexp1.html">harder to
+recognize</a> than regular languages.</p>
+<p>Every regular language corresponds to a finite automaton that recognizes it.
+Roughly speaking, a <a href="#DFA">DFA</a> has no memory and looks at each byte of input
+exactly once.</p>
+<p><a href="#eggex">Eggex</a> encourages the use of regular languages, but it also has clear
+syntax for Perl-style backtracking constructs.</p>
+<p><a name=peg>#peg</a><br/>
+<a href="http://bford.info/packrat/">Parsing Expression Grammar</a> -- An alternative formalism to context-free
+grammars, which may be better-suited to expressing shell syntax.</p>
+<p><a name=lexical-state>#lexical-state</a><br/>
+<a href="blog/2016/10/19.html">Lexical State</a> —
+A simple parsing technique for dealing with language composition, i.e.
+&quot;sublanguages&quot; or &quot;dialects&quot;.  Renamed to <a href="#lexer-modes">lexer modes</a> (because
+the lexer has other unrelated state).</p>
+<p><a name=lexer-modes>#lexer-modes</a><br/>
+<a href="blog/2017/12/17.html">Lexer Modes</a> —
+A simple parsing technique for dealing with language composition, i.e.
+&quot;sublanguages&quot; or &quot;dialects&quot;.  Formerly <a href="#lexical-state">lexical state</a>.  See
+posts on #<a href="/blog/tags.html?tag=lexing#lexing">lexing</a>.</p>
+<p><a name=precedence-climbing>#precedence-climbing</a><br/>
+<a href="http://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing">Precedence Climbing</a> -- A simple algorithm for top-down
+parsing of expressions.  It's <a href="blog/2016/11/01.html">a special case</a> of <a href="#tdop-parsing">top-down operator precedence
+parsing</a>.</p>
+<p><a name=tdop-parsing>#tdop-parsing</a><br/>
+<a href="blog/2016/11/03.html">Top-Down Operator Precedence Parsing</a> -- Also called Pratt
+parsing, this is a general algorithm for parsing expressions with multiple
+levels of precedence.</p>
+<p><a name=recursive-descent>#recursive-descent</a><br/>
+<a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">Recursive Descent Parsing</a> -- The most widely-used parsing
+technique.  Recursive descent parsers are written by hand, often following a
+grammar.  Each recursive procedure in the parser corresponds to a &quot;production&quot;
+in a <a href="#cfg">context-free grammar</a>.</p>
+<p>They are flexible, e.g. in accomodating ad hoc parsing rules and good error
+messages.</p>
+<p>Recursive descent parsing is &quot;top-down&quot; parsing.</p>
+<p><a name=top-down-parsing>#top-down-parsing</a><br/>
+<a href="https://en.wikipedia.org/wiki/Top-down_parsing">Top-Down Parsing</a> -- Parsing algorithms can be categorized
+as either top-down or bottom-up.  <a href="#antlr">ANTLR</a> uses top-down algorithms,
+while <a href="#yacc">yacc</a> uses bottom-up algorithms.  <a href="#tdop-parsing">Pratt parsing</a>
+is a top-down algorithm and <a href="#recursive-descent">recursive descent</a> is a
+top-down technique.  See <a href="http://blog.reverberate.org/2013/07/ll-and-lr-parsing-demystified.html">LL and LR Parsing Demystified</a>.</p>
+<p><a name=AST>#AST</a><br/>
+<a href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">Abstract Syntax Tree</a> —
+In contrast to an AST, a <strong>parse tree</strong> is derived only from the rules of the
+grammar for a language.  You don't need to annotate your parser with nontrivial
+&quot;semantic actions&quot;.  The exact definition is debatable, but in my usage, an AST
+has some simplifications or annotations over a parse tree, depending on what
+you need to do with it: source-to-source translation, interpretation, code
+generation, etc.</p>
+<p><a name=LST>#LST</a><br/>
+<a href="blog/2017/02/11.html">Lossless Syntax Tree</a> —
+An syntax tree with enough detail to reproduce the original source code.</p>
+<ul>
+<li>Compared to a parse tree, it has <strong>less</strong> information: it doesn't contain
+&quot;useless&quot; nodes forming the derivation of the program text from the grammar.</li>
+<li>Compared to an <a href="#AST">abstract syntax tree</a>, it has <strong>more</strong> information.
+For example, it retains information about whitespace and comments.</li>
+</ul>
+<p><a name=adt>#adt</a><br/>
+<a href="https://en.wikipedia.org/wiki/Algebraic_data_type">Algebraic Data Types</a> —
+A data model of sum and product types.  This model is particularly convenient
+for representing the structure of programming languages.</p>
+<p><a name=data-frame>#data-frame</a><br/>
+<a href="/blog/2018/11/30.html">Data Frame</a> —
+A table data structure with dynamically typed columns.  The <a href="#r-language">R
+language</a> is built around data frames, and the <a href="https://pandas.pydata.org/">Pandas</a>
+library borrowed this idea.  It's similar to an SQL table, except that it
+generally lives in memory, rather than on a remote server's disk.</p>
+<a name="software-architecure"></a>
+<a name="toc_20"></a>
+<h3>Software Architecure</h3>
+<a name="architecture-concepts"></a>
+<a name="toc_21"></a>
+<h4>Architecture Concepts</h4>
+<p><a name=perlis-thompson>#perlis-thompson</a><br/>
+<a href="https://github.com/oilshell/oil/wiki/Perlis-Thompson-Principle">Perlis-Thompson Principle</a> —
+A software architecture concept distilled from statements by Alan Perlis and
+Ken Thompson.  Short definition: <em>Software with <strong>fewer concepts</strong> composes,
+scales, and evolves more easily</em>.  This is a tradeoff, not a hard rule.</p>
+<p><a name=narrow-waist>#narrow-waist</a><br/>
+<a href="https://github.com/oilshell/oil/wiki/Perlis-Thompson-Principle">Narrow Waist</a> —
+The narrow waist (of an hourglass) is a software concept that solves an
+interoperability problem, avoiding an O(M × N) explosion.    All of these
+are narrow waists:</p>
+<ul>
+<li>Interchange formats like JSON</li>
+<li>Networking protocols like HTTP</li>
+<li>Operating system interfaces like Win32 and POSIX</li>
+<li>Instruction set architectures like x86, and arguably WebAssembly.</li>
+</ul>
+<p><a name=m-by-n-explosion>#m-by-n-explosion</a><br/>
+<a href="https://github.com/oilshell/oil/wiki/Perlis-Thompson-Principle">O(M × N) code explosion</a> —
+A system may need bespoke code to fill in <em>every cell</em> of a grid, like M
+algorithms and N data structures, or M languages and N operating systems.
+This problem can often be mitigated by better software architecture, e.g.
+with protocols, interchange formats, or intermediate representations.</p>
+<p><a name=API>#API</a><br/>
+<a href="https://news.ycombinator.com/item?id=12029321">Application Programming Interface (API)</a> —
+A software interface specified in a programming language, often with static
+linking.  Contrast with <a href="/cross-ref.html?tag=ABI#ABI">ABI</a>: Application Binary Interface.</p>
+<p><a name=ABI>#ABI</a><br/>
+<a href="https://news.ycombinator.com/item?id=12029321">Application Binary Interface (ABI)</a> —
+The &quot;runtime reality&quot; of a software interface, often derived from an
+<a href="/cross-ref.html?tag=API#API">API</a>.  The <a href="https://justine.lol/ape.html">Actually Portable Executable</a>
+project takes this idea to an extreme, building on the x86-64 Linux ABI.  It
+essentially <strong>ignores</strong> the APIs and &quot;puns&quot; multiple ABIs.</p>
+<p><a name=IPC>#IPC</a><br/>
+<a href="https://en.wikipedia.org/wiki/Inter-process_communication">Inter-Process Communication</a> —
+A type of software composition that involves messages exchanged between
+processes.  It differs from composition via APIs in that the programs on each
+side of the &quot;wire&quot; aren't compiled and deployed together, aren't synchronized
+in the same &quot;thread&quot;, and may be written in different programming languages.</p>
+<p>IPC is similar to networking, but the links are reliable rather than
+unreliable.  RPC abstractions can be built on top of IPC or networking.</p>
+<a name="protocols"></a>
+<a name="toc_22"></a>
+<h4>Protocols</h4>
+<p><a name=CGI>#CGI</a><br/>
+<a href="https://en.wikipedia.org/wiki/Common_Gateway_Interface">Common Gateway Interface</a> —
+A Unix-y protocol for creating dynamic web content.  It was more popular in the
+90's, but is still used today.  The more complex FastCGI protocol can fix
+performance problems.</p>
+<a name="interchange-formats"></a>
+<a name="toc_23"></a>
+<h4>Interchange Formats</h4>
+
+<p><a name=utf8>#utf8</a><br/>
+<a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a> —
+The best and most popular Unicode encoding.  It's backward-compatible with
+ASCII, so less code has to be rewritten to support Unicode.  See <a href="/blog/tags.html?tag=utf8#utf8">blog posts
+tagged <code>#utf8</code></a>.</p>
+<p><a name=JSON>#JSON</a><br/>
+<a href="https://www.json.org/">JSON</a> —
+A versionless interchange format for hierarchical data.  It was derived from the
+syntax of JavaScript.</p>
+<p><a name=j8-notation>#j8-notation</a><br/>
+<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">J8 Notation</a> —
+A collection of data languages based on JSON.  It specifies concrete representations for strings/bytes, records (<a href="/cross-ref.html?tag=JSON8#JSON8">JSON8</a>), and tables (<a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>).</p>
+<p><a name=j8-string>#j8-string</a><br/>
+<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">J8 String</a> —
+An extension of JSON strings with <code>\yff</code> for binary data and <code>\u{123456}</code> to move past surrogate pairs.  Example: <code>u'mu = \u{3bc}'</code>.</p>
+<p><a name=JSON8>#JSON8</a><br/>
+<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">JSON8</a> —
+An extension of JSON with <a href="/cross-ref.html?tag=j8#j8">J8 strings</a>.  Any language that has JSON library should also have a JSON8 library.</p>
+<p><a name=TSV>#TSV</a><br/>
+<a href="https://en.wikipedia.org/wiki/Tab-separated_values">Tab-Separated Values</a> —
+A text format for tables, where cells are separated by tabs, and each row is a line.  There's no standard way to denote a literal tab or newline in a cell.</p>
+<p><a name=TSV8>#TSV8</a><br/>
+<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">TSV8</a> —
+An extension of TSV with <a href="/cross-ref.html?tag=j8#j8">J8 strings</a>.  Any language that has a JSON and JSON8 library should also have
+a TSV8 library.</p>
+<p><a name=YAML>#YAML</a><br/>
+<a href="https://yaml.org/">YAML</a> —
+A human-editable configuration file syntax that's a superset of JSON.  It's
+quirky, but widely used in the cloud.  It <a href="https://news.ycombinator.com/item?id=26671136">confuses
+values</a> like the string &quot;NO&quot; and
+the boolean <code>false</code>.</p>
+<p><a name=QSN>#QSN</a><br/>
+<a href="//oilshell.org/release/latest/doc/qsn.html">Quoted String Notation (QSN)</a> —
+A data format for strings which looks like <code>'foo \x00 bar\n'</code>.  It's an
+adaptation of Rust's string literal syntax with two main use cases:</p>
+<ul>
+<li>To exchange data between different programs, like JSON (which can't express
+arbitrary byte strings).</li>
+<li>To print arbitrary filenames to a terminal.</li>
+</ul>
+<p>QSN will be deprecated in favor of <a href="/cross-ref.html?tag=j8#j8">J8 Strings</a>.</p>
+<p><a name=QTT>#QTT</a><br/>
+<a href="//oilshell.org/release/latest/doc/qtt.html">Quoted, Typed Tables</a> —
+An obsolete name, now <a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>.</p>
+<p><a name=QTSV>#QTSV</a><br/>
+<a href="//oilshell.org/release/latest/doc/qtt.html">QTSV</a> —
+An obsolete name, now <a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>.</p>
+<a name="books"></a>
+<a name="toc_24"></a>
+<h3>Books</h3>
+<p><a name=APUE>#APUE</a><br/>
+<a href="http://www.apuebook.com/">Advanced Programming in the Unix Environment</a> —
+A classic book on talking to the Unix kernel with C code.  A shell uses a very old subset of the Unix interface, so it works the same way on Linux, OS X, and BSD Unixes.</p>
+<p><a name=dsl-book>#dsl-book</a><br/>
+<a href="http://martinfowler.com/books/dsl.html">Domain Specific Languages by Martin Fowler</a> —
+A book of patterns for implementing DSLs.  Discusses <a href="#lexical-state">lexical
+state</a>.</p>
+<a name="project-infrastructure"></a>
+<a name="toc_25"></a>
+<h3>Project Infrastructure</h3>
+<p><a name=zulip>#zulip</a><br/>
+<a href="https://oilshell.zulipchat.com/">Zulip Chat</a> —
+Zulip is a hybrid of e-mail and chat that Oils users and developers can use.
+Log in to <a href="https://oilshell.zulipchat.com/">oilshell.zulipchat.com</a> with Github
+or Google.  I sometimes summarize Zulip threads in blog posts tagged
+#<a href="/blog/tags.html?tag=zulip-links#zulip-links">zulip-links</a>.</p>
+
+
+<div style="margin-bottom: 40em;">
+</div>
+
+<hr/>
+
+</body>
+</html>
