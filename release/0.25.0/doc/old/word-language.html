@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Word Language</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/word-language.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Word Language</h1>
+<p>Recall that Oil is composed of three interleaved languages: <strong>words</strong>,
+<a href="command-language.html">commands</a>, and <a href="expression-language.html">expressions</a>.</p>
+<p>This doc describes words, but only the things that are <strong>not</strong> in:</p>
+<ul>
+<li><a href="oil-language-tour.html">A Tour of the Oil Language</a></li>
+<li>The <code>#word-lang</code> section of <a href="osh-help-topics.html#word-lang">OSH Help
+Topics</a></li>
+<li>The <code>#word-lang</code> section of <a href="oil-help-topics.html#word-lang">Oil Help
+Topics</a></li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#whats-a-word">What's a Word?</a></div>
+  <div class="toclevel1"><a href="#contexts-where-words-are-used">Contexts Where Words Are Used</a></div>
+  <div class="toclevel2"><a href="#words-are-part-of-expressions-and-commands">Words Are Part of Expressions and Commands</a></div>
+  <div class="toclevel2"><a href="#word-sequences-in-for-loops-and-array-literals">Word Sequences: in for loops and array literals</a></div>
+  <div class="toclevel2"><a href="#oil-vs-bash-array-literals">Oil vs. Bash Array Literals</a></div>
+  <div class="toclevel2"><a href="#oil-discourages-context-sensitive-evaluation">Oil Discourages Context-Sensitive Evaluation</a></div>
+  <div class="toclevel1"><a href="#sigils">Sigils</a></div>
+  <div class="toclevel2"><a href="#means-returns-one-string"><code>$</code> Means &quot;Returns One String&quot;</a></div>
+  <div class="toclevel2"><a href="#means-returns-an-array-of-strings"><code>@</code> Means &quot;Returns An Array of Strings&quot;</a></div>
+  <div class="toclevel1"><a href="#osh-features">OSH Features</a></div>
+  <div class="toclevel2"><a href="#word-splitting-and-empty-string-elision">Word Splitting and Empty String Elision</a></div>
+  <div class="toclevel2"><a href="#implicit-joining">Implicit Joining</a></div>
+  <div class="toclevel2"><a href="#extended-globs">Extended Globs</a></div>
+</div>
+<a name="whats-a-word"></a>
+<h2>What's a Word?</h2>
+<p>A word is an expression like <code>$x</code>, <code>&quot;hello $name&quot;</code>, or <code>{build,test}/*.py</code>.  It
+evaluates to a string or an array of strings.</p>
+<p>Generally speaking, Oil behaves like a simpler version of POSIX shell / bash.
+Sophisticated users can read <a href="simple-word-eval.html">Simple Word Evaluation</a>
+for a comparison.</p>
+<a name="contexts-where-words-are-used"></a>
+<h2>Contexts Where Words Are Used</h2>
+<a name="words-are-part-of-expressions-and-commands"></a>
+<h3>Words Are Part of Expressions and Commands</h3>
+<p>Part of an expression:</p>
+<pre><code>var x = ${y:-'default'}
+</code></pre>
+<p>Part of a command:</p>
+<pre><code>echo ${y:-'default'}
+</code></pre>
+<a name="word-sequences-in-for-loops-and-array-literals"></a>
+<h3>Word Sequences: in for loops and array literals</h3>
+<p>The three contexts where splitting and globbing apply are the ones where a
+<strong>sequence</strong> of words is evaluated (<code>EvalWordSequence</code>):</p>
+<ol>
+<li><a href="osh-help.html?topic=simple-command#simple-command">Command</a>: <code>echo $x foo</code></li>
+<li><a href="osh-help.html?topic=for#for">For loop</a>: <code>for i in $x foo; do ...</code></li>
+<li><a href="osh-help.html?topic=array#array">Array Literals</a>: <code>a=($x foo)</code> and <code>var a = :| $x foo |</code> (<a href="osh-help.html?topic=oil-array#oil-array">oil-array</a>)</li>
+</ol>
+<a name="oil-vs-bash-array-literals"></a>
+<h3>Oil vs. Bash Array Literals</h3>
+<p>Oil has a new array syntax, but it also supports the bash-compatible syntax:</p>
+<pre><code>local myarray=(one two *.py)  <span class="sh-comment"># bash</span>
+
+var myarray = :| one two *.py |  <span class="sh-comment"># Oil style</span>
+</code></pre>
+<a name="oil-discourages-context-sensitive-evaluation"></a>
+<h3>Oil Discourages Context-Sensitive Evaluation</h3>
+<p>Shell also has contexts where it evaluates words to a <strong>single string</strong>, rather
+than a sequence, like:</p>
+<!-- done pygments -->
+
+<p>The behavior of these snippets diverges a lot in existing shells.  That is,
+shells are buggy and poorly-specified.</p>
+<p>Oil disallows most of them.  Arrays are considered separate from strings and
+don't randomly &quot;decay&quot;.</p>
+<p>Related: the RHS of an Oil assignment is an expression, which can be of any
+type, including an array:</p>
+<pre><code>var parts = split(x)       <span class="sh-comment"># returns an array</span>
+var python = glob('*.py')  <span class="sh-comment"># ditto</span>
+
+var s = join(parts)        <span class="sh-comment"># returns a string</span>
+</code></pre>
+<a name="sigils"></a>
+<h2>Sigils</h2>
+<p>This is a recap of <a href="syntax-feelings.html">A Feel for Oil's Syntax</a>.</p>
+<a name="means-returns-one-string"></a>
+<h3><code>$</code> Means &quot;Returns One String&quot;</h3>
+<p>Examples:</p>
+<ul>
+<li>
+<p>All substitutions: var, command, arith</p>
+<ul>
+<li>TODO: Do we have <code>$[a[x+1]]</code> as an expression substitution?</li>
+<li>Or <code>$[ /pat+ /]</code>?</li>
+<li>I don't think so.</li>
+</ul>
+</li>
+<li>
+<p>Inline function calls, a YSH extension: <code>$[join(myarray)]</code></p>
+</li>
+</ul>
+<p>(C-style strings like <code>$'\n'</code> use <code>$</code>, but that's more of a bash anachronism.
+In Oil, <code>c'\n'</code> is preferred.</p>
+<a name="means-returns-an-array-of-strings"></a>
+<h3><code>@</code> Means &quot;Returns An Array of Strings&quot;</h3>
+<p>Enabled with <code>shopt -s parse_at</code>.</p>
+<p>Examples:</p>
+<ul>
+<li><code>@myarray</code></li>
+<li><code>@[arrayfunc(x, y)]</code></li>
+</ul>
+<p>These are both Oil extensions.</p>
+<p>The array literal syntax also uses a <code>@</code>:</p>
+<pre><code>var myarray = :| 1 2 3 |
+</code></pre>
+<a name="osh-features"></a>
+<h2>OSH Features</h2>
+<a name="word-splitting-and-empty-string-elision"></a>
+<h3>Word Splitting and Empty String Elision</h3>
+<p>Uses POSIX behavior for unquoted substitutions like <code>$x</code>.</p>
+<ul>
+<li>The string value is split into args with <code>$IFS</code>.</li>
+<li>If the string value is empty, no args are produced.</li>
+</ul>
+<a name="implicit-joining"></a>
+<h3>Implicit Joining</h3>
+<p>Shell has odd &quot;joining&quot; semantics, which are supported in Oil but generally
+discouraged:</p>
+<pre><code>set -- 'a b' 'c d'
+argv.py X&quot;$@&quot;X  <span class="sh-comment"># =&gt; ['Xa', 'b', 'c', 'dX']</span>
+</code></pre>
+<p>In Oil, the RHS of an assignment is an expression, and joining only occurs
+within double quotes:</p>
+<pre><code><span class="sh-comment"># Oil</span>
+var joined = $x$y    <span class="sh-comment"># parse error</span>
+var joined = &quot;$x$y&quot;  <span class="sh-comment"># OK</span>
+
+<span class="sh-comment"># Shell</span>
+joined=$x$y          <span class="sh-comment"># OK</span>
+joined=&quot;$x$y&quot;        <span class="sh-comment"># OK</span>
+</code></pre>
+<p><a name="extended-glob"></a></p>
+<a name="extended-globs"></a>
+<h3>Extended Globs</h3>
+<p>Extended globs in OSH are a &quot;legacy syntax&quot; modelled after the behavior of
+<code>bash</code> and <code>mksh</code>.  This features adds alternation, repetition, and negation to
+globs, giving the power of regexes.</p>
+<p>You can use them to match strings:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">[[ foo.cc == *.(cc|h) ]] &amp;&amp; echo 'matches'</span>  <span class="sh-comment"># =&gt; matches</span>
+</code></pre>
+<p>Or produce lists of filename arguments:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">touch foo.cc foo.h</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo *.@(cc|h)</span>  <span class="sh-comment"># =&gt; foo.cc foo.h</span>
+</code></pre>
+<p>There are some limitations and differences:</p>
+<ul>
+<li>Extended globs are supported only when Oil is built with GNU libc.
+<ul>
+<li>GNU libc has the <code>FNM_EXTMATCH</code> extension to <code>fnmatch()</code>.  Unlike bash and
+mksh, Oil doesn't implement its own extended glob matcher.</li>
+</ul>
+</li>
+<li>They're more <strong>static</strong>, like in <code>mksh</code>.  When an extended glob appears in a
+word, we evaluate the word, match filenames, and <strong>skip</strong> the rest of the
+word evaluation pipeline.  This means:
+<ul>
+<li>Automatic word splitting is skipped in something like
+<code>$unquoted/@(*.cc|h)</code>.</li>
+<li>You can't use arrays like <code>&quot;$@&quot;</code> and extended globs in the same word, e.g.
+<code>&quot;$@&quot;_*.@(cc|h)</code>.  This is usually nonsensical anyway.</li>
+</ul>
+</li>
+<li>OSH only accepts them in <strong>contexts</strong> that make sense.
+<ul>
+<li>For example, <code>echo foo &gt; @(cc|h)</code> is a runtime error in OSH, but other
+shells will write a file literally named <code>@(cc|h)</code>.</li>
+<li>OSH doesn't accept <code>${undef:-@(cc)}</code>.  But it does accept <code>${x%@(cc)}</code>,
+since string strip operators like <code>%</code> accept a glob.</li>
+</ul>
+</li>
+<li>Extended globbing is always on in OSH, regardless of <code>shopt -s extglob</code>.
+<ul>
+<li>Trivia: <code>bash</code> can't parse some extended globs unless <code>extglob</code> is on.  But
+it parses others when it's off.</li>
+</ul>
+</li>
+<li>Extended globs can't be used in the <code>PATTERN</code> in <code>${x//PATTERN/replace}</code>.
+This is because we only translate normal (non-extended) globs to regexes (in
+order to get the position information necessary for string replacement).</li>
+<li>They're not supported when <code>shopt --set simple_word_eval</code> (Oil word
+evaluation).
+<ul>
+<li>For similar reasons, they're also not supported in assignment builtins.
+(This is a good thing!)</li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

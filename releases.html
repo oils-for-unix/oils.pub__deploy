@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Releases</title>
+    <style>
+/* base.css: Style common to all pages on oilshell.org.
+ */
+
+@media screen and (max-width: 800px) {
+  /* mobile: distance from left/right edge */
+  body {
+    padding: 0 1em;
+  }
+  /* mobile: horizontal scrollbar for code, so the long lines don't make the page small */
+  pre {
+    overflow: auto;
+  }
+}
+
+/* wide screens: Center and limit width for readability */
+@media screen and (min-width: 801px) {
+  body {
+    margin: 0 auto;
+    line-height: 1.4;  /* http://bettermotherfuckingwebsite.com/ */
+    font-size: large;  /* 2024-01 - all pages deserve this */
+  }
+
+  .skinny { width: 30em; }  /* Most blog posts */
+  .wider { width: 45em; }   /* A few posts with tables */
+
+  /* We don't want too many distinct widths, so pre-declare them here. */
+  .width40 { width: 40em; }  /* the default for doc/*.md */
+  .width50 { width: 50em; }  /* releases.html uses this */
+  .width60 { width: 60em; }  /* test/wild, benchmarks */
+
+  .width35 { width: 35em; }  /* May 2022 update.  Make more room for code. */
+}
+
+body {
+  color: #444;
+}
+
+pre {
+  background-color: #EEE;
+  padding: 1em;
+}
+
+/* Remove left indent of bullet.  0em puts the bullet to the LEFT of
+ * surrounding text. */
+ul { padding-left: 1.2em; }
+ol { padding-left: 1.2em; }
+
+#home-link {
+  text-align: right;
+}
+
+#version-in-header {
+  color: darkgreen;
+  font-weight: bold;
+}
+
+#why-sponsor a:link { text-decoration: none }
+#why-sponsor a:hover { text-decoration: underline }
+#why-sponsor a { color: darkgreen; }
+
+#build-timestamp {
+  margin-top: 2em;
+  padding-top: 0.5em;
+  padding-bottom: 2em;
+  border-top: solid 1px #BBB;
+}
+
+.in-progress {
+  color: darkred;
+}
+
+
+/* 
+ * Usage: <table class="col3-right col5-right">
+ *
+ * colgroup/col doesn't work for right-justifying columns
+ */
+
+.col1-right td:nth-child(1),
+.col2-right td:nth-child(2),
+.col3-right td:nth-child(3),
+.col4-right td:nth-child(4),
+.col5-right td:nth-child(5),
+.col6-right td:nth-child(6),
+.col6-right td:nth-child(7),
+.col6-right td:nth-child(8) {
+  text-align: right
+}
+/* Style for checksum, file size, etc.
+ * Included dynamically from release/$VERSION/index.html, and statically
+ * built into /releases.html.
+ */
+
+h1 {
+  font-size: 1.5em;  /* reduce to what browsers apparently use for h2 */
+}
+
+h2 {
+  font-size: 1.2em;  /* reduce to what browsers apparently use for h3 */
+
+  padding-top: 1em;  /* separate sections */
+}
+
+h3 {
+  font-size: 1.0em;
+  margin-left: 1em;
+  color: darkgreen;  /* different than blog */
+}
+
+pre {
+  color: green;
+  margin-left: 4em;
+}
+
+code {
+  color: green;
+}
+
+/* END COMMON */
+
+
+/* Download links are in both releases.html and /release/$VERSION/index.html */
+
+.release-table {
+  padding: 1em;
+}
+
+.file-table {
+  padding: 1em;
+  background-color: oldlace;
+}
+
+.file-table table {
+  width: 100%
+}
+
+.file-table-heading {
+  color: darkgreen;
+}
+
+.filename {
+  font-size: large;
+  font-family: monospace;
+}
+
+.size {
+  text-align: right;
+}
+.checksum {
+  font-family: monospace;
+  font-size: small;
+  color: #444;
+}
+
+/* for releases.html */
+.version-number {
+  font-size: large;
+  font-weight: bold;
+}
+
+.date {
+  font-size: medium;
+  color: #555;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+      h1 {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body class="width50">
+    <p id="home-link">
+      <a href="/">oils.pub</a>
+    </p>
+    <h1>Oils Releases</h1>
+
+    <table class="release-table">
+<tr>
+  <td>
+    <span class="date">2024-12-27</span>
+  </td>
+  <td>
+    <a name="0.25.0"></a>
+    <span class="version-number">0.25.0</span>
+  </td>
+  <td>
+    <p>                <a href="release/0.25.0/announcement.html">Announcement</a>
+       &nbsp; | &nbsp; <a href="release/0.25.0/">Docs and Details</a>
+    </p>
+  </td>
+</tr>
+<tr class="file-table-heading">
+  <td></td>
+  <td>File / SHA256 checksum</td>
+  <td class="size">Size</td>
+  <td></td>
+</tr>
+    <tr> 
+      <td></td>
+      <td class="filename"><a href="/download/oils-for-unix-0.25.0.tar.gz">oils-for-unix-0.25.0.tar.gz</a></td>
+      <td class="size">818,854</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan=2 class="checksum">b7ecb6923e2e2fc301087fee6f1370e6607e0ff5214c41efaabf56459d40fdaa</td>
+    </tr>
+    <tr> 
+      <td></td>
+      <td class="filename"><a href="/download/oil-0.25.0.tar.gz">oil-0.25.0.tar.gz</a></td>
+      <td class="size">2,319,278</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan=2 class="checksum">0773334ad14dca266b5c8efe1dc2c2a416b8a45ef49a360dfdeb3fa37672b6f7</td>
+    </tr>
+    <tr> 
+      <td></td>
+      <td class="filename"><a href="/download/oil-0.25.0.tar.xz">oil-0.25.0.tar.xz</a></td>
+      <td class="size">1,629,352</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan=2 class="checksum">2a18608e74fd2fc089bb6dbec6a0c8ac5d21e089c36e58966cf2fe1a932e86a5</td>
+    </tr>
+<tr>
+  <td colspan="3">
+    <div style="padding: 1em;" >
+    </div>
+  </td>
+</tr>
+
+    </table>
+  </body>
+</html>

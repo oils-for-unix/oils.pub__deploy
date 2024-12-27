@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Language Warts</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/warts.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Language Warts</h1>
+<p>This documents describes parts of the YSH language that may be surprising.</p>
+<p>All languages have warts, but most of them don't document them for you!  Even a
+nice language like Python has surprising cases like <code>42,</code> and <code>f(x),</code> being a
+1-tuple (because of the trailing comma).</p>
+<p>The goal of YSH is to remove the many warts of shell, documented at <a href="https://github.com/oilshell/oil/wiki/Shell-WTFs">Shell
+WTFs</a>.  Nonetheless it has some of its own.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#for-bash-compatibility">For Bash Compatibility</a></div>
+  <div class="toclevel2"><a href="#two-left-parens-should-be-separated-by-space">Two Left Parens Should be Separated By Space</a></div>
+  <div class="toclevel2"><a href="#two-different-syntaxes-for-block-and-expr-literals">Two Different Syntaxes For <code>Block</code> and <code>Expr</code> Literals</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="for-bash-compatibility"></a>
+<h2>For Bash Compatibility</h2>
+<a name="two-left-parens-should-be-separated-by-space"></a>
+<h3>Two Left Parens Should be Separated By Space</h3>
+<p>No:</p>
+<pre><code>if ((x + 1) &lt; n) {  <span class="sh-comment"># note ((</span>
+  echo 'less'
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code>if ( (x + 1) &lt; n) {  <span class="sh-comment"># add a space</span>
+  echo 'less'
+}
+</code></pre>
+<p>This is because the <code>((</code> token is for bash arithmetic, which is disallowed in
+YSH.</p>
+<a name="two-different-syntaxes-for-block-and-expr-literals"></a>
+<h3>Two Different Syntaxes For <code>Block</code> and <code>Expr</code> Literals</h3>
+<p>Blocks look different in command vs expression mode:</p>
+<pre><code>cd /tmp {                   <span class="sh-comment"># command mode { }</span>
+  echo $PWD
+}
+var myblock = ^(echo $PWD)  <span class="sh-comment"># expression mode, lazy ^( )</span>
+</code></pre>
+<p>So do expressions:</p>
+<pre><code>myproc | where (age &gt; 10)   <span class="sh-comment"># command mode, lazy ( )</span>
+var myval = age &gt; 10        <span class="sh-comment"># expression mode</span>
+var myexpr = ^[age &gt; 10]    <span class="sh-comment"># expression mode, lazy ^[ ]</span>
+</code></pre>
+<p>It would have been nicer if they were consistent, but shell is already
+inconsistent with <code>$(echo hi)</code> and <code>{ echo hi; }</code>.</p>
+<p>There is consistency in other directions:</p>
+<ul>
+<li><code>^(echo $PWD)</code> is consistent with shell's eagerly evaluated <code>$(echo $PWD)</code>.</li>
+<li><code>^[42 + f(x)]</code> is consistent with expression sub <code>$[42 + f(x)]</code>.</li>
+</ul>
+<p>Most users won't see these literal forms very much.  They're more useful for
+testing and frameworks rather than simple scripts/applications.</p>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li>The doc on <a href="quirks.html">compatibility quirks</a> relates to the OSH language.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

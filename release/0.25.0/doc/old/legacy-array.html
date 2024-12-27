@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Draft</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/legacy-array.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Draft</h1>
+<h2>Operations on Arrays</h2>
+<h3>Initialization</h3>
+<pre><code>declare -a array 
+declare -a array=()
+
+declare -A assoc
+# there is no empty literal here
+</code></pre>
+<p>Also valid, but not necessary since <code>declare</code> is local:</p>
+<pre><code>local -a array
+local -A assoc
+</code></pre>
+<p>Makes a global array:</p>
+<pre><code>array=()
+</code></pre>
+<h3>Array Literals</h3>
+<p>Respects the normal rules of argv.</p>
+<pre><code>prefix=foo
+myarray=(one two -{three,four}- {5..8} *.py &quot;$prefix*.py&quot; '$prefix*.py')
+
+myarray=(
+  $var ${var} &quot;$var&quot; 
+  $(echo hi) &quot;$(echo hi)&quot;
+  $(1 + 2 * 3)
+)
+</code></pre>
+<h3>Associative Array Literals</h3>
+<pre><code>(['k']=v)
+
+Unlike bash, ([0]=v) is still an associative array literal.
+
+It's not an indexed array literal.  This matters when you take slices and
+so forth?
+</code></pre>
+<h3>&quot;${a[@]}&quot; is Evaluating (Splicing)</h3>
+<pre><code>echo &quot;${array[@]}&quot;
+echo &quot;${assoc[@]}&quot;
+</code></pre>
+<p>Not Allowed, unlike in bash!</p>
+<pre><code>$assoc  ${assoc}  &quot;${assoc}&quot;
+${!assoc}  ${assoc//pattern/replace}  # etc.
+</code></pre>
+<h3>Iteration</h3>
+<p>Note that since a for loop takes an array of words, evaluating/splicing works:</p>
+<pre><code>for i in &quot;${a1[@]}&quot; &quot;${a2[@]}&quot;; do
+  echo $i
+done
+</code></pre>
+<h3>${#a[@]} is the Length</h3>
+<pre><code>echo ${#array[@]}
+echo ${#assoc[@]}
+</code></pre>
+<h3>Coercion to String by Joining Elements</h3>
+<pre><code>echo ${!array[@]}
+echo ${!assoc[@]}
+
+echo ${!array[*]}
+echo ${!assoc[*]}
+
+echo &quot;${!array[*]}&quot;
+echo &quot;${!assoc[*]}&quot;
+</code></pre>
+<h3>Look Up By Index / Key With a[]</h3>
+<p>matrix:
+a['x'] a[&quot;x&quot;]
+a[&quot;$x&quot;]
+a[$x]
+a[${x}]
+a[${x#a}]</p>
+<pre><code>a[x] -- allowed
+A[x] -- NOT allowed?  It should be a string
+
+(( 'a' )) -- parsed, but can't evaluate
+
+# This is a string in both cases
+a[0]
+A[0]
+</code></pre>
+<p>undef[0]=1 automatically creates an INDEXED array
+undef=(1)</p>
+<h3>Assign / Append To Location Specified by Index / Key</h3>
+<pre><code>a[expr]=    # int_coerce
+A[expr]=    # no integer coercion
+</code></pre>
+<p>Just like you can append to strings:</p>
+<pre><code>s+='foo'
+</code></pre>
+<p>Append to elements of an array, which are strings:</p>
+<pre><code>a[x+1]+=x
+a[x+1]+=$x
+</code></pre>
+<h3>Slicing With ${a[@]:5:2}</h3>
+<pre><code>${array[@]:1:3}
+</code></pre>
+<p>Note the presence of DISALLOWED VALUES.</p>
+<pre><code># TODO: disallow this?  because no order
+${assoc[@]:1:3}
+</code></pre>
+<p>NOTE: string slicing:</p>
+<h3>Append Array to Array</h3>
+<pre><code>a=(1 2 3)
+a+=(4 5 6)
+</code></pre>
+<h3>Get All Indices With ${!a[@]}</h3>
+<pre><code>echo ${!array[@]}
+echo ${!assoc[@]}
+</code></pre>
+<h3>Vectorized String Operations</h3>
+<pre><code>echo ${array[@]//x/X}
+
+echo ${assoc[@]//x/X}
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

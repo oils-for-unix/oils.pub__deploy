@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Doc Processing in YSH - Notation, Query, Templating</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-doc-processing.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Doc Processing in YSH - Notation, Query, Templating</h1>
+<p>This is a slogan for &quot;maximalist YSH&quot; design:</p>
+<p><em>Documents, Objects, and Tables - HTML, JSON, and CSV</em> †</p>
+<p>This design doc is about the first part - <strong>documents</strong> and document processing.</p>
+<p>† from a paper about the C# language</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#intro">Intro</a></div>
+  <div class="toclevel1"><a href="#use-cases-for-html-processing">Use Cases for HTML Processing</a></div>
+  <div class="toclevel1"><a href="#operations">Operations</a></div>
+</div> 
+<a name="intro"></a>
+<h2>Intro</h2>
+<p>Let's sketch a design for 3 aspects of doc processing:</p>
+<ol>
+<li>HTM8 Notation - A <strong>subset</strong> of HTML5 meant for easy implementation, with
+regular languages.
+<ul>
+<li>It's part of J8 Notation (although it does not use J8 strings, like JSON8
+and TSV8 do.)</li>
+<li>It's very important to understand that this is HTM8, not HTML8!</li>
+</ul>
+</li>
+<li>A subset of CSS for querying</li>
+<li>Templating in the Markaby style (a bit like Lisp, but unlike JSX templates)</li>
+</ol>
+<p>The basic goal is to write ad hod HTML processors.</p>
+<p>YSH programs should loosely follow the style of the DOM API in web browsers,
+e.g.  <code>document.querySelectorAll('table#mytable')</code> and the doc fragments it
+returns.</p>
+<p>Note that the DOM API is not available in node.js or Deno by default, much less
+any alternative lightweight JavaScript runtimes.</p>
+<p>I believe we can write include something that's simpler, and just as powerful,
+in YSH.</p>
+<a name="use-cases-for-html-processing"></a>
+<h2>Use Cases for HTML Processing</h2>
+<p>These will help people get an idea.</p>
+<ol>
+<li>making Oils cross-ref.html
+<ul>
+<li>query and replacement</li>
+</ul>
+</li>
+<li>table language - md-ul-table
+<ul>
+<li>query and replacement</li>
+<li>many tables to make here</li>
+</ul>
+</li>
+<li>safe HTML subset, e.g. for publishing user results on continuous build
+<ul>
+<li>well I think I want to encode the policy, like</li>
+<li>query</li>
+</ul>
+</li>
+</ol>
+<p>Design goals:</p>
+<ul>
+<li>Simple format that can be re-implemented anywhere
+<ul>
+<li>a few re2c expressions</li>
+</ul>
+</li>
+<li>Fast
+<ul>
+<li>re2c uses C</li>
+<li>Few allocations</li>
+</ul>
+</li>
+<li>much simpler than an entire browser engine</li>
+</ul>
+<a name="operations"></a>
+<h2>Operations</h2>
+<ul>
+<li>doc('<p>') - validates it and creates a value.Obj</li>
+<li>docQuery(mydoc, '#element') - does a simple search</li>
+</ul>
+<p>Constructors:</p>
+<pre><code>doc {  <span class="sh-comment"># prints valid HT8</span>
+  p {
+    echo 'hi'
+  }
+  p {
+    'hi'  <span class="sh-comment"># I think I want to turn on this auto-quote feature</span>
+  }
+  raw '&lt;b&gt;bold&lt;/b&gt;'
+}
+</code></pre>
+<p>And then</p>
+<pre><code>doc (&amp;mydoc) {  <span class="sh-comment"># captures the output, and creates a value.Obj</span>
+  p {
+    'hi'  <span class="sh-comment"># I think I want to turn on this auto-quote feature</span>
+    &quot;hi $x&quot;
+  }
+}
+</code></pre>
+<p>This is the same as the table constructor</p>
+<p>Module:</p>
+<pre><code>source $LIB_YSH/doc.ysh
+
+doc (&amp;d) {
+}
+doc {
+}
+doc('&lt;p&gt;')
+
+This can have both __invoke__ and __call__
+
+var results = d.query('#a')
+
+<span class="sh-comment"># The doc could be __invoke__ ?</span>
+d query '#a' {
+}
+
+doc query (d, '#a') {
+  for result in (results) {
+    echo hi
+  }
+}
+
+<span class="sh-comment"># we create (old, new) pairs?</span>
+<span class="sh-comment"># this is performs an operation like:</span>
+<span class="sh-comment"># d.outerHTML = outerHTML</span>
+var d = d.replace(pairs)
+</code></pre>
+<p>Safe HTML subset</p>
+<pre><code>d query (tags= :|a p div h1 h2 h3|) {
+  case (_frag.tag) {
+    a {
+      <span class="sh-comment"># get a list of all attributes</span>
+      var attrs = _frag.getAttributes()
+    }
+  }
+}
+</code></pre>
+<p>If you want to take user HTML, then you first use an HTML5 -&gt; HT8 converter.</p>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

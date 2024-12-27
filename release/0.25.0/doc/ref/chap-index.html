@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Index (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-index.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> — <strong>Index</strong></p>
+</div>
+<p>This is an index of topics in the <a href="index.html">Oils Reference</a>.</p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Name-Conflicts">Name Conflicts</a> <br/>
+  <a class="dense-toc-h3" href="#append">append</a> <br/>
+  <a class="dense-toc-h3" href="#clear">clear</a> <br/>
+  <a class="dense-toc-h3" href="#false">false</a> <br/>
+  <a class="dense-toc-h3" href="#true">true</a> <br/>
+  <a class="dense-toc-h3" href="#type">type</a> <br/>
+</div>
+</div>
+</div>
+<a name="Name-Conflicts"></a>
+<h2>Name Conflicts</h2>
+<a name="append"></a>
+<h3>append</h3>
+<p>The name <code>append</code> can refer to:</p>
+<ul>
+<li>The builtin command <a href="chap-builtin-cmd.html#cmd/append">append</a></li>
+<li>The <a href="chap-type-method.html#List/append">List method append</a></li>
+</ul>
+<a name="clear"></a>
+<h3>clear</h3>
+<p>The name <code>clear</code> can refer to:</p>
+<ul>
+<li>The <a href="chap-type-method.html#List/clear">List method clear</a></li>
+<li>The <a href="chap-type-method.html#Dict/clear">Dict method clear</a></li>
+</ul>
+<a name="false"></a>
+<h3>false</h3>
+<p>The name <code>false</code> can refer to:</p>
+<ul>
+<li>The builtin command <a href="chap-builtin-cmd.html#cmd/false">false</a></li>
+<li>The expression <a href="chap-type-method.html#expr/false">false</a></li>
+</ul>
+<a name="true"></a>
+<h3>true</h3>
+<p>The name <code>true</code> can refer to:</p>
+<ul>
+<li>The builtin command <a href="chap-builtin-cmd.html#cmd/true">true</a></li>
+<li>The expression <a href="chap-type-method.html#expr/true">true</a></li>
+</ul>
+<a name="type"></a>
+<h3>type</h3>
+<p>The name <code>type</code> can refer to:</p>
+<ul>
+<li>The builtin command <a href="chap-builtin-cmd.html#cmd/type">type</a></li>
+<li>The builtin function <a href="chap-builtin-func.html#func/type">type</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

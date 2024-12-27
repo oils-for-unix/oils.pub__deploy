@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Expressions vs. Python</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-vs-python.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Expressions vs. Python</h1>
+<p>The <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> expression language borrows heavily from Python.  In fact, it
+literally started with Python's <code>Grammar/Grammar</code> file.</p>
+<p>This doc describes the differences, which may help Python users learn YSH.</p>
+<p>If you don't know Python, <a href="ysh-tour.html">A Tour of YSH</a> explains the language
+from the clean-slate perspective.</p>
+<p>(TODO: A separate doc could compare commands/statements like <code>for</code> and <code>if</code>.)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#background">Background</a></div>
+  <div class="toclevel1"><a href="#literals">Literals</a></div>
+  <div class="toclevel2"><a href="#like-python-numbers-and-lists">Like Python: numbers and lists</a></div>
+  <div class="toclevel2"><a href="#changed-booleans-strings-dicts">Changed: booleans, strings, dicts</a></div>
+  <div class="toclevel2"><a href="#added">Added</a></div>
+  <div class="toclevel2"><a href="#omitted">Omitted</a></div>
+  <div class="toclevel1"><a href="#operators">Operators</a></div>
+  <div class="toclevel2"><a href="#note-ysh-does-less-operator-overloading">Note: YSH Does Less Operator Overloading</a></div>
+  <div class="toclevel2"><a href="#like-python">Like Python</a></div>
+  <div class="toclevel2"><a href="#changed">Changed</a></div>
+  <div class="toclevel2"><a href="#added">Added</a></div>
+  <div class="toclevel2"><a href="#omitted">Omitted</a></div>
+  <div class="toclevel1"><a href="#syntax-compared-with-javascript">Syntax Compared With JavaScript</a></div>
+  <div class="toclevel1"><a href="#semantics-compared">Semantics Compared</a></div>
+  <div class="toclevel2"><a href="#versus-python">Versus Python</a></div>
+  <div class="toclevel2"><a href="#versus-javascript">Versus JavaScript</a></div>
+</div>
+<a name="background"></a>
+<h2>Background</h2>
+<p>YSH has dynamic types, much like Python.  These are the main <strong>data</strong> types:</p>
+<pre><code>Null Bool Int Float List Dict
+</code></pre>
+<p>Quick example:</p>
+<pre><code>var x = null
+var y = f(true, 42, 3.14)
+var z = [5, 6, {name: 'bob'}]
+</code></pre>
+<a name="literals"></a>
+<h2>Literals</h2>
+<p>Every data type can be written as a literal.  Literals generally look like
+Python, so this section describes what's the same, and what's changed /  added
+/ and removed.</p>
+<a name="like-python-numbers-and-lists"></a>
+<h3>Like Python: numbers and lists</h3>
+<ul>
+<li>Integers: <code>123</code>, <code>1_000_000</code>, <code>0b1100_0010</code>, <code>0o755</code>, <code>0xff</code></li>
+<li>Floats: <code>1.023e6</code></li>
+<li>Lists: <code>['pea', 'nut']</code>
+<ul>
+<li>TODO: we want Python-like list comprehensions</li>
+</ul>
+</li>
+</ul>
+<a name="changed-booleans-strings-dicts"></a>
+<h3>Changed: booleans, strings, dicts</h3>
+<ul>
+<li>
+<p>Atoms are <code>true</code>, <code>false</code>, and <code>null</code> (like JavaScript) rather than <code>True</code>,
+<code>False</code>, and <code>None</code> (like Python).</p>
+<ul>
+<li>In YSH, we use capital letters for types like <code>Int</code>.</li>
+</ul>
+</li>
+<li>
+<p>String literals are like <strong>shell</strong> string literals, not like Python.</p>
+<ul>
+<li>Double Quoted: <code>&quot;hello $name&quot;</code></li>
+<li>Single quoted: <code>r'c:\Program Files\'</code></li>
+<li>C-style: <code>$'line\n'</code> (TODO: change to J8 Notation)
+<ul>
+<li>Unicode literals are <code>\u{3bc}</code> instead of <code>\u03bc</code> and <code>\U000003bc</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Dicts use <strong>JavaScript</strong> syntax, not Python syntax.</p>
+<ul>
+<li>Unquoted keys: <code>{age: 42}</code></li>
+<li>Bracketed keys: <code>{[myvar + 1]: 'value'}</code></li>
+<li>&quot;Punning&quot;: <code>{age}</code></li>
+</ul>
+</li>
+</ul>
+<a name="added"></a>
+<h3>Added</h3>
+<ul>
+<li>
+<p>Shell-like list literals: <code>:| pea nut |</code> is equivalent to <code>['pea', 'nut']</code></p>
+</li>
+<li>
+<p>&quot;Quotation&quot; types for unevaluated code:</p>
+<ul>
+<li>Command / block <code>^(ls | wc -l)</code></li>
+<li>Unevaluated expression <code>^[1 + a[i] + f(x)]</code></li>
+</ul>
+</li>
+<li>
+<p>Units on number constants like <code>100 MiB</code> (reserved, not implemented)</p>
+</li>
+</ul>
+
+<a name="omitted"></a>
+<h3>Omitted</h3>
+<ul>
+<li>YSH has no tuples, only lists.</li>
+<li>No lambdas (function literals returning an expression)</li>
+<li>No closures, or scope declarations like <code>global</code> and <code>nonlocal</code>.  (We would
+prefer objects over closures.)</li>
+<li>No iterators.
+<ul>
+<li>Instead we have for loop that works on lists and dicts.</li>
+<li>It flexibly accepts up to 3 loop variables, taking the place of Python's
+<code>enumerate()</code>, <code>keys()</code>, <code>values()</code>, and <code>items()</code>.</li>
+</ul>
+</li>
+</ul>
+<a name="operators"></a>
+<h2>Operators</h2>
+<p>Like literals, YSH operators resemble Python operators.  The expression <code>42 + a[i]</code> means the same thing in both languages.</p>
+<p>This section describes what's the same, and what's changed / added / removed.</p>
+<a name="note-ysh-does-less-operator-overloading"></a>
+<h3>Note: YSH Does Less Operator Overloading</h3>
+<p>YSH doesn't overload operators as much because it often does automatic
+<code>Str</code> ↔ <code>Int</code> conversions (like Awk):</p>
+<ul>
+<li>
+<p><code>a + b</code> is for addition, while <code>a ++ b</code> is for concatenation.</p>
+</li>
+<li>
+<p><code>a &lt; b</code> does numeric comparison, not lexicographical comparison of strings.</p>
+<ul>
+<li>(We should add <code>strcmp()</code> for strings.)</li>
+</ul>
+</li>
+</ul>
+<a name="like-python"></a>
+<h3>Like Python</h3>
+<ul>
+<li>
+<p>Arithmetic <code>+ - * /</code> and comparison <code>&lt; &gt; &lt;= =&gt;</code>.  They also convert strings
+to integers or floats.  Examples:</p>
+<ul>
+<li><code>'22' &lt; '3'</code> is true because <code>22 &lt; 3</code> is true.</li>
+<li><code>'3.1' &lt;= '3.14'</code> is true because <code>3.1 &lt;= 3.14</code> is true.</li>
+</ul>
+</li>
+<li>
+<p>Integer arithmetic: <code>//</code> integer division, <code>%</code> modulus, <code>**</code> exponentiation.</p>
+<ul>
+<li>They also convert strings to integers (but not floats).</li>
+</ul>
+</li>
+<li>
+<p>Bitwise <code>&amp; | ~ ^ &lt;&lt; &gt;&gt;</code></p>
+</li>
+<li>
+<p>Logical <code>and or not</code></p>
+</li>
+<li>
+<p>Ternary <code>0 if cond else 1</code></p>
+</li>
+<li>
+<p>Slicing: <code>s[i:j]</code> evaluates to a string</p>
+</li>
+<li>
+<p>Membership <code>in</code>, <code>not in</code></p>
+</li>
+<li>
+<p>Identity <code>is</code>, <code>is not</code></p>
+</li>
+<li>
+<p>Function Call: <code>f(x, y)</code></p>
+</li>
+</ul>
+<a name="changed"></a>
+<h3>Changed</h3>
+<ul>
+<li>Equality is <code>=== !==</code>, because we also have <code>~==</code>.</li>
+<li>String Concatenation is <code>++</code>, not <code>+</code>.  Again, <code>+</code> is always addition.</li>
+<li>Splat operator is <code>...</code> not <code>*</code>: <code>f(...myargs)</code>.</li>
+</ul>
+<a name="added"></a>
+<h3>Added</h3>
+<ul>
+<li>Eggex match <code>s ~ /d+/</code></li>
+<li>Glob match <code>s ~~ '*.py'</code></li>
+<li>Approximate Equality <code>42 ~== '42'</code></li>
+<li>YSH sigils: <code>$</code> and <code>@</code></li>
+<li><code>mydict.key</code> as an alias for <code>mydict['key']</code></li>
+</ul>
+<a name="omitted"></a>
+<h3>Omitted</h3>
+<ul>
+<li>No string formatting with <code>%</code>.  Use <code>${x %.3f}</code> instead. (unimplemented)</li>
+<li>No <code>@</code> for matrix multiply.</li>
+<li>I removed slice step syntax <code>1:5:2</code> because <code>0::2</code> could conflict with
+<code>module::name</code> (could be restored).</li>
+</ul>
+<a name="syntax-compared-with-javascript"></a>
+<h2>Syntax Compared With JavaScript</h2>
+<p>This section may be useful if yo know JavaScript.</p>
+<ul>
+<li>
+<p>YSH uses <code>===</code> and <code>~==</code> for exact and type-converting equality, while JS
+uses <code>===</code> and <code>==</code>.</p>
+</li>
+<li>
+<p>Expressions are more like Python:</p>
+<ul>
+<li>YSH expressions use <code>and or not</code> while JS uses <code>&amp;&amp; || !</code>.  In shell, <code>&amp;&amp; || !</code> are already used in the command language (but they're somewhat less
+important than in YSH).</li>
+<li>The YSH ternary operator is <code>0 if cond else 1</code>, while in JS it's <code>cond ? 0 : 1</code>.</li>
+<li>Operator precedence rules are slightly different, but still C-like.  They
+follow Python's grammar.</li>
+</ul>
+</li>
+<li>
+<p>Same differences as above, versus Python:</p>
+<ul>
+<li><code>s ++ t</code> for string concatenation rather than <code>s + t</code></li>
+<li>Shell string literals rather than JS string literals</li>
+</ul>
+</li>
+</ul>
+<a name="semantics-compared"></a>
+<h2>Semantics Compared</h2>
+<p>The runtime behavior of YSH is also similar to Python and JavaScript.</p>
+<a name="versus-python"></a>
+<h3>Versus Python</h3>
+<ul>
+<li>
+<p><code>Bool</code> and <code>Int</code> are totally separate types.  YSH is like JavaScript, where
+they aren't equal: <code>true !== 1</code>.  In Python, they are equal: <code>True == 1</code>.</p>
+</li>
+<li>
+<p>Strings are bytes, which may UTF-8 encoded, like Go.  (In Python 3, strings
+are sequences of code points, which are roughly integers up to
+2<sup>21</sup>.)</p>
+</li>
+<li>
+<p>We avoid operators that cause &quot;accidentally quadratic&quot; behavior.</p>
+<ul>
+<li>No <code>in</code> on <code>List</code>, since that's a linear search.  Only <code>in</code> on <code>Dict</code>.</li>
+<li>The're not <code>++=</code> operator on strings.</li>
+</ul>
+</li>
+</ul>
+
+<a name="versus-javascript"></a>
+<h3>Versus JavaScript</h3>
+<ul>
+<li>Strings are bytes, which may UTF-8 encoded, like Go.  (In
+JavaScript are sequences of UTF-16 code units, which are roughly integers up
+to 2<sup>16</sup>.)</li>
+<li>Undefined variables result in a fatal error like Python, not a silently
+propagating <code>undefined</code> like JavaScript.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

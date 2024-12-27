@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Global Shell Options (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-option.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>Global Shell Options</strong></p>
+</div>
+<p>This chapter describes global shell options in Oils.  Some options are from
+POSIX shell, and some are from <a href="/cross-ref.html?tag=bash#bash">bash</a>.  We also use options to turn
+<a href="/cross-ref.html?tag=OSH#OSH">OSH</a> into <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Errors">Errors</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Globbing">Globbing</a> <br/>
+  <a class="dense-toc-h3" href="#nullglob">nullglob</a> <br/>
+  <a class="dense-toc-h3" href="#dashglob">dashglob</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Other-Option">Other Option</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Debugging">Debugging</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Interactive">Interactive</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Compat">Compat</a> <br/>
+  <a class="dense-toc-h3" href="#eval_unsafe_arith">eval_unsafe_arith</a> <br/>
+  <a class="dense-toc-h3" href="#ignore_flags_not_impl">ignore_flags_not_impl</a> <br/>
+  <a class="dense-toc-h3" href="#ignore_shopt_not_impl">ignore_shopt_not_impl</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Groups">Groups</a> <br/>
+  <a class="dense-toc-h3" href="#strict:all">strict:all</a> <br/>
+  <a class="dense-toc-h3" href="#ysh:upgrade">ysh:upgrade</a> <br/>
+  <a class="dense-toc-h3" href="#ysh:all">ysh:all</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Details">YSH Details</a> <br/>
+  <a class="dense-toc-h3" href="#opts-redefine">opts-redefine</a> <br/>
+  <a class="dense-toc-h3" href="#opts-internal">opts-internal</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Unlinked-Descriptions">Unlinked Descriptions</a> <br/>
+  <a class="dense-toc-h3" href="#strict_control_flow">strict_control_flow</a> <br/>
+  <a class="dense-toc-h3" href="#strict_tilde">strict_tilde</a> <br/>
+  <a class="dense-toc-h3" href="#strict_nameref">strict_nameref</a> <br/>
+  <a class="dense-toc-h3" href="#parse_ignored">parse_ignored</a> <br/>
+  <a class="dense-toc-h3" href="#parse_triple_quote">parse_triple_quote</a> <br/>
+  <a class="dense-toc-h3" href="#parse_ysh_string">parse_ysh_string</a> <br/>
+  <a class="dense-toc-h3" href="#sigpipe_status_ok">sigpipe_status_ok</a> <br/>
+</div>
+</div>
+</div>
+<a name="Errors"></a>
+<h2>Errors</h2>
+<p>These options are from POSIX shell:</p>
+<pre><code>nounset -u  
+errexit -e
+</code></pre>
+<p>These are from bash:</p>
+<pre><code>inherit_errexit:
+pipefail
+</code></pre>
+<a name="Globbing"></a>
+<h2>Globbing</h2>
+<p>These options are from POSIX shell:</p>
+<pre><code>noglob -f
+</code></pre>
+<p>From bash:</p>
+<pre><code>nullglob   failglob   dotglob
+</code></pre>
+<p>From Oils:</p>
+<pre><code>dashglob
+</code></pre>
+<p>Some details:</p>
+<a name="nullglob"></a>
+<h3>nullglob</h3>
+<p>When <code>nullglob</code> is on, a glob matching no files expands to no arguments:</p>
+<pre><code>shopt -s nullglob
+<span class="sh-prompt">$</span> <span class="sh-command">echo L *.py R</span>
+L R
+</code></pre>
+<p>Without this option, the glob string itself is returned:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo L *.py R</span>  <span class="sh-comment"># no Python files in this dir</span>
+L *.py R
+</code></pre>
+<p>(This option is from GNU bash.)</p>
+<a name="dashglob"></a>
+<h3>dashglob</h3>
+<p>Do globs return results that start with <code>-</code>?  It's on by default in <code>bin/osh</code>,
+but off when YSH is enabled.</p>
+<p>Turning it off prevents a command like <code>rm *</code> from being confused by a file
+called <code>-rf</code>.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">touch -- myfile -rf</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo *</span>
+-rf myfile
+
+<span class="sh-prompt">$</span> <span class="sh-command">shopt -u dashglob</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo *</span>
+myfile
+</code></pre>
+<a name="Other-Option"></a>
+<h2>Other Option</h2>
+<pre><code>noclobber -C  <span class="sh-comment"># Redirects can't overwrite files</span>
+errtrace -E   <span class="sh-comment"># Enable ERR trap is both shell functions and subshells</span>
+</code></pre>
+<a name="Debugging"></a>
+<h2>Debugging</h2>
+<p>These options are from POSIX shell:</p>
+<pre><code>xtrace   verbose
+</code></pre>
+<p>From bash:</p>
+<pre><code>extdebug
+</code></pre>
+<a name="Interactive"></a>
+<h2>Interactive</h2>
+<p>These options are from bash.</p>
+<pre><code>emacs   vi
+</code></pre>
+<a name="Compat"></a>
+<h2>Compat</h2>
+<a name="eval_unsafe_arith"></a>
+<h3>eval_unsafe_arith</h3>
+<p>Allow dynamically parsed <code>a[$(echo 42)]</code>  For bash compatibility.</p>
+<a name="ignore_flags_not_impl"></a>
+<h3>ignore_flags_not_impl</h3>
+<p>Suppress failures from unimplemented flags.  Example:</p>
+<pre><code>shopt --set ignore_flags_not_impl
+
+declare -i foo=2+3  <span class="sh-comment"># not evaluated to 5, but doesn't fail either</span>
+</code></pre>
+<p>This option can be useful for &quot;getting past&quot; errors while testing.</p>
+<a name="ignore_shopt_not_impl"></a>
+<h3>ignore_shopt_not_impl</h3>
+<p>Suppress failures from unimplemented shell options.  Example:</p>
+<pre><code>shopt --set ignore_shopt_not_impl
+
+shopt --set xpg_echo  <span class="sh-comment"># exit with status 0, not 1</span>
+                      <span class="sh-comment"># this is a bash option that OSH doesn't implement</span>
+</code></pre>
+<p>This option can be useful for &quot;getting past&quot; errors while testing.</p>
+<a name="Groups"></a>
+<h2>Groups</h2>
+<p>To turn OSH into YSH, we use three option groups.  Some of them allow new
+features, and some disallow old features.</p>
+
+<a name="strictall"></a>
+<h3 id="strict:all">strict:all</h3>
+<p>Option in this group disallow problematic or confusing shell constructs.  The
+resulting script will still run in another shell.</p>
+<pre><code>shopt --set strict:all    <span class="sh-comment"># turn on all options</span>
+shopt -p strict:all       <span class="sh-comment"># print their current state</span>
+</code></pre>
+<p>Parsing options:</p>
+<pre><code>  strict_parse_slice      <span class="sh-comment"># No implicit length for ${a[@]::}</span>
+X strict_parse_utf8       <span class="sh-comment"># Source code must be valid UTF-8</span>
+</code></pre>
+<p>Runtime options:</p>
+<pre><code>  strict_argv             <span class="sh-comment"># No empty argv</span>
+  strict_arith            <span class="sh-comment"># Fatal parse errors (on by default)</span>
+  strict_array            <span class="sh-comment"># Arrays and strings aren't confused</span>
+  strict_control_flow     <span class="sh-comment"># Disallow misplaced keyword, empty arg</span>
+  strict_errexit          <span class="sh-comment"># Disallow code that ignores failure</span>
+  strict_nameref          <span class="sh-comment"># Trap invalid variable names</span>
+  strict_word_eval        <span class="sh-comment"># Expose unicode and slicing errors</span>
+  strict_tilde            <span class="sh-comment"># Tilde subst can result in error</span>
+X strict_glob             <span class="sh-comment"># Parse the sublanguage more strictly</span>
+</code></pre>
+<a name="yshupgrade"></a>
+<h3 id="ysh:upgrade">ysh:upgrade</h3>
+<p>Options in this group enable new YSH features.  It doesn't break existing shell
+scripts when it's avoidable.</p>
+<p>For example, <code>parse_at</code> means that <code>@myarray</code> is now the operation to splice
+an array.  This will break scripts that expect <code>@</code> to be literal, but you can
+simply quote it like <code>'@literal'</code> to fix the problem.</p>
+<pre><code>shopt --set ysh:upgrade   <span class="sh-comment"># turn on all options</span>
+shopt -p ysh:upgrade      <span class="sh-comment"># print their current state</span>
+</code></pre>
+<p>Details on each option:</p>
+<pre><code>  parse_at                echo @array @[arrayfunc(x, y)]
+  parse_brace             if true { ... }; cd ~/src { ... }
+  parse_equals            x = 'val' in Caps { } config blocks
+  parse_paren             if (x &gt; 0) ...
+  parse_proc              proc p { ... }
+  parse_triple_quote      &quot;&quot;&quot;$x&quot;&quot;&quot;  '''x''' (command mode)
+  parse_ysh_string        echo r'\' u'\\' b'\\' (command mode)
+  command_sub_errexit     Synchronous errexit check
+  process_sub_fail        Analogous to pipefail for process subs
+  sigpipe_status_ok       status 141 -&gt; 0 in pipelines
+  simple_word_eval        No splitting, static globbing
+  xtrace_rich             Hierarchical and process tracing
+  xtrace_details (-u)     Disable most tracing with +
+  dashglob (-u)           Disabled to avoid files like -rf
+  no_exported             Environ doesn't correspond to exported (-x) vars
+</code></pre>
+<a name="yshall"></a>
+<h3 id="ysh:all">ysh:all</h3>
+<p>Enable the full YSH language.  This includes everything in the <code>ysh:upgrade</code>
+group and the <code>strict:all</code> group.</p>
+<pre><code>shopt --set ysh:all       <span class="sh-comment"># turn on all options</span>
+shopt -p ysh:all          <span class="sh-comment"># print their current state</span>
+</code></pre>
+<p>Details on options that are not in <code>ysh:upgrade</code> and <code>strict:all</code>:</p>
+<pre><code>  parse_at_all            @ starting any word is an operator
+  parse_backslash (-u)    Allow bad backslashes in &quot;&quot; and $''
+  parse_backticks (-u)    Allow legacy syntax `echo hi`
+  parse_bare_word (-u)    'case unquoted' and 'for x in unquoted'
+  parse_dollar (-u)       Allow bare $ to mean \$  (maybe $/d+/)
+  parse_dbracket (-u)     Is legacy [[ allowed?
+  parse_dparen (-u)       Is (( legacy arithmetic allowed?
+  parse_ignored (-u)      Parse, but ignore, certain redirects
+  parse_sh_arith (-u)     Allow legacy shell arithmetic
+  expand_aliases (-u)     Whether aliases are expanded
+X old_builtins (-u)       local/declare/etc.  pushd/popd/dirs
+                          ... source  unset  printf  [un]alias
+                          ... getopts
+X old_syntax (-u)         ( )   ${x%prefix}  ${a[@]}   $$
+  env_obj                 Populate the ENV object
+  no_init_globals         At startup, don't set vars like PWD, SHELLOPTS
+  simple_echo             echo doesn't accept flags -e -n
+  simple_eval_builtin     eval takes exactly 1 argument
+  simple_test_builtin     3 args or fewer; use test not [
+X simple_trap             Function name only
+  verbose_errexit         Whether to print detailed errors
+</code></pre>
+<a name="YSH-Details"></a>
+<h2>YSH Details</h2>
+<a name="opts-redefine"></a>
+<h3>opts-redefine</h3>
+<p>In the interactive shell, you can redefine procs and funcs.</p>
+<pre><code>  redefine_source          'source-guard' builtin always returns 0
+X redefine_const            Can consts be redefined?
+</code></pre>
+<a name="opts-internal"></a>
+<h3>opts-internal</h3>
+<p>These options are used by the interpreter.  You generally shouldn't set them
+yourself.</p>
+<pre><code>_allow_command_sub  To implement strict_errexit, eval_unsafe_arith
+_allow_process_sub  To implement strict_errexit
+dynamic_scope       To implement proc and func
+_no_debug_trap      Used in pipelines in job control shell
+_running_trap       To disable strict_errexit
+_running_hay        Hay evaluation
+</code></pre>
+<a name="Unlinked-Descriptions"></a>
+<h2>Unlinked Descriptions</h2>
+<p>Here are some descriptions of individual options.</p>
+<a name="strict_control_flow"></a>
+<h3>strict_control_flow</h3>
+<p>Disallow <code>break</code> and <code>continue</code> at the top level, and disallow empty args like
+<code>return $empty</code>.</p>
+<a name="strict_tilde"></a>
+<h3>strict_tilde</h3>
+<p>Failed tilde expansions cause hard errors (like zsh) rather than silently
+evaluating to <code>~</code> or <code>~bad</code>.</p>
+<a name="strict_nameref"></a>
+<h3>strict_nameref</h3>
+<p>When <code>strict_nameref</code> is set, undefined references produce fatal errors:</p>
+<pre><code>declare -n ref
+echo $ref  <span class="sh-comment"># fatal error, not empty string</span>
+ref=x      <span class="sh-comment"># fatal error instead of decaying to non-reference</span>
+</code></pre>
+<p>References that don't contain variables also produce hard errors:</p>
+<pre><code>declare -n ref='not a var'
+echo $ref  <span class="sh-comment"># fatal</span>
+ref=x      <span class="sh-comment"># fatal</span>
+</code></pre>
+<a name="parse_ignored"></a>
+<h3>parse_ignored</h3>
+<p>For compatibility, YSH will parse some constructs it doesn't execute, like:</p>
+<pre><code>return 0 2&gt;&amp;1  <span class="sh-comment"># redirect on control flow</span>
+</code></pre>
+<p>When this option is disabled, that statement is a syntax error.</p>
+<a name="parse_triple_quote"></a>
+<h3>parse_triple_quote</h3>
+<p>Parse the shell-style multi-line strings, which strip leading whitespace:</p>
+<pre><code>echo '''    
+  one
+  two
+  '''
+
+echo &quot;&quot;&quot;
+  hello
+  $name
+  &quot;&quot;&quot;
+</code></pre>
+<p>(This option affects only command mode.  Such strings are always parsed in
+expression mode.)</p>
+<a name="parse_ysh_string"></a>
+<h3>parse_ysh_string</h3>
+<p>Allow <code>r'\'</code> and <code>u'\\'</code> and <code>b'\\'</code> strings, as well as their multi-line
+versions.</p>
+<p>Since shell strings are already raw, this means that YSH just ignores the r
+prefix:</p>
+<pre><code>echo r'\'  <span class="sh-comment"># a single backslash</span>
+</code></pre>
+<p>J8 unicode strings:</p>
+<pre><code>echo u'mu \u{3bc}'  <span class="sh-comment"># mu char</span>
+</code></pre>
+<p>J8 byte strings:</p>
+<pre><code>echo b'byte \yff'
+</code></pre>
+<p>(This option affects only command mode.  Such strings are always parsed in
+expression mode.)</p>
+<a name="sigpipe_status_ok"></a>
+<h3>sigpipe_status_ok</h3>
+<p>If a process that's part of a pipeline exits with status 141 when this is
+option is on, it's turned into status 0, which avoids failure.</p>
+<p>SIGPIPE errors occur in cases like 'yes | head', and generally aren't useful.</p>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>

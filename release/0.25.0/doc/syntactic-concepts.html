@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Syntactic Concepts in YSH</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/syntactic-concepts.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.25.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Syntactic Concepts in YSH</h1>
+<p>These documents introduce the YSH language:</p>
+<ul>
+<li><a href="//www.oilshell.org/blog/2020/01/simplest-explanation.html">The Simplest Explanation of Oil</a> (blog)</li>
+<li><a href="syntax-feelings.html">A Feel For YSH Syntax</a></li>
+</ul>
+<p>In contrast, the concepts introduced below may help advanced users <strong>remember</strong>
+YSH and its syntax.  Read on to learn about:</p>
+<ul>
+<li><strong>Command vs. Expression Mode</strong>.  Command mode is like shell, and expression
+mode is like Python.</li>
+<li><strong>Lexer Modes</strong> help parse different &quot;sublanguages&quot; or dialects.</li>
+<li><strong>Sigils and Sigil Pairs</strong>.  A style of syntax that's familiar to shell and
+Perl users.</li>
+<li><strong>Parse Options</strong> like <code>shopt -s parse_paren</code>.  To selectively break
+compatibility, and gradually upgrade shell to YSH.</li>
+<li><strong>Static Parsing</strong>, as opposed to the dynamic parsing of shell.  Static
+parsing improves error messages and makes more software engineering tools
+possible.</li>
+</ul>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#command-vs-expression-mode">Command vs. Expression Mode</a></div>
+  <div class="toclevel1"><a href="#lexer-modes">Lexer Modes</a></div>
+  <div class="toclevel2"><a href="#more-information">More Information</a></div>
+  <div class="toclevel1"><a href="#sigils-and-sigil-pairs">Sigils and Sigil Pairs</a></div>
+  <div class="toclevel2"><a href="#valid-contexts">Valid Contexts</a></div>
+  <div class="toclevel1"><a href="#parse-options-to-take-over-and">Parse Options to Take Over <code>()</code>, <code>[]</code>, <code>@</code>, and <code>=</code></a></div>
+  <div class="toclevel1"><a href="#static-parsing">Static Parsing</a></div>
+  <div class="toclevel2"><a href="#aside-duplicate-functionality-in-bash">Aside: Duplicate Functionality in Bash</a></div>
+  <div class="toclevel2"><a href="#related-links">Related Links</a></div>
+  <div class="toclevel1"><a href="#related-documents">Related Documents</a></div>
+  <div class="toclevel1"><a href="#appendix-hand-written-vs-generated-parsers">Appendix: Hand-Written vs. Generated Parsers</a></div>
+</div> 
+<a name="command-vs-expression-mode"></a>
+<h2>Command vs. Expression Mode</h2>
+<p>The YSH parser starts out in command mode:</p>
+<pre><code>echo &quot;hello $name&quot;
+
+for i in 1 2 3 {
+  echo $i
+}
+</code></pre>
+<p>But it switches to expression mode in a few places:</p>
+<pre><code>var x = 42 + a[i]          <span class="sh-comment"># the RHS of = is a YSH expression</span>
+
+echo $[mydict['key']]      <span class="sh-comment"># interpolated expressions with $[]</span>
+
+json write ({key: &quot;val&quot;})  <span class="sh-comment"># typed args inside ()</span>
+</code></pre>
+<p>See <a href="command-vs-expression-mode.html">Command vs. Expression Mode</a> for details.</p>
+<a name="lexer-modes"></a>
+<h2>Lexer Modes</h2>
+<p><em>Lexer modes</em> are a technique that YSH uses to manage the complex syntax of
+shell, which evolved over many decades.</p>
+<p>For example, <code>:</code> means something different in each of these lines:</p>
+<pre><code>PATH=/bin:/usr/bin          <span class="sh-comment"># Literal string</span>
+echo ${x:-default}          <span class="sh-comment"># Part of an operator</span>
+echo $(( x &gt; y ? 42 : 0 ))  <span class="sh-comment"># Arithmetic Operator</span>
+var myslice = a[3:5]        <span class="sh-comment"># YSH expression</span>
+</code></pre>
+<p>To solve this problem, YSH has a lexer that can run in many <strong>modes</strong>.
+Multiple parsers read from this single lexer, but they demand different tokens,
+depending on the parsing context.</p>
+<a name="more-information"></a>
+<h3>More Information</h3>
+<ul>
+<li><a href="//www.oilshell.org/blog/2016/10/19.html">How OSH Uses Lexer Modes</a></li>
+<li><a href="//www.oilshell.org/blog/2017/12/17.html">When Are Lexer Modes Useful?</a></li>
+<li><a href="//www.oilshell.org/blog/2019/02/07.html">How to Parse Shell Like a Programming Language</a>
+<ul>
+<li>See the list of 14 lexer modes.</li>
+</ul>
+</li>
+<li><a href="/blog/tags.html?tag=lexing#lexing">Posts tagged #lexing</a></li>
+</ul>
+<a name="sigils-and-sigil-pairs"></a>
+<h2>Sigils and Sigil Pairs</h2>
+<p>A <strong>sigil</strong> is a symbol like the <code>$</code> in <code>$mystr</code>.</p>
+<p>A <strong>sigil pair</strong> is a sigil with opening and closing delimiters, like <code>${var}</code>
+and <code>@(seq 3)</code>.</p>
+<p>An appendix of <a href="syntax-feelings.html">A Feel For YSH Syntax</a> lists the sigil
+pairs in the YSH language.</p>
+<a name="valid-contexts"></a>
+<h3>Valid Contexts</h3>
+<p>Each sigil pair may be available in command mode, expression mode, or both.</p>
+<p>For example, command substitution is available in both:</p>
+<pre><code>echo $(hostname)      <span class="sh-comment"># command mode</span>
+var x = $(hostname)   <span class="sh-comment"># expression mode</span>
+</code></pre>
+<p>So are raw and C-style string literals:</p>
+<pre><code>echo $'foo\n'  <span class="sh-comment"># the bash-compatible way to do it</span>
+var s = $'foo\n'
+
+echo r'c:\Program Files\'
+var raw = r'c:\Program Files\'
+</code></pre>
+<p>But array literals only make sense in expression mode:</p>
+<pre><code>var myarray = :| one two three |
+
+echo one two three  <span class="sh-comment"># no array literal needed</span>
+</code></pre>
+<p>A sigil pair often changes the <strong>lexer mode</strong> to parse what's inside.</p>
+<a name="parse-options-to-take-over-and"></a>
+<h2>Parse Options to Take Over <code>()</code>, <code>[]</code>, <code>@</code>, and <code>=</code></h2>
+<p>Most users don't have to worry about parse options.  Instead, they run either
+<code>bin/osh</code> or <code>bin/ysh</code>, which are actually aliases for the same binary.  The
+difference is that <code>bin/ysh</code> has the <strong>option group</strong> <code>ysh:all</code> on by default.</p>
+<p>Nonetheless, here are two examples.</p>
+<p>The <code>parse_at</code> option (in group <code>ysh:upgrade</code>) turns <code>@</code> into the <strong>splice
+operator</strong> when it's at the front of a word:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">var myarray = :| one two three |</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo @myarray       </span>  <span class="sh-comment"># @ isn't an an operator in shell</span>
+@myarray
+
+<span class="sh-prompt">$</span> <span class="sh-command">shopt -s parse_at   </span>  <span class="sh-comment"># parse the @ symbol</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo @myarray</span>
+one two three
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo '@myarray'     </span>  <span class="sh-comment"># quote it to get the old behavior</span>
+@myarray
+</code></pre>
+<p>The <code>parse_bracket</code> option (also in group <code>ysh:upgrade</code>) lets you pass
+unevaluated expressions to a command with <code>[]</code>:</p>
+<pre><code class="language-sh-prompt">assert (^[42 === x])   <span class="sh-comment"># assert is passed an expression, not value</span>
+assert [42 === x]      <span class="sh-comment"># syntax sugar with parse_bracket</span>
+</code></pre>
+<a name="static-parsing"></a>
+<h2>Static Parsing</h2>
+<p>POSIX specifies that Unix shell has multiple stages of parsing and evaluation.
+For example:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">x=2 </span>
+<span class="sh-prompt">$</span> <span class="sh-command">code='3 * x'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $(( code ))</span>  <span class="sh-comment"># Silent eval of a string.  Dangerous!</span>
+6
+</code></pre>
+<p>YSH expressions are parsed in a single stage, and then evaluated, which makes
+it more like Python or JavaScript:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">setvar code = '3 * x'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $[ code ]</span>
+3 * x
+</code></pre>
+<p>Another example: shell assignment builtins like <code>readonly</code> and <code>local</code>
+dynamically parsed, while YSH assignment like <code>const</code> and <code>var</code> are statically
+parsed.</p>
+<a name="aside-duplicate-functionality-in-bash"></a>
+<h3>Aside: Duplicate Functionality in Bash</h3>
+<p>It's confusing that <a href="/cross-ref.html?tag=bash#bash">bash</a> has <strong>both</strong> statically- and
+dynamically-parsed variants of the same functionality.</p>
+<p>Boolean expressions:</p>
+<ul>
+<li><code>[ -d /tmp ]</code> is dynamically parsed</li>
+<li><code>[[ -d /tmp ]]</code> is statically parsed</li>
+</ul>
+<p>C-style string literals:</p>
+<ul>
+<li><code>echo -e '\n'</code> is dynamically parsed</li>
+<li><code>echo $'\n'</code> is statically parsed</li>
+</ul>
+
+<a name="related-links"></a>
+<h3>Related Links</h3>
+<ul>
+<li><a href="//www.oilshell.org/blog/2016/10/20.html">Parsing Bash is Undecidable</a></li>
+<li><a href="//www.oilshell.org/blog/2019/01/18.html#a-story-about-a-30-year-old-security-problem">A 30-year-old Security Problem</a></li>
+<li><a href="https://lobste.rs/s/7bpgbl/rc_plan_9_shell#c_mokqrn">Comment on Perl and the rc shell</a></li>
+</ul>
+<a name="related-documents"></a>
+<h2>Related Documents</h2>
+<ul>
+<li><a href="language-influences.html">YSH Language Influences</a>.  Where the syntax in YSH
+comes from.</li>
+</ul>
+<a name="appendix-hand-written-vs-generated-parsers"></a>
+<h2>Appendix: Hand-Written vs. Generated Parsers</h2>
+<p>The <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> language is parsed &quot;by hand&quot;, while the <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>
+expression language is parsed with tables generated from a grammar (a modified
+version of <a href="/cross-ref.html?tag=pgen2#pgen2">Python's pgen</a>).</p>
+<p>This is mostly an implementation detail, but users may notice that OSH gives
+more specific error messages!</p>
+<p>Hand-written parsers give you more control over errors.  Eventually the YSH
+language may have a hand-written parser as well.  Either way, feel free to file
+bugs about error messages that confuse you.</p>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 27 Dec 2024 16:21:38 -0500</i>
+    </div>
+  </body>
+</html>
