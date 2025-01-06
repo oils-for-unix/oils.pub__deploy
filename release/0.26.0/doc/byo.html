@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BYO - Protocols for Test Discovery, Shell Completion</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/byo.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.26.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>BYO - Protocols for Test Discovery, Shell Completion</h1>
+<p>BYO is a simple mechanism to turn CLI processes into &quot;servers&quot; which respond to
+requests encoded in environment variables.</p>
+<p>Points of reference:</p>
+<ul>
+<li><a href="https://testanything.org/">Test Anything Protocol</a>
+<ul>
+<li>e.g. Perl scripts parse stdout of test processes in any language</li>
+</ul>
+</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Shellac-Protocol-Proposal-V2">Shellac Protocol Proposal V2</a> (wiki, 2019)</li>
+</ul>
+<p>(About the name: It originally stood for Bash YSH OSH.  But &quot;bring your own&quot; is
+a good acronym!)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#the-general-idea">The General Idea</a></div>
+  <div class="toclevel1"><a href="#protocol">Protocol</a></div>
+  <div class="toclevel2"><a href="#detecting-byo-servers">Detecting BYO Servers</a></div>
+  <div class="toclevel2"><a href="#testing-discover-and-run">Testing - discover and run</a></div>
+  <div class="toclevel2"><a href="#shell-completion-use-these-primitives">Shell completion - use these primitives</a></div>
+  <div class="toclevel1"><a href="#client-tool">Client Tool</a></div>
+  <div class="toclevel1"><a href="#appendix-future-work">Appendix: Future Work</a></div>
+  <div class="toclevel2"><a href="#other-applications">Other Applications</a></div>
+  <div class="toclevel2"><a href="#coprocesses">Coprocesses</a></div>
+</div> 
+<a name="the-general-idea"></a>
+<h2>The General Idea</h2>
+<p>Executables should respond to the <code>BYO_COMMAND</code> environment variable:</p>
+<pre><code>BYO_COMMAND=foo
+</code></pre>
+<p>And <code>BYO_ARG=bar</code> varies based on the command.</p>
+<p>A library that implements this is:</p>
+<pre><code>source $LIB_OSH/byo-server.sh
+</code></pre>
+<p>But it's designed to be implemented in Python, C++, etc.</p>
+<p>A client is:</p>
+<pre><code>test/byo-client.sh detect myscript.sh
+</code></pre>
+<a name="protocol"></a>
+<h2>Protocol</h2>
+<a name="detecting-byo-servers"></a>
+<h3>Detecting BYO Servers</h3>
+<p>Here's how you detect if an executable supports BYO:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">BYO_COMMAND=detect ./any-executable &lt;/dev/null</span>
+list-tests
+run-tests
+
+<span class="sh-comment"># must exit with code 66, which is ASCII 'B'</span>
+</code></pre>
+<a name="testing-discover-and-run"></a>
+<h3>Testing - discover and run</h3>
+<p>List tests first:</p>
+<pre><code>BYO_COMMAND=list-tests   
+</code></pre>
+<p>Then run them one at a time:</p>
+<pre><code>BYO_COMMAND=run-test
+BYO_ARG=foo
+</code></pre>
+<a name="shell-completion-use-these-primitives"></a>
+<h3>Shell completion - use these primitives</h3>
+<p>TODO:</p>
+<pre><code>BYO_COMMAND=list-tasks  <span class="sh-comment"># related to task-five</span>
+BYO_COMMAND=list-flags  <span class="sh-comment"># only some binaries have flags</span>
+</code></pre>
+
+<a name="client-tool"></a>
+<h2>Client Tool</h2>
+<p>The tool should work like this:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">byo detect myscript.sh</span>
+<span class="sh-prompt">$</span> <span class="sh-command">byo test myscript.sh</span>
+</code></pre>
+<p>(Right now it's <a href="https://github.com/oilshell/oil/blob/master/test/byo-client.sh">test/byo-client.sh</a>)</p>
+<a name="appendix-future-work"></a>
+<h2>Appendix: Future Work</h2>
+<a name="other-applications"></a>
+<h3>Other Applications</h3>
+<ul>
+<li>Benchmarking with TSV output</li>
+<li>Building tests first, with Ninja</li>
+<li>Deployment</li>
+</ul>
+<p>Runtime:</p>
+<ul>
+<li>Gateway Interface / Coprocess
+<ul>
+<li>like FastCGI / CGI</li>
+</ul>
+</li>
+<li>Logs</li>
+</ul>
+<p>Points of reference:</p>
+<ul>
+<li>12 factor app for Hosting (Heroku)</li>
+<li>CGI / FastCGI</li>
+</ul>
+<a name="coprocesses"></a>
+<h3>Coprocesses</h3>
+<p>Instead of a fresh process env variables, we might want to detect coprocesses.</p>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

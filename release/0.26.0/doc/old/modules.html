@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oil Modules Safely Separate a Program Into Files</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/modules.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.26.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Oil Modules Safely Separate a Program Into Files</h1>
+<p>Oil has a minimal module system that is shell-like.</p>
+<ul>
+<li>&quot;Modules&quot; is actually a misnomer because they are NOT &quot;modular&quot;.  Procs are
+modular.  But we use the term since &quot;module&quot; is sometimes associated with
+file&quot;.</li>
+<li>In contrast to other features, it's very different than Python or JavaScript
+modules, which have multiple global namespaces.</li>
+</ul>
+<p>The only goal is a little more safety.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#an-example">An Example</a></div>
+  <div class="toclevel1"><a href="#usage-guidelines">Usage Guidelines</a></div>
+  <div class="toclevel1"><a href="#recap-shell-has-separate-namespaces-for-functions-and-variables">Recap: Shell Has Separate Namespaces for Functions and Variables</a></div>
+  <div class="toclevel1"><a href="#mechanisms">Mechanisms</a></div>
+  <div class="toclevel2"><a href="#guarded-execution-with-module">Guarded Execution with <code>module</code></a></div>
+  <div class="toclevel2"><a href="#_this_dir-for-imports-relative-to-the-current-file"><code>$_this_dir</code> For Imports Relative To the Current File</a></div>
+  <div class="toclevel2"><a href="#the-oil-main-builtin-dispatches-to-procs">The <code>oil-main</code> builtin dispatches to procs</a></div>
+  <div class="toclevel2"><a href="#shell-options-redefine_procmodule-expose-name-conflicts">Shell Options <code>redefine_{proc,module}</code> Expose Name Conflicts</a></div>
+  <div class="toclevel1"><a href="#bundling">Bundling</a></div>
+  <div class="toclevel2"><a href="#oil-source-files">Oil Source Files</a></div>
+  <div class="toclevel2"><a href="#with-the-oil-interpreter">With The Oil Interpreter</a></div>
+  <div class="toclevel1"><a href="#appendix-related-documents">Appendix: Related Documents</a></div>
+</div>
+<a name="an-example"></a>
+<h2>An Example</h2>
+<p>Library file.  Top level has <code>module</code>, <code>source</code>, <code>const</code>, and <code>proc</code>.</p>
+<pre><code><span class="sh-comment"># lib-foo.oil (no shebang line necessary)</span>
+
+module lib-foo.oil || return 0  <span class="sh-comment"># module named after file</span>
+source $_this_dir/lib-other
+
+const G_foo = {myvar: 42}
+
+proc foo-proc {
+  echo 'hi from foo-proc'
+}
+
+<span class="sh-comment"># no main function</span>
+</code></pre>
+<p>Executable file.  Top level the same 4, plus <code>oil-main</code> at the bottom.</p>
+<pre><code><span class="sh-comment">#!/usr/bin/env ysh</span>
+
+<span class="sh-comment"># deploy.ysh: Deploy C++ program to a server</span>
+module main || return 0  <span class="sh-comment"># executable programs use 'main' guard</span>
+
+source $_this_dir/lib-foo.oil
+source $_this_dir/lib-bar.oil
+
+const DEST_HOST = 'example.com'
+const DEST_USER = 'homer'
+
+proc .private-p {
+  echo &quot;I don't want oil-main to find this&quot;
+}
+
+proc _p {
+  .private-p  <span class="sh-comment"># direct function call</span>
+  foo-proc
+  echo hi
+}
+
+proc p {
+  sudo $0 _p @ARGV  <span class="sh-comment"># argv dispatch pattern</span>
+}
+
+oil-main  <span class="sh-comment"># dispatch to arguments in this module, except ones beginning with .</span>
+</code></pre>
+<a name="usage-guidelines"></a>
+<h2>Usage Guidelines</h2>
+<ul>
+<li>Distinguish between <code>.oil</code> files that are executable programs, and those that
+are libraries
+<ul>
+<li>A <code>lib-</code> prefix or a <code>lib/</code> dir can make sense, but isn't required</li>
+</ul>
+</li>
+<li>Every <strong>file</strong> needs a <code>module</code> guard</li>
+<li>Use <code>oil-main</code>
+<ul>
+<li>Optional &quot;hide&quot; symbols with <code>.</code></li>
+</ul>
+</li>
+</ul>
+<p>Other:</p>
+<ul>
+<li><code>source</code> must only be used at the top level.</li>
+<li>When using modules, it's considered bad style to put code at the top level.
+<ul>
+<li>Either ALL code is at the top level in short script, or NONE of it is.</li>
+<li>See the <a href="variables.html">doc on variables</a>.</li>
+</ul>
+</li>
+</ul>
+<a name="recap-shell-has-separate-namespaces-for-functions-and-variables"></a>
+<h2>Recap: Shell Has Separate Namespaces for Functions and Variables</h2>
+<p>TODO:</p>
+<ul>
+<li>Proc namespace</li>
+<li>Var namespace (a stack)</li>
+</ul>
+<p>The <code>source</code> just concatenates both.</p>
+<p>This is like a Lisp 2.</p>
+<p>Oil doesn't deviate from this!  It builds some things on top.</p>
+<p>TODO: See Interpreter state / data model.</p>
+<a name="mechanisms"></a>
+<h2>Mechanisms</h2>
+<a name="guarded-execution-with-module"></a>
+<h3>Guarded Execution with <code>module</code></h3>
+<ul>
+<li>Use either <code>main</code> or <code>mylib.oil</code></li>
+</ul>
+<a name="_this_dir-for-imports-relative-to-the-current-file"></a>
+<h3><code>$_this_dir</code> For Imports Relative To the Current File</h3>
+<ul>
+<li>This lets you move things around, version them, etc.</li>
+</ul>
+<a name="the-oil-main-builtin-dispatches-to-procs"></a>
+<h3>The <code>oil-main</code> builtin dispatches to procs</h3>
+<p>The <code>$0</code> dispatch pattern.</p>
+<a name="shell-options-redefine_procmodule-expose-name-conflicts"></a>
+<h3>Shell Options <code>redefine_{proc,module}</code> Expose Name Conflicts</h3>
+<p>In batch mode, you'll get errors.</p>
+<p>But you can iteratively test in interactive mode.</p>
+<pre><code>source mymodule.oil  <span class="sh-comment"># 'module' guard will be bypassed in interactive mode</span>
+</code></pre>
+<a name="bundling"></a>
+<h2>Bundling</h2>
+<a name="oil-source-files"></a>
+<h3>Oil Source Files</h3>
+<p>TODO / help wanted: Pea.</p>
+<p>It's nice that we have this &quot;sequential&quot; or concatenative property of code!
+Multiple &quot;modules&quot; can go in the same file.</p>
+<p>Naming convention: <code>pkg-foo.oil</code> ?  I don't really think we should have
+packages though?</p>
+<a name="with-the-oil-interpreter"></a>
+<h3>With The Oil Interpreter</h3>
+<a name="appendix-related-documents"></a>
+<h2>Appendix: Related Documents</h2>
+<ul>
+<li>Variables and Namespaces</li>
+<li><a href="qsn.html">QSN</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

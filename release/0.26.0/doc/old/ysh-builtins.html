@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oil Builtins</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/ysh-builtins.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.26.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Oil Builtins</h1>
+
+<p>This is an <strong>overview</strong> of <a href="/cross-ref.html?tag=shell-builtin#shell-builtin">shell builtins</a> that are
+unique to Oil.  A full description of each builtin will be available in the
+<a href="help-index.html">help pages</a>.</p>
+<p>What are builtins?  They look like external commands, but are included with the
+shell itself.  They don't spawn an external process, and can modify the shell's
+memory.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#new-builtins-in-oil">New Builtins in Oil</a></div>
+  <div class="toclevel2"><a href="#append-appends-strings-to-an-array"><code>append</code> appends strings to an array</a></div>
+  <div class="toclevel2"><a href="#pp-pretty-prints-interpreter-state"><code>pp</code> pretty prints interpreter state</a></div>
+  <div class="toclevel2"><a href="#module"><code>module</code></a></div>
+  <div class="toclevel2"><a href="#use"><code>use</code></a></div>
+  <div class="toclevel2"><a href="#runproc"><code>runproc</code></a></div>
+  <div class="toclevel1"><a href="#shell-builtins-enhanced-with-block">Shell Builtins Enhanced with Block</a></div>
+  <div class="toclevel2"><a href="#cd">cd</a></div>
+  <div class="toclevel2"><a href="#shopt">shopt</a></div>
+  <div class="toclevel1"><a href="#other-builtins-that-take-blocks">Other Builtins That Take Blocks</a></div>
+  <div class="toclevel2"><a href="#fork-forkwait">fork, forkwait</a></div>
+  <div class="toclevel2"><a href="#argparse">argparse</a></div>
+  <div class="toclevel1"><a href="#io-builtins">I/O Builtins</a></div>
+  <div class="toclevel1"><a href="#more">More</a></div>
+</div>
+<a name="new-builtins-in-oil"></a>
+<h2>New Builtins in Oil</h2>
+<a name="append-appends-strings-to-an-array"></a>
+<h3><a href="osh-help.html?topic=&lt;code&gt;append&lt;/code&gt;#&lt;code&gt;append&lt;/code&gt;"><code>append</code></a> appends strings to an array</h3>
+<p>Example:</p>
+<pre><code>var a = :| 1 '2 two' |
+append :a three four
+echo @a  <span class="sh-comment"># prints 4 lines</span>
+</code></pre>
+<p>Here's another way to write it:</p>
+<pre><code>setvar a = :| @a three four |
+</code></pre>
+<p>Note that you can append to a string like this:</p>
+<pre><code>var s = 'foo'
+setvar s = &quot;${s}suffix&quot;
+</code></pre>
+<p>(Note: Oil doesn't currently support the equivalent of shell's <code>s+=suffix</code>.)</p>
+<a name="pp-pretty-prints-interpreter-state"></a>
+<h3><a href="osh-help.html?topic=&lt;code&gt;pp&lt;/code&gt;#&lt;code&gt;pp&lt;/code&gt;"><code>pp</code></a> pretty prints interpreter state</h3>
+<ul>
+<li><code>pp cell</code> - shows the value of a variable, for debugging</li>
+<li><code>pp proc</code> - shows doc strings</li>
+</ul>
+<a name="module"></a>
+<h3><code>module</code></h3>
+<a name="use"></a>
+<h3><code>use</code></h3>
+<a name="runproc"></a>
+<h3><code>runproc</code></h3>
+<a name="shell-builtins-enhanced-with-block"></a>
+<h2>Shell Builtins Enhanced with Block</h2>
+<p>Done:</p>
+<ul>
+<li><a href="osh-help.html?topic=cd#cd">cd</a></li>
+<li><a href="osh-help.html?topic=shopt#shopt">shopt</a></li>
+</ul>
+<p>Planned, but not implemented:</p>
+<ul>
+<li><a href="osh-help.html?topic=fork#fork">fork</a> for <code>&amp;</code></li>
+<li><a href="osh-help.html?topic=forkwait#forkwait">forkwait</a> for <code>()</code></li>
+<li><a href="osh-help.html?topic=env#env">env</a> to replace <code>PYTHONPATH=. foo.py</code></li>
+<li><a href="osh-help.html?topic=each#each">each</a> runs processes in parallel and replaces <code>xargs</code></li>
+</ul>
+<p>Examples of what we have in mind:</p>
+<pre><code><span class="sh-comment"># this replaces an awkward idiom with eval I've seen a lot</span>
+shopt -u errexit {  <span class="sh-comment"># TODO: --unset</span>
+   false
+   echo &quot;temporary disable an option&quot;
+} 
+
+<span class="sh-comment"># generalizes the 'NAME=value command' syntax and the 'env' prefix helps parsing</span>
+env PYTHONPATH=. {
+  ./foo.py
+  ./bar.py
+}
+
+<span class="sh-comment"># replaces sleep 5 &amp;</span>
+fork { sleep 5 }
+
+<span class="sh-comment"># replaces () syntax so we can use it for something else.</span>
+forkwait { echo subshell; sleep 5 }
+
+<span class="sh-comment"># Probably used for a &quot;syntactic pun&quot; of Python-like &quot;import as&quot; functionality</span>
+
+use lib foo.sh {
+  myfunc
+  myalias otherfunc
+}
+</code></pre>
+<a name="cd"></a>
+<h3>cd</h3>
+<p>It now takes a block:</p>
+<pre><code>cd /tmp {
+  echo $PWD  <span class="sh-comment"># prints /tmp</span>
+}
+echo $PWD  <span class="sh-comment"># prints the original directory</span>
+</code></pre>
+<p>This subsumes the functionality of bash builtins <a href="osh-help.html?topic=pushd#pushd">pushd</a> and
+<a href="osh-help.html?topic=popd#popd">popd</a>.</p>
+<p>When a block is passed:</p>
+<ul>
+<li><code>cd</code> doesn't set The <code>OLDPWD</code> variable (which is used to implement the <code>cd -</code>
+shortcut.)</li>
+<li>The directory stack for <code>pushd</code> and <code>popd</code> isn't cleared, as it is with a
+normal <code>cd</code> command.</li>
+</ul>
+<a name="shopt"></a>
+<h3>shopt</h3>
+<a name="other-builtins-that-take-blocks"></a>
+<h2>Other Builtins That Take Blocks</h2>
+<a name="fork-forkwait"></a>
+<h3>fork, forkwait</h3>
+<a name="argparse"></a>
+<h3>argparse</h3>
+<a name="io-builtins"></a>
+<h2>I/O Builtins</h2>
+<p>See <a href="io-builtins.html">IO Builtins</a>.</p>
+<p>And <a href="json.html">JSON</a>.</p>
+<a name="more"></a>
+<h2>More</h2>
+<ul>
+<li>Not implemented: log, die</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

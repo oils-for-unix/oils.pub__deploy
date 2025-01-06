@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils 0.26.0</title>
+    <link rel="stylesheet" type="text/css" href="web/base.css" />
+<link rel="stylesheet" type="text/css" href="web/release-index.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/release-index.md" id="source-link">source</a> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils 0.26.0</h1>
+
+<span class="date">
+2025-01-06
+</span>
+<p>This is the home page for version 0.26.0 of Oils, a Unix shell.  To use it,</p>
+<ol>
+<li>Download a source tarball.</li>
+<li>Build it and do a &quot;smoke test&quot;, as described in <a href="doc/INSTALL.html">INSTALL</a>.</li>
+</ol>
+<p>These steps take 30 to 60 seconds on most machines.  After installation, see
+<a href="doc/getting-started.html">Getting Started</a>.</p>
+<h2>Download</h2>
+<div class="file-table">
+<table>
+<tr class="file-table-heading">
+  <td></td>
+  <td>File / SHA256 checksum</td>
+  <td class="size">Size</td>
+  <td></td>
+</tr>
+    <tr> 
+      <td></td>
+      <td class="filename"><a href="/download/oils-for-unix-0.26.0.tar.gz">oils-for-unix-0.26.0.tar.gz</a></td>
+      <td class="size">821,833</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan=2 class="checksum">2b5b295a577a2763814203b4a34880ca03067a29eeb80af4857b6092314d6eed</td>
+    </tr>
+    <tr> 
+      <td></td>
+      <td class="filename"><a href="/download/oil-0.26.0.tar.gz">oil-0.26.0.tar.gz</a></td>
+      <td class="size">2,321,495</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan=2 class="checksum">2d5ca8f22b6abce9a7d519d227d74283aa1265453d89f6cfe59086ac1cb949f2</td>
+    </tr>
+    <tr> 
+      <td></td>
+      <td class="filename"><a href="/download/oil-0.26.0.tar.xz">oil-0.26.0.tar.xz</a></td>
+      <td class="size">1,630,836</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td colspan=2 class="checksum">6bf492e683c045a615df11f99b3dda7515bf56c1c46d2daeba610c7451cf22dc</td>
+    </tr>
+</table>
+</div>
+<p>The <a href="https://github.com/oilshell/oil/wiki/Oils-Deployments">Oils Deployments</a>
+wiki page has other ways of getting Oils.  These versions may not be
+up-to-date.</p>
+<h2>Documentation</h2>
+<ul>
+<li><a href="doc/published.html">Published Docs</a> - these are ready to read</li>
+<li><a href="doc/index.html">All Docs</a> (in progress)
+<ul>
+<li>The <a href="doc/ref/index.html"><strong>Oils Reference</strong></a></li>
+</ul>
+</li>
+<li><a href="https://github.com/oilshell/oil/wiki">Github Wiki for oilshell/oil</a></li>
+</ul>
+<h2>Packaging</h2>
+<p>Summary of <a href="https://github.com/oilshell/oil/wiki/Oils-Packaging-Guidelines">Oils Packaging Guidelines</a>:</p>
+<ul>
+<li>The <code>oils-for-unix</code> tarball is the fast shell in C++, completed in
+2024.  The distro package should be called <code>oils-for-unix</code>.</li>
+<li>The <code>oil</code> tarball is the slow reference interpreter based on CPython.
+<ul>
+<li>Don't rename old distro packages.  They can remain <code>oil</code>.</li>
+<li>It's not worth packaging <code>oil</code> in new distros.  It may be removed at some
+point.</li>
+</ul>
+</li>
+<li>The project is now called <strong>Oils</strong>, or <a href="https://www.oilshell.org/blog/2023/03/rename.html">Oils for
+Unix</a>.  There is no more
+<code>oil</code>!</li>
+</ul>
+<h2>What's New</h2>
+<ul>
+<li>Details are in the <a href="changelog.html">raw git change log</a>.  Not all changes
+affect the release tarball.</li>
+<li>I sometimes write a <a href="announcement.html">release announcement</a> with a
+high-level description of changes.</li>
+</ul>
+<h2>Links</h2>
+<ul>
+<li>The <strong><a href="quality.html">quality page</a></strong> shows test results, metrics, and
+benchmarks.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

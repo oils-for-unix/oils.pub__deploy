@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Style Guide</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/style-guide.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.26.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Style Guide</h1>
+<p>Here are some recommendations on coding style.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#your-names">Your Names</a></div>
+  <div class="toclevel2"><a href="#procs-and-funcs-look-different">Procs and Funcs Look Different</a></div>
+  <div class="toclevel2"><a href="#variables">Variables</a></div>
+  <div class="toclevel2"><a href="#filenames">Filenames</a></div>
+  <div class="toclevel1"><a href="#ysh-names">YSH Names</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#reserved-names">Reserved Names</a></div>
+  <div class="toclevel2"><a href="#related">Related</a></div>
+</div>
+<a name="your-names"></a>
+<h2>Your Names</h2>
+<a name="procs-and-funcs-look-different"></a>
+<h3>Procs and Funcs Look Different</h3>
+<pre><code>proc kebab-case() {
+  echo hi
+}
+
+func camelCase() {
+  echo hi
+}
+</code></pre>
+<a name="variables"></a>
+<h3>Variables</h3>
+<p>Local variables:</p>
+<pre><code>var snake_case = 42
+</code></pre>
+<p>Hungarian for global &quot;constants&quot;:</p>
+<pre><code>var kMyConst = 42   <span class="sh-comment"># immutable</span>
+
+var gMyGlobal = {}  <span class="sh-comment"># mutable</span>
+</code></pre>
+<p>For consistency, this style is also OK:</p>
+<pre><code>var MY_CONST = 42
+</code></pre>
+<p>Env vars use <code>CAP_WORDS</code>:</p>
+<pre><code>var maxProcs = ENV.MAX_PROCS
+</code></pre>
+<a name="filenames"></a>
+<h3>Filenames</h3>
+<pre><code>my-script.sh    <span class="sh-comment"># runs with /bin/sh and OSH</span>
+
+my-script.bash  <span class="sh-comment"># runs with bash and OSH</span>
+
+my-script.osh   <span class="sh-comment"># runs with OSH</span>
+
+my-script.ysh   <span class="sh-comment"># runs with YSH</span>
+
+my-module.ysh   <span class="sh-comment"># import with 'use'</span>
+mymodule.ysh    <span class="sh-comment"># also OK</span>
+</code></pre>
+<a name="ysh-names"></a>
+<h2>YSH Names</h2>
+<p>Capital Letters are used for types:</p>
+<pre><code>Null   Bool   Int   Float   Str
+List   Dict
+Proc   Func
+</code></pre>
+<p>Special shell variables:</p>
+<pre><code>PATH   IFS
+</code></pre>
+<p>Global variables that are <strong>silently mutated</strong> by the interpreter start with
+<code>_</code>:</p>
+<pre><code>_error   _pipeline_status   _reply
+</code></pre>
+<p>As do functions to access such mutable vars:</p>
+<pre><code>_group()   _start()   _end()
+</code></pre>
+<p>Example:</p>
+<pre><code>try {
+  false
+}
+if (_error.code !== 0) {
+  echo 'failed'
+}
+</code></pre>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="reserved-names"></a>
+<h3>Reserved Names</h3>
+<p>As in Python, names like <code>__provide__</code> are reserved by the interpreter.</p>
+<a name="related"></a>
+<h3>Related</h3>
+<ul>
+<li><a href="shell-idioms.html">Shell Language Idioms</a></li>
+<li><a href="syntax-feelings.html">A Feel For YSH Syntax</a></li>
+</ul>
+
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

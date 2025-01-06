@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Guide to Procs and Funcs</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/proc-func.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.26.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Guide to Procs and Funcs</h1>
+<p>YSH has two major units of code: shell-like <code>proc</code>, and Python-like <code>func</code>.</p>
+<ul>
+<li>Roughly speaking, procs are for commands and <strong>I/O</strong>, while funcs are for
+pure <strong>computation</strong>.</li>
+<li>Procs are often <strong>big</strong>, and may call <strong>small</strong> funcs.  On the other hand,
+it's possible, but rarer, for funcs to call procs.</li>
+<li>You can write shell scripts <strong>mostly</strong> with procs, and perhaps a few funcs.</li>
+</ul>
+<p>This doc compares the two mechanisms, and gives rough guidelines.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#tip-start-simple">Tip: Start Simple</a></div>
+  <div class="toclevel1"><a href="#at-a-glance">At a Glance</a></div>
+  <div class="toclevel2"><a href="#procs-vs-funcs">Procs vs. Funcs</a></div>
+  <div class="toclevel2"><a href="#func-calls-and-defs">Func Calls and Defs</a></div>
+  <div class="toclevel2"><a href="#proc-calls-and-defs">Proc Calls and Defs</a></div>
+  <div class="toclevel1"><a href="#common-features">Common Features</a></div>
+  <div class="toclevel2"><a href="#spread-args-rest-params">Spread Args, Rest Params</a></div>
+  <div class="toclevel2"><a href="#the-error-builtin-raises-exceptions">The <code>error</code> builtin raises exceptions</a></div>
+  <div class="toclevel2"><a href="#out-params-myvar-is-of-type-valueplace">Out Params: <code>&amp;myvar</code> is of type <code>value.Place</code></a></div>
+  <div class="toclevel1"><a href="#proc-only-features">Proc-Only Features</a></div>
+  <div class="toclevel2"><a href="#lazy-arg-lists-where-x-10">Lazy Arg Lists <code>where [x &gt; 10]</code></a></div>
+  <div class="toclevel2"><a href="#open-proc-signatures-bind-argv">Open Proc Signatures bind <code>argv</code></a></div>
+  <div class="toclevel1"><a href="#methods-are-funcs-bound-to-objects">Methods are Funcs Bound to Objects</a></div>
+  <div class="toclevel1"><a href="#the-__invoke__-method-makes-an-object-proc-like">The <code>__invoke__</code> method makes an Object &quot;Proc-like&quot;</a></div>
+  <div class="toclevel1"><a href="#usage-notes">Usage Notes</a></div>
+  <div class="toclevel2"><a href="#3-ways-to-return-a-value">3 Ways to Return a Value</a></div>
+  <div class="toclevel2"><a href="#procs-compose-in-pipelines-bernstein-chaining">Procs Compose in Pipelines / &quot;Bernstein Chaining&quot;</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#implementation-details">Implementation Details</a></div>
+  <div class="toclevel2"><a href="#related">Related</a></div>
+</div>
+<a name="tip-start-simple"></a>
+<h2>Tip: Start Simple</h2>
+<p>Before going into detail, here's a quick reminder that you don't have to use
+<strong>either</strong> procs or funcs.  YSH is a language that scales both down and up.</p>
+<p>You can start with just a list of plain commands:</p>
+<pre><code>mkdir -p /tmp/dest
+cp --verbose *.txt /tmp/dest
+</code></pre>
+<p>Then copy those into procs as the script gets bigger:</p>
+<pre><code>proc build-app {
+  ninja --verbose
+}
+
+proc deploy {
+  mkdir -p /tmp/dest
+  cp --verbose *.txt /tmp/dest
+}
+
+build-app
+deploy
+</code></pre>
+<p>Then add funcs if you need pure computation:</p>
+<pre><code>func isTestFile(name) {
+  return (name =&gt; endsWith('._test.py'))
+}
+
+if (isTestFile('my_test.py')) {
+  echo 'yes'
+}
+</code></pre>
+<a name="at-a-glance"></a>
+<h2>At a Glance</h2>
+<a name="procs-vs-funcs"></a>
+<h3>Procs vs. Funcs</h3>
+<p>This table summarizes the difference between procs and funcs.  The rest of the
+doc will elaborate on these issues.</p>
+<style>
+  thead {
+    background-color: #eee;
+    font-weight: bold;
+  }
+  table {
+    font-family: sans-serif;
+    border-collapse: collapse;
+  }
+
+  tr {
+    border-bottom: solid 1px;
+    border-color: #ddd;
+  }
+
+  td {
+    padding: 8px;  /* override default of 5px */
+  }
+</style>
+<table>
+<thead>
+<tr>
+  <th>
+
+</th>
+  <th>Proc</th>
+  <th>Func</th>
+</tr>
+</thead>
+<tr>
+  <td>Design Influence</td>
+  <td>Shell-like.</td>
+  <td>Python- and JavaScript-like, but <strong>pure</strong>.</td>
+</tr>
+<tr>
+  <td>
+<p>Shape</p>
+</td>
+  <td>
+<p>Procs are shaped like Unix processes: with <code>argv</code>, an integer return code,
+and <code>stdin</code> / <code>stdout</code> streams.</p>
+<p>They're a generalization of Bourne shell &quot;functions&quot;.</p>
+</td>
+  <td>
+<p>Funcs are shaped like mathematical functions.</p>
+</td>
+</tr>
+<tr>
+  <td>Architectural Role (<a href="https://www.oilshell.org/blog/2023/06/ysh-design.html">Oils is Exterior First</a>)</td>
+  <td><strong>Exterior</strong>: processes and files.</td>
+  <td><strong>Interior</strong>: functions and garbage-collected data structures.</td>
+</tr>
+<tr>
+  <td>I/O</td>
+  <td>Procs may start external processes and pipelines.  Can perform I/O
+anywhere.</td>
+  <td>Funcs need an explicit <code>io</code> param to perform I/O.</td>
+</tr>
+<tr>
+  <td>Example Definition</td>
+  <td>
+<pre><code>proc print-max (; x, y) {
+  echo $[x if x &gt; y else y]
+}
+</code></pre>
+</td>
+  <td>
+<pre><code>func computeMax(x, y) {
+  return (x if x &gt; y else y)
+}
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td>
+<p>Example Call</p>
+</td>
+  <td>
+<pre><code>print-max (3, 4)
+</code></pre>
+<p>Procs can be put in pipelines:</p>
+<pre><code>print-max (3, 4) | tee out.txt
+</code></pre>
+</td>
+  <td>
+<pre><code>var m = computeMax(3, 4)
+</code></pre>
+<p>Or throw away the return value, which is useful for functions that mutate:</p>
+<pre><code>call computeMax(3, 4)
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td>Naming Convention</td>
+  <td><code>kebab-case</code></td>
+  <td><code>camelCase</code></td>
+</tr>
+<tr>
+  <td><a href="command-vs-expression-mode.html">Syntax Mode</a> of call site</td>
+  <td>Command Mode</td></td>
+  <td>Expression Mode</td></td>
+</tr>
+<tr>
+  <td>
+<p>Kinds of Parameters / Arguments</p>
+</td>
+  <td>
+
+<ol>
+<li>Word aka string</li>
+<li>Typed and Positional</li>
+<li>Typed and Named</li>
+<li>Block</li>
+</ol>
+<p>Examples shown below.</p>
+</td>
+  <td>
+
+<ol>
+<li>Positional</li>
+<li>Named</li>
+</ol>
+<p>(both typed)</p>
+</td>
+</tr>
+<tr>
+  <td>
+<p>Return Value</p>
+</td>
+  <td>
+<p>Integer status 0-255</p>
+</td>
+  <td>
+<p>Any type of value, e.g.</p>
+<pre><code>return ([42, {name: 'bob'}])
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td>
+<p>Can it be a method on an object?</p>
+</td>
+  <td>
+<p>No</p>
+</td>
+  <td>
+<p>Yes, funcs may be bound to objects:</p>
+<pre><code>var x = obj.myMethod()
+call obj-&gt;myMutatingMethod()
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td>Interface Evolution</td>
+  <td><strong>Slower</strong>: Procs exposed to the outside world may need to evolve in a compatible or &quot;versionless&quot; way.</td>
+  <td><strong>Faster</strong>: Funcs may be refactored internally.</td>
+</tr>
+<tr>
+  <td>Parallelism?</td>
+  <td>Procs can be parallel with:
+<ul>
+<li>shell constructs: pipelines, <code>&amp;</code> aka <code>fork</code></li>
+<li>external tools and the <a href="https://www.oilshell.org/blog/2021/08/xargs.html">$0 Dispatch
+Pattern</a>: xargs, make,
+Ninja, etc.</li>
+</ul>
+</td>
+  <td>Funcs are inherently <strong>serial</strong>, unless wrapped in a proc.</td>
+</tr>
+<tr>
+  <td colspan="3" style="text-align: center; padding: 3em">More <code>proc</code> Features ...
+</td>
+</tr>
+<tr>
+  <td>Kinds of Signature</td>
+  <td>Open <code>proc p {</code> or <br/>
+Closed <code>proc p () {</code></td>
+  <td>
+ -
+</td>
+</tr>
+<tr>
+  <td>Lazy Args</td>
+  <td>
+<pre><code>assert [42 === x]
+</code></pre>
+</td>
+  <td>
+ -
+</td>
+</tr>
+</table>
+<a name="func-calls-and-defs"></a>
+<h3>Func Calls and Defs</h3>
+<p>Now that we've compared procs and funcs, let's look more closely at funcs.
+They're inherently <strong>simpler</strong>: they have 2 types of args and params, rather
+than 4.</p>
+<p>YSH argument binding is based on Julia, which has all the power of Python, but
+without the &quot;evolved warts&quot; (e.g. <code>/</code> and <code>*</code>).</p>
+<p>In general, with all the bells and whistles, func definitions look like:</p>
+<pre><code><span class="sh-comment"># pos args and named args separated with ;</span>
+func f(p1, p2, ...rest_pos; n1=42, n2='foo', ...rest_named) {
+  return (len(rest_pos) + len(rest_named))
+}
+</code></pre>
+<p>Func calls look like:</p>
+<pre><code><span class="sh-comment"># spread operator ... at call site</span>
+var pos_args = [3, 4]
+var named_args = {foo: 'bar'}
+var x = f(1, 2, ...pos_args; n1=43, ...named_args)
+</code></pre>
+<p>Note that positional args/params and named args/params can be thought of as two
+&quot;separate worlds&quot;.</p>
+<p>This table shows simpler, more common cases.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Args / Params</td>
+    <td>Call Site</td>
+    <td>Definition</td>
+  </tr>
+  </thead>
+  <tr>
+    <td>Positional Args</td>
+<td>
+<pre><code>var x = myMax(3, 4)
+</code></pre>
+</td>
+<td>
+<pre><code>func myMax(x, y) {
+  return (x if x &gt; y else y)
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td>Spread Pos Args</td>
+<td>
+<pre><code>var args = [3, 4]
+var x = myMax(...args)
+</code></pre>
+</td>
+<td>
+<p>(as above)</p>
+</td>
+  </tr>
+  <tr>
+    <td>Rest Pos Params</td>
+<td>
+<pre><code>var x = myPrintf(&quot;%s is %d&quot;, 'bob', 30)
+</code></pre>
+</td>
+<td>
+<pre><code>func myPrintf(fmt, ...args) {
+  <span class="sh-comment"># ...</span>
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td colspan=3 style="text-align: center; padding: 3em">...</td>
+  </tr>
+</td>
+  </tr>
+  <tr>
+    <td>Named Args</td>
+<td>
+<pre><code>var x = mySum(3, 4, start=5)
+</code></pre>
+</td>
+<td>
+<pre><code>func mySum(x, y; start=0) {
+  return (x + y + start)
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td>Spread Named Args</td>
+<td>
+<pre><code>var opts = {start: 5}
+var x = mySum(3, 4, ...opts)
+</code></pre>
+</td>
+<td>
+<p>(as above)</p>
+</td>
+  </tr>
+  <tr>
+    <td>Rest Named Params</td>
+<td>
+<pre><code>var x = f(start=5, end=7)
+</code></pre>
+</td>
+<td>
+<pre><code>func f(; ...opts) {
+  if ('start' not in opts) {
+    setvar opts.start = 0
+  }
+  <span class="sh-comment"># ...</span>
+}
+</code></pre>
+</td>
+  </tr>
+</table>
+<a name="proc-calls-and-defs"></a>
+<h3>Proc Calls and Defs</h3>
+<p>Like funcs, procs have 2 kinds of typed args/params: positional and named.</p>
+<p>But they may also have <strong>string aka word</strong> args/params, and a <strong>block</strong>
+arg/param.</p>
+<p>In general, a proc signature has 4 sections, like this:</p>
+<pre><code>proc p (
+    w1, w2, ...rest_word;     <span class="sh-comment"># word params</span>
+    p1, p2, ...rest_pos;      <span class="sh-comment"># pos params</span>
+    n1, n2, ...rest_named;    <span class="sh-comment"># named params</span>
+    block                     <span class="sh-comment"># block param</span>
+) {
+  echo 'body'
+}
+</code></pre>
+<p>In general, a proc call looks like this:</p>
+<pre><code>var pos_args = [3, 4]
+var named_args = {foo: 'bar'}
+
+p /bin /tmp (1, 2, ...pos_args; n1=43, ...named_args) {
+  echo 'block'
+}
+</code></pre>
+<p>The block can also be passed as an expression after a second semicolon:</p>
+<pre><code>p /bin /tmp (1, 2, ...pos_args; n1=43, ...named_args; block)
+</code></pre>
+
+<p>Some simpler examples:</p>
+<table>
+  <thead>
+  <tr>
+    <td>Args / Params</td>
+    <td>Call Site</td>
+    <td>Definition</td>
+  </tr>
+  </thead>
+  <tr>
+    <td>Word args</td>
+<td>
+<pre><code>my-cd /tmp
+</code></pre>
+</td>
+<td>
+<pre><code>proc my-cd (dest) {
+  cd $dest
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td>Rest Word Params</td>
+<td>
+<pre><code>my-cd -L /tmp
+</code></pre>
+</td>
+<td>
+<pre><code>proc my-cd (...flags) {
+  cd @flags
+}
+</code></pre>
+  <tr>
+    <td>Spread Word Args</td>
+<td>
+<pre><code>var flags = :| -L /tmp |
+my-cd @flags
+</code></pre>
+</td>
+<td>
+<p>(as above)</p>
+</td>
+  </tr>
+</td>
+  </tr>
+  <tr>
+    <td colspan=3 style="text-align: center; padding: 3em">...</td>
+  </tr>
+  <tr>
+    <td>Typed Pos Arg</td>
+<td>
+<pre><code>print-max (3, 4)
+</code></pre>
+</td>
+<td>
+<pre><code>proc print-max ( ; x, y) {
+  echo $[x if x &gt; y else y]
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td>Typed Named Arg</td>
+<td>
+<pre><code>print-max (3, 4, start=5)
+</code></pre>
+</td>
+<td>
+<pre><code>proc print-max ( ; x, y; start=0) {
+  <span class="sh-comment"># ...</span>
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td colspan=3 style="text-align: center; padding: 3em">...</td>
+  </tr>
+  <tr>
+    <td>Block Argument</td>
+<td>
+<pre><code>my-cd /tmp {
+  echo $PWD
+  echo hi
+}
+</code></pre>
+</td>
+<td>
+<pre><code>proc my-cd (dest; ; ; block) {
+  cd $dest (; ; block)
+}
+</code></pre>
+</td>
+  </tr>
+  <tr>
+    <td>All Four Kinds</td>
+<td>
+<pre><code>p 'word' (42, verbose=true) {
+  echo $PWD
+  echo hi
+}
+</code></pre>
+</td>
+<td>
+<pre><code>proc p (w; myint; verbose=false; block) {
+  = w
+  = myint
+  = verbose
+  = block
+}
+</code></pre>
+</td>
+  </tr>
+</table>
+<a name="common-features"></a>
+<h2>Common Features</h2>
+<p>Let's recap the common features of procs and funcs.</p>
+<a name="spread-args-rest-params"></a>
+<h3>Spread Args, Rest Params</h3>
+<ul>
+<li>Spread arg list <code>...</code> at call site</li>
+<li>Rest params <code>...</code> at definition</li>
+</ul>
+<a name="the-error-builtin-raises-exceptions"></a>
+<h3>The <code>error</code> builtin raises exceptions</h3>
+<p>The <code>error</code> builtin is idiomatic in both funcs and procs:</p>
+<pre><code>func f(x) {   
+  if (x &lt;= 0) {
+    error 'Should be positive' (status=99)
+  }
+}
+</code></pre>
+<p>Tip: reserve such errors for <strong>exceptional</strong> situations.  For example, an input
+string being invalid may not be uncommon, while a disk full I/O error is more
+exceptional.</p>
+<p>(The <code>error</code> builtin is implemented with C++ exceptions, which are slow in the
+error case.)</p>
+<a name="out-params-myvar-is-of-type-valueplace"></a>
+<h3>Out Params: <code>&amp;myvar</code> is of type <code>value.Place</code></h3>
+<p>Out params are more common in procs, because they don't have a typed return
+value.</p>
+<pre><code>proc p ( ; out) {
+  call out-&gt;setValue(42)
+}
+var x
+p (&amp;x)
+echo &quot;x set to $x&quot;  <span class="sh-comment"># =&gt; x set to 42</span>
+</code></pre>
+<p>But they can also be used in funcs:</p>
+<pre><code>func f (out) {
+  call out-&gt;setValue(42)
+}
+var x
+call f(&amp;x)
+echo &quot;x set to $x&quot;  <span class="sh-comment"># =&gt; x set to 42</span>
+</code></pre>
+<p>Observation: procs can do everything funcs can.  But you may want the purity
+and familiar syntax of a <code>func</code>.</p>
+<hr />
+<p>Design note: out params are a nicer way of doing what bash does with <code>declare -n</code> aka <code>nameref</code> variables.  They don't rely on <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic
+scope</a>.</p>
+<a name="proc-only-features"></a>
+<h2>Proc-Only Features</h2>
+<p>Procs have some features that funcs don't have.</p>
+<a name="lazy-arg-lists-where-x-10"></a>
+<h3>Lazy Arg Lists <code>where [x &gt; 10]</code></h3>
+<p>A lazy arg list is implemented with <code>shopt --set parse_bracket</code>, and is syntax
+sugar for an unevaluated <code>value.Expr</code>.</p>
+<p>Longhand:</p>
+<pre><code>var my_expr = ^[42 === x]  <span class="sh-comment"># value of type Expr</span>
+assert (myexpr)
+</code></pre>
+<p>Shorthand:</p>
+<pre><code>assert [42 === x]  <span class="sh-comment"># equivalent to the above</span>
+</code></pre>
+<a name="open-proc-signatures-bind-argv"></a>
+<h3>Open Proc Signatures bind <code>argv</code></h3>
+<p>TODO: Implement new <code>ARGV</code> semantics.</p>
+<p>When a proc signature omits <code>()</code>, it's called <strong>&quot;open&quot;</strong> because the caller can
+pass &quot;extra&quot; arguments:</p>
+<pre><code>proc my-open {
+  write 'args are' @ARGV
+}
+<span class="sh-comment"># All valid:</span>
+my-open
+my-open 1 
+my-open 1 2
+</code></pre>
+<p>Stricter closed procs:</p>
+<pre><code>proc my-closed (x) {
+  write 'arg is' $x
+}
+my-closed      <span class="sh-comment"># runtime error: missing argument</span>
+my-closed 1    <span class="sh-comment"># valid</span>
+my-closed 1 2  <span class="sh-comment"># runtime error: too many arguments</span>
+</code></pre>
+<p>An &quot;open&quot; proc is nearly is nearly identical to a shell function:</p>
+<pre><code>shfunc() {
+  write 'args are' @ARGV
+}
+</code></pre>
+<a name="methods-are-funcs-bound-to-objects"></a>
+<h2>Methods are Funcs Bound to Objects</h2>
+<p>Values of type <code>Obj</code> have an ordered set of name-value bindings, as well as a
+prototype chain of more <code>Obj</code> instances (&quot;parents&quot;).  They support these
+operators:</p>
+<ul>
+<li>dot (<code>.</code>) looks for attributes or methods with a given name.
+<ul>
+<li>Reference: <a href="ref/chap-expr-lang.html#ysh-attr">ysh-attr</a></li>
+<li>Attributes may be in the object, or up the chain.  They are returned
+literally.</li>
+<li>Methods live up the chain.  They are returned as <code>BoundFunc</code>, so that the
+first <code>self</code> argument of a method call is the object itself.</li>
+</ul>
+</li>
+<li>Thin arrow (<code>-&gt;</code>) looks for mutating methods, which have an <code>M/</code> prefix.
+<ul>
+<li>Reference: <a href="ref/chap-expr-lang.html#thin-arrow">thin-arrow</a></li>
+</ul>
+</li>
+</ul>
+<a name="the-__invoke__-method-makes-an-object-proc-like"></a>
+<h2>The <code>__invoke__</code> method makes an Object &quot;Proc-like&quot;</h2>
+<p>First, define a proc, with the first typed arg named <code>self</code>:</p>
+<pre><code>proc myInvoke (word_param; self, int_param) {
+  echo &quot;sum = $[self.x + self.y + int_param]&quot;
+}
+</code></pre>
+<p>Make it the <code>__invoke__</code> method of an <code>Obj</code>:</p>
+<pre><code>var methods = Object(null, {__invoke__: myInvoke})
+var invokable_obj = Object(methods, {x: 1, y: 2})
+</code></pre>
+<p>Then invoke it like a proc:</p>
+<pre><code>invokable_obj myword (3)
+<span class="sh-comment"># sum =&gt; 6</span>
+</code></pre>
+<a name="usage-notes"></a>
+<h2>Usage Notes</h2>
+<a name="3-ways-to-return-a-value"></a>
+<h3>3 Ways to Return a Value</h3>
+<p>Let's review the recommended ways to &quot;return&quot; a value:</p>
+<ol>
+<li><code>return (x)</code> in a <code>func</code>.
+<ul>
+<li>The parentheses are required because expressions like <code>(x + 1)</code> should
+look different than words.</li>
+</ul>
+</li>
+<li>Pass a <code>value.Place</code> instance to a proc or func.
+<ul>
+<li>That is, out param <code>&amp;out</code>.</li>
+</ul>
+</li>
+<li>Print to stdout in a <code>proc</code>
+<ul>
+<li>Capture it with command sub: <code>$(myproc)</code></li>
+<li>Or with <code>read</code>: <code>myproc | read --all; echo $_reply</code></li>
+</ul>
+</li>
+</ol>
+<p>Obsolete ways of &quot;returning&quot;:</p>
+<ol>
+<li>Using <code>declare -n</code> aka <code>nameref</code> variables in bash.</li>
+<li>Relying on <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a> in POSIX shell.</li>
+</ol>
+<a name="procs-compose-in-pipelines-bernstein-chaining"></a>
+<h3>Procs Compose in Pipelines / &quot;Bernstein Chaining&quot;</h3>
+<p>Some YSH users may tend toward funcs because they're more familiar. But shell
+composition with procs is very powerful!</p>
+<p>They have at least two kinds of composition that funcs don't have.</p>
+<p>See #<a href="/blog/tags.html?tag=shell-the-good-parts#shell-the-good-parts">shell-the-good-parts</a>:</p>
+<ol>
+<li><a href="https://www.oilshell.org/blog/2017/01/13.html">Shell Has a Forth-Like
+Quality</a> - Bernstein
+chaining.</li>
+<li><a href="https://www.oilshell.org/blog/2017/01/15.html">Pipelines Support Vectorized, Point-Free, and Imperative
+Style</a> - the shell can
+transparently run procs as elements of pipelines.</li>
+</ol>
+
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>YSH is influenced by both shell and Python, so it has both procs and funcs.</p>
+<p>Many programmers will gravitate towards funcs because they're familiar, but
+procs are more powerful and shell-like.</p>
+<p>Make your YSH programs by learning to use procs!</p>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="implementation-details"></a>
+<h3>Implementation Details</h3>
+<p>procs vs. funcs both have these concerns:</p>
+<ol>
+<li>Evaluation of default args at definition time.</li>
+<li>Evaluation of actual args at the call site.</li>
+<li>Arg-Param binding for builtin functions, e.g. with <code>typed_args.Reader</code>.</li>
+<li>Arg-Param binding for user-defined functions.</li>
+</ol>
+<p>So the implementation can be thought of as a <strong>2 × 4 matrix</strong>, with some
+code shared.  This code is mostly in <a href="https://github.com/oilshell/oil/blob/master/ysh/func_proc.py">ysh/func_proc.py</a>.</p>
+<a name="related"></a>
+<h3>Related</h3>
+<ul>
+<li><a href="variables.html">Variable Declaration, Mutation, and Scope</a> - in particular,
+procs don't have <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a>.</li>
+<li><a href="block-literals.html">Block Literals</a> (in progress)</li>
+</ul>
+
+
+
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

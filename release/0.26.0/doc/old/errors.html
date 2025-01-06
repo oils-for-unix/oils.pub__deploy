@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>List of Errors in the OSH Interpreter</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/errors.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.26.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>List of Errors in the OSH Interpreter</h1>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#syntax-errors-in-oil-string-literals">Syntax Errors in Oil String Literals</a></div>
+  <div class="toclevel1"><a href="#fatal-vs-non-fatal">Fatal vs. Non-Fatal</a></div>
+  <div class="toclevel1"><a href="#strict-modes">Strict Modes</a></div>
+  <div class="toclevel1"><a href="#parse-error-api">Parse Error API</a></div>
+  <div class="toclevel1"><a href="#runtime-error-api-error-codes-error-contexts">Runtime Error API: error codes + error contexts?</a></div>
+  <div class="toclevel1"><a href="#problem-in-bash-context-affects-a-lot">Problem in bash: Context affects a lot</a></div>
+  <div class="toclevel1"><a href="#arith-eval">Arith Eval</a></div>
+  <div class="toclevel1"><a href="#bool-eval">Bool Eval</a></div>
+  <div class="toclevel1"><a href="#word-eval">Word Eval</a></div>
+  <div class="toclevel1"><a href="#command-exec">Command Exec</a></div>
+  <div class="toclevel2"><a href="#builtins">Builtins</a></div>
+  <div class="toclevel1"><a href="#syscall-failures">Syscall Failures</a></div>
+  <div class="toclevel1"><a href="#interpreter-failures">Interpreter Failures</a></div>
+  <div class="toclevel1"><a href="#runtime-parse-errors">Runtime Parse Errors</a></div>
+  <div class="toclevel1"><a href="#parse-time-errors">Parse Time Errors</a></div>
+</div>
+<p>Parse Error:
+Can be determined statically
+spec/parse-errors.test.sh</p>
+<p>TODO: See test/runtime-errors.sh.  Merge them here.</p>
+<a name="syntax-errors-in-oil-string-literals"></a>
+<h2>Syntax Errors in Oil String Literals</h2>
+<ul>
+<li>
+<p><code>parse_backslash</code></p>
+<ul>
+<li>no octal</li>
+<li>no <code>\z</code></li>
+<li>no <code>\u{invalid</code></li>
+</ul>
+</li>
+<li>
+<p><code>parse_backticks</code></p>
+<ul>
+<li>use &quot;$(echo hi)&quot;` and not backticks</li>
+</ul>
+</li>
+</ul>
+<a name="fatal-vs-non-fatal"></a>
+<h2>Fatal vs. Non-Fatal</h2>
+<p>Fatal Error:
+terminates the interpreter unconditionally, e.g. divide by zero does this in
+bash.</p>
+<p>Non-fatal error:
+terminates the current builtin and exits 1</p>
+<p>non-fatal errors can be turned into fatal errors.</p>
+<p>by Strict modes:
+set -o errexit</p>
+<p>strict modes can also things that are not errors at all into fatal errors
+set -o nounset
+set -o failglob</p>
+<p>Fatal errors can be turned into non-fatal ones!!!!</p>
+<p>by dparen:</p>
+<p>(( 1 / 0 ))</p>
+<p>by command sub -- although this involves another process so it's
+understandable!</p>
+<p>set -o errexit
+echo $(exit 1)</p>
+<a name="strict-modes"></a>
+<h2>Strict Modes</h2>
+<p>strict_array
+strict_errexit
+strict_arith</p>
+<p>TODO: strict-word-eval?
+for unicode errors
+for subshell negative indices?  I think this is most consistent right now.</p>
+<a name="parse-error-api"></a>
+<h2>Parse Error API</h2>
+<p>TODO:</p>
+<pre><code>p_die() internally
+
+
+w = w_parser.ReadWord()
+if w is None:
+  do something with w_parser.Error()
+</code></pre>
+<p>Related to memory management API:</p>
+<pre><code># arena is the out param
+arena = pool.NewArena()
+c_parser = cmd_parse.CommandParser(w_parser, arena)
+bool ok = c_parser.Parse()
+if ok:
+  arena.RootNode() #  turns indexes into pointers?
+  arena.Deallocate()  # d
+else:
+  c_parser.Error()  # Is this still a stack?
+</code></pre>
+<a name="runtime-error-api-error-codes-error-contexts"></a>
+<h2>Runtime Error API: error codes + error contexts?</h2>
+<p>Idea:</p>
+<ul>
+<li>Should we have a table of errors for metaprogramming?
+<ul>
+<li>
+<p>assign each one of these a code, and decide what to do based on a table?</p>
+</li>
+<li>
+<p>then have an error CONTEXT</p>
+</li>
+<li>
+<p>based on spec tests?</p>
+</li>
+<li>
+<p>and error context takes an error code, looks it up in a table, and decides
+whether to catch or to reraise!</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>List of contexts:</p>
+<ul>
+<li>assignment   a=$()    exit code</li>
+<li>command sub $()</li>
+<li>subshell ()</li>
+<li>pipeline?  ls | { foo; exit 1; }</li>
+<li>dparen (( )) vs. arith sub $(( ))</li>
+</ul>
+<a name="problem-in-bash-context-affects-a-lot"></a>
+<h2>Problem in bash: Context affects a lot</h2>
+<p>echo $(( 1 / 0 ))
+echo 'after-$(())
+(( 1 / 0 ))
+echo 'after-$(())</p>
+<a name="arith-eval"></a>
+<h2>Arith Eval</h2>
+<p>Divide by zero: $(( 1 / 0 ))</p>
+<pre><code>                  ^
+</code></pre>
+<p>Maybe: integer overflow.  But we want big numbers.</p>
+<p>Type errors between integers and strings:</p>
+<pre><code>x=foo
+$(( x * 2 ))  # doesn't make sense, except in bash's crazy world.
+</code></pre>
+<p>Invalid hex constant:</p>
+<pre><code>x=0xabcg
+echo $(( x * 2 ))   (fatal in bash)
+</code></pre>
+<a name="bool-eval"></a>
+<h2>Bool Eval</h2>
+<p>regcomp parse error:</p>
+<p>x=$(cat invalid-syntax.txt)
+[[ foo =~ $x ]]</p>
+<a name="word-eval"></a>
+<h2>Word Eval</h2>
+<p>IMPORTANT: Command sub error $(exit 1)</p>
+<p>User-requested error:  ${undef?error}</p>
+<p>set -o nounset</p>
+<pre><code>def _EmptyStrOrError(self, val, token=None):
+  # calls `e_die()`
+</code></pre>
+<p>Variants:
+nounset: index out of bounds ${a[3]}
+I guess same diagnostic?</p>
+<p>In bash you can set an index out of bounds, like
+b[2]=9<br />
+Might want to have a mode for this?</p>
+<p>set -o failglob
+TODO: not implemented
+might need PWD diagnostic</p>
+<p>Redirects:
+Redirect to empty filename/descriptor ( or array)</p>
+<p>{ break; }<br />
+^~~~~~ break only invalid inside loop, etc.</p>
+<p>NotImplementedError</p>
+<ul>
+<li>
+<p>e.g for var ref ${!a}</p>
+</li>
+<li>
+<p>bash associative arrays?  I think we want most of that</p>
+</li>
+<li>
+<p>$&quot;&quot; ?</p>
+</li>
+<li>
+<p>|&amp; not yet done</p>
+</li>
+<li>
+<p>;;&amp; for case -- although parsing it is all of the work I guess</p>
+</li>
+<li>
+<p>some could be parse time errors too though?</p>
+</li>
+<li>
+<p>String Slicing and String Length require valid utf-8 characters</p>
+<p>s=$(cat invalid.txt)
+echo ${#s}  # code points
+echo ${s:1:3}  # code points</p>
+</li>
+<li>
+<p>Slicing: Index is negative.  ${foo: -4} and ${foo: 1 : -4} aren't supported
+right now, unlike bash and zsh.</p>
+</li>
+</ul>
+<a name="command-exec"></a>
+<h2>Command Exec</h2>
+<p>IMPORTANT: subshell error ( exit 1 )</p>
+<p>set -o errexit  -- turns NON-FATAL error into FATAL error.</p>
+<p>set -o pipefail
+pipefail might need some fanciness for ${PIPESTATUS}</p>
+<p>Trying to set readonly variable:
+readonly foo=bar
+foo=x
+(could any of this be done at compile time?)</p>
+<ul>
+<li>this needs two locations: where the assignment was, and where it was
+declared readonly.</li>
+</ul>
+<p>Trying to redeclare a variable?  That can also be parse time.
+local x=1
+local x=2</p>
+<p>Type errors between Str and StrArray:  -- strict-array controls this
+EvalWordToString calls e_die()`</p>
+<p>echo foo &gt; &quot;$@&quot;
+^--    # Should have what it evaluated to?  # This could be static too</p>
+<p>case &quot;$@&quot; in
+&quot;$@&quot;) echo bad;;
+esac</p>
+<p>${undef:-&quot;$@&quot;} is OK, but ${var%&quot;$@&quot;}  doesn't make sense really.
+${v/&quot;$@&quot;/&quot;$@&quot;}</p>
+<p>LHS evaluation:
+s='abc'
+s[1]=X  # invalid because it's a string, not an array</p>
+<p>Invalid descriptor:</p>
+<p>fd=$(cat invalid.txt)
+echo foo 2&gt;&amp; $fd</p>
+<a name="builtins"></a>
+<h3>Builtins</h3>
+<p>In core/builtins.py:</p>
+<pre><code>util.usage('...')
+return 1
+</code></pre>
+<p>A usage error is a runtime error that results in the builtin returning 1.</p>
+<p>Builtin has too many arguments -- but this falls under the errexit rule
+cd foo bar baz
+continue &quot;$@&quot;
+(Parse error: continue 1 2 3)</p>
+<p>Although we might want to highlight the extra args.</p>
+<a name="syscall-failures"></a>
+<h2>Syscall Failures</h2>
+<p>Fatal error from system calls:
+fork() could fail in theory</p>
+<p>Some are not failures:</p>
+<pre><code>stat() [[ -f /tmp/foo ]] 
+cd /ff  chdir()  # exit code 1
+cat &lt;nonexistent  # This is just exit code 1 
+</code></pre>
+<a name="interpreter-failures"></a>
+<h2>Interpreter Failures</h2>
+<p>Runtime: Stack Too Deep (catch infinite recursion)
+Out of memory: should not happen with OSH, but maybe with Oil</p>
+<a name="runtime-parse-errors"></a>
+<h2>Runtime Parse Errors</h2>
+<p>The way bash works 0x$var can be a hex literal.
+so var=xx makes this invalid.   hex/octal/decimal have this problem.</p>
+<a name="parse-time-errors"></a>
+<h2>Parse Time Errors</h2>
+<p>regcomp() errors (sometimes at parse time; other times at runtime)</p>
+<p>Need to show stack trace for &quot;source&quot; like Python.  Prototype this.</p>
+<p>Also might show which token thing caused you to be in arith parse state, like:</p>
+<p>$((echo hi))
+^~      ^~
+Arith   Invalid token</p>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 05 Jan 2025 23:28:55 -0500</i>
+    </div>
+  </body>
+</html>

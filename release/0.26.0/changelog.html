@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Commits Between Branches origin/release/0.25.0 and release/0.26.0</title>
+<link rel="stylesheet" type="text/css" href="web/base.css" />
+<link rel="stylesheet" type="text/css" href="web/changelog.css" />
+  </head>
+  <body class="width60">
+    <h3>Commits Between Branches <code>origin/release/0.25.0</code> and
+       <code>release/0.26.0</code></h3>
+    <table>
+      <colgroup>
+        <col>
+        <col>
+        <col>
+        <!-- prevent long commits from causing wrapping in other cells -->
+        <col style="width: 40em">
+      </colgroup>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/a3e360753ac7eb8da172ed24d3742f1c745bc94d">a3e360753</a>
+    </td>
+    <td class="date">2024-12-27</td>
+    <td>Andy C</td>
+    <td class="subject">[release] Minor tweaks</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/55a49cad13df1b14391708b6700244e49b3d1a3d">55a49cad1</a>
+    </td>
+    <td class="date">2024-12-27</td>
+    <td>Andy C</td>
+    <td class="subject">[doc] Update error catalog with actual error messages</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/45e66a8f926145537ca4a6f79d3f898480269d53">45e66a8f9</a>
+    </td>
+    <td class="date">2024-12-30</td>
+    <td>Andy C</td>
+    <td class="subject">[doctools/ul-table] HTML comments no longer interfere with parsing</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/3df92575158e04b42645aff35228c1f565fee6f9">3df925751</a>
+    </td>
+    <td class="date">2024-12-31</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Make ${!ref} with invalid ref non-fatal (#2204)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/b5e15f3a826435e700abe86ff6e48cad1e7baa0b">b5e15f3a8</a>
+    </td>
+    <td class="date">2025-01-01</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[ysh] Implement SparseArray `$[sp1 === sp2]`, `append ... (sp)`, and `$[bool(sp)]` (#2209)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/f2c84dade0c058aac579df18ceaa10614ed1dd4f">f2c84dade</a>
+    </td>
+    <td class="date">2025-01-01</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Improve bash compatibility for `${a@a}` and `${a[0]@A}` (#2208)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/0bc8f6f58cd604c71b8dec1f265ae51268113b37">0bc8f6f58</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[spec/var-op-test] Upgrade from bash 4 to bash 5 (#2211)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/94ce2a5dbe2202aff77231154182e994bbcb2e61">94ce2a5db</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[builtin/compadjust] Fix crashes with empty and sparse COMP_ARGV (#2213)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/3775f6a9d1c33d1b7ad5c338e79f4ae55c4f4a7c">3775f6a9d</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[core/state] Dump SparseArray in CrashDumper (#2214)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/eadacc604e69281e4d082794d33cde94cfb7ccbf">eadacc604</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[core/completion] Support scalar `COMPREPLY` with `compgen -F` (#2212)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/1485501d98f892e9700bd50935aa87933cb7452d">1485501d9</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Implement `${a[@]@P}` and make `${a[@]@a}` and `${a[@]@Q}` consistent with Bash (#2210)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/6b0e1efa3489b6f48768dc0b1fe50566ede179f8">6b0e1efa3</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[spec/var-op-bash] Split #24 into respective tests for @Q, @P, and @a (#2217)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/cdee8ea8ec52bb107002579c54caf76d88333e5a">cdee8ea8e</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[builtin/completion_osh] Support SparseArray COMPREPLY and COMP_ARGV (#2216)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/c326e7c0fe0e6c12cd33f02bd6fd7b3f0b468ce1">c326e7c0f</a>
+    </td>
+    <td class="date">2025-01-04</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Fix ${a[@]:-}, ${a[*]:-}, etc. to depend on string value, not array (#2215)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/31ce9f63777c2e2ca85228ae7711f1bb3bae8d62">31ce9f637</a>
+    </td>
+    <td class="date">2025-01-03</td>
+    <td>Andy C</td>
+    <td class="subject">[osh] Fix behavior of unquoted ${*:-} and ${a[*]:-}</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/459d58d3cbe61787ab6f9d661e3873529bca99b8">459d58d3c</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Implement SparseArray `${sp[@]...}` (#2218)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/b069fe6eaa252216f85fbf58e332967b00e71aea">b069fe6ea</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[refactor] Use `bash_impl` to print arrays (#2219)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/45a426c6e276cc958a5c358921f184584f8576c8">45a426c6e</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[mycpp] Don't pass template arguments when disabling constructors - C++20 (#2220)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/25161ff44c9b44e718696b661e7ba8a7b1ecd473">25161ff44</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Fix crashes on type mismatch `s+=([0]=v)`, `a+=([0]=v)`, `assoc+=(0)` (#2221)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/f4f49acff60b8df76be2ab34f1ceba80364add4b">f4f49acff</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[osh] Implement SparseArray `$sp` as `${sp[0]}` (#2222)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/7b4f24c5a1cca05f50d761698a49ffd340675eba">7b4f24c5a</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Koichi Murase</td>
+    <td class="subject">[cleanup] Leftovers for array refactoring (#2223)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/a40c0ebe0165ce59453aea1cd44b45d7c6c661d2">a40c0ebe0</a>
+    </td>
+    <td class="date">2024-12-31</td>
+    <td>Andy C</td>
+    <td class="subject">[spec/assign-extended] Failing test case for shopt -s extdebug</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/10ec7ae3ddeaaef79aedb88c8ace82be18afd5b0">10ec7ae3d</a>
+    </td>
+    <td class="date">2025-01-04</td>
+    <td>Andy C</td>
+    <td class="subject">[lazylex] Working on HTM8 lexer</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/097f0d1d8bffee29127116a704a601d824bcf514">097f0d1d8</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[spec/word-split] Add ash, ysh</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/2883cec254f3602558d7239ee53c02ea2af653b9">2883cec25</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[doc/ref/chap-type-method] Update topics for Command and Expr types</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/3b861d63422bdb38da9f8a185ca4734a817b35e6">3b861d634</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[release] Update release announcement links</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/1aeec9510eb7de33dfec78a23dea5cd78a52f7be">1aeec9510</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Samuel Hierholzer</td>
+    <td class="subject">[configure] Check for GLOB_PERIOD and FNM_EXTMATCH (#2207)</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/c1eb56c301e3eb1c66b2ba36cb9242e645860ef4">c1eb56c30</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[test] Add test/configure-effects.sh</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/0cc995b9476ba66ad66ca598437e3117d9baf775">0cc995b94</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[configure] Don't export systemtap vars to shell</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/00652b59a4c7a7989c4effc62fa98e011e435425">00652b59a</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[configure] Fix test after last change</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/950120a2529ebe83241f937bfa737f5b759f3f4d">950120a25</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[configure] Detect HAVE_GLOB_PERIOD, and use it</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/1c582ab51d49ed7e7d792e7612f95ac60e17fcba">1c582ab51</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[osh] Test for FNM_EXTMATCH at parse time!</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/937099ad2018666dcf29e3c7ab691f6be4d12dba">937099ad2</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[configure] Fix test after whitespace change</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/6c47273979b63eb73dc2fb37beeb17de94f93b8e">6c4727397</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[build] Remove build/oil-defs, and all references</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/21e8165426ad1409ae77346df455d2fc269a66de">21e816542</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[release] Bump version to 0.26.0</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/2805d231bfc7036465dd9b9f8e57af9101d144fd">2805d231b</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[spec/ysh-special-vars] Fix tests after moving local dir</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/a0b296d324604744f00f4411abd492bbe9eb3e7e">a0b296d32</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[release] Fix automation for machine 2</td>
+  </tr>
+<tr>
+    <td><a class="checksum"
+           href="https://github.com/oilshell/oil/commit/871e0876223ae4f94e116da6c31d7b7c933054e8">871e08762</a>
+    </td>
+    <td class="date">2025-01-05</td>
+    <td>Andy C</td>
+    <td class="subject">[build] Update hack that broke when running benchmarks/ovm-build</td>
+  </tr>
+    </table>
+  </body>
+</html>
