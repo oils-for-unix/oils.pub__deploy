@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Things To Do For the New oils.pub Domain</title>
+  <meta name="twitter:title" content="Things To Do For the New oils.pub Domain">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v6.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h2>Things To Do For the New oils.pub Domain</h2>
+<div class="date">
+  2025-01-08
+</div>
+<p>Last week, on the old <code>oilshell.org</code> site, I wrote that <a href="https://www.oilshell.org/blog/2024/12/new-domain.html">Oils Will Move to the oils.pub Domain</a>.</p>
+<p>And then I wrote the <strong>final</strong> post: <a href="https://www.oilshell.org/blog/2025/01/release-0.24.0.html">Oils 0.24.0 - Closures, Objects, and Namespaces</a>.  It belongs there because the <a href="https://www.oilshell.org/release/0.24.0/">corresponding tarball</a> is published there.</p>
+<hr />
+<p>So what's left to do before we fully migrate to <code>oils.pub</code>?</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#todo">TODO</a></div>
+  <div class="toclevel1"><a href="#enhancements">Enhancements</a></div>
+  <div class="toclevel1"><a href="#releases">Releases</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel1"><a href="#appendix-dreamhost-ssh-has-become-unreliable">Appendix: Dreamhost SSH Has Become Unreliable</a></div>
+</div> 
+<a name="todo"></a>
+<h2>TODO</h2>
+<ol>
+<li>Publish the first new post.
+<ul>
+<li>That's why I'm writing this :-)</li>
+</ul>
+</li>
+<li>Create <strong>links</strong> both ways, e.g.
+<ul>
+<li>The old home page will be a pointer to <a href="https://oils.pub/">https://oils.pub/</a></li>
+<li>Link from the new <a href="/blog/">oils.pub/blog/</a> to the old blog</li>
+</ul>
+</li>
+<li>Highlight important posts on the old site, like <a href="https://www.oilshell.org/blog/2024/09/project-overview.html">What Oils Looks Like in 2024</a></li>
+</ol>
+<hr />
+<p>I'm <strong>not</strong> going to migrate all posts and other content.  The redirects are a bit of a pain, and it's nice to have a <strong>clean start</strong> after 8 years.</p>
+<p>But <code>oilshell.org</code> will remain up forever, as a <strong>historical</strong> archive.  There's still useful knowledge there!  I'm glad that people still read it.</p>
+<hr />
+<ol start="4">
+<li>Check that the <strong>analytics</strong> job works on the new domain.
+<ul>
+<li>Many years ago, I wrote my own analytics scripts that read Apache's <code>access.log</code>.  We don't burden your computer with Google Analytics!</li>
+</ul>
+</li>
+<li>Maybe remove obsolete entries from the <a href="/cross-ref.html">Cross Reference</a>, which I copied from the old domain.  Again, it's nice to have a clean start!</li>
+</ol>
+<a name="enhancements"></a>
+<h2>Enhancements</h2>
+<ol start="6">
+<li>Create friendly pages for <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.
+<ul>
+<li>I noticed that more people are visiting the site, which is good!  But we don't have short, friendly intros.</li>
+<li>The <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> page will likely be based on <a href="https://www.oilshell.org/blog/2024/09/project-overview.html#seven-parts-of-ysh">Seven Parts of YSH</a></li>
+</ul>
+</li>
+<li>Mirror portions of the Wiki <a href="https://github.com/oils-for-unix/oils/wiki">https://github.com/oils-for-unix/oils/wiki</a> to the <code>oils.pub</code> domain.
+<ul>
+<li>Github has a quirk where it doesn't make wikis searchable.</li>
+</ul>
+</li>
+<li>Long term: Implement <code>git</code> push-to-deploy.
+<ul>
+<li>I've been using <code>make</code> and <code>rsync</code> this whole time!  But they've run their course.</li>
+</ul>
+</li>
+</ol>
+<p>I've mentioned that I should have used <a href="/cross-ref.html?tag=ninja#ninja">Ninja</a> rather than <a href="/cross-ref.html?tag=make#make">Make</a>.  I learned and wrote 3 Makefiles from scratch as &quot;research&quot; for Oils, but now I think that <a href="/cross-ref.html?tag=make#make">Make</a> is pure legacy.</p>
+<p>It may be hard to match the speed of <code>rsync</code>, but the timestamp-based syncing is fiddly because I use multiple computers to publish to the site.</p>
+<p>So <code>git</code> push-to-deploy is natural alternative, but I wonder if there is a way to avoid building the entire blog on every push.  CI services like sourcehut and Github Actions are <strong>stateless</strong>, so incremental builds won't work.</p>
+<p>Let me know if you have a solution <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Things.20To.20Do.20For.20the.20New.20oils.2Epub.20Domain">in the comments</a>!</p>
+<a name="releases"></a>
+<h2>Releases</h2>
+<p>Note that there are already 2 releases on <code>oils.pub</code>:</p>
+<ul>
+<li><a href="/release/0.25.0/">Oils 0.25.0</a> - I briefly mentioned this in <a href="https://www.oilshell.org/blog/2024/12/new-domain.html">the post about <code>oils.pub</code></a></li>
+<li><a href="/release/0.26.0/">Oils 0.26.0</a> - Build fixes, and more <a href="/cross-ref.html?tag=bash#bash">bash</a> compatibility</li>
+</ul>
+<p>I hope to write an announcement for them, but there is a lot to do!</p>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>See you on <a href="/">oils.pub</a> from now on!  I will no longer publish anything to <a href="https://www.oilshell.org">oilshell.org</a>.</p>
+<a name="appendix-dreamhost-ssh-has-become-unreliable"></a>
+<h2>Appendix: Dreamhost SSH Has Become Unreliable</h2>
+<p>I wrote about similar problems in June: <a href="https://www.oilshell.org/blog/2024/06/cgi.html">Comments on Scripting, CGI, and FastCGI</a>.  This site was put on a new machine, and the OS configuration has bugs.  They don't appear to affect serving, but they affect deploying.</p>
+<p>I don't really want to migrate to a new web host, and the alternative hosts aren't better in every dimension, like network speed, disk speed, and the base OS image.</p>
+<p>But I suppose now is a good time to do it, since we have a new site.  And <strong>15 years</strong> is a pretty good run for Dreamhost.</p>
+<p>I've already mitigated the problems by:</p>
+<ol>
+<li>Moving from FastCGI to CGI
+<ul>
+<li>which means that <a href="https://github.com/oils-for-unix/wwz">wwz</a> is slightly slower</li>
+</ul>
+</li>
+<li>Disallowing crawling of <code>.wwz</code> files in <code>robots.txt</code>
+<ul>
+<li>There are many dumb crawlers out there, and those pages are mostly test and benchmark results.</li>
+</ul>
+</li>
+</ol>
+<p>And I've contacted support multiple times.  So the only thing left to do is to migrate ...</p>
+<p>I might do that when I figure out <code>git</code> push-to-deploy.</p>
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Things.20To.20Do.20For.20the.20New.20oils.2Epub.20Domain">Discuss This Post on Zulip</a>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=blog-meta#blog-meta">blog-meta</a> </li>
+  <li><a href="../..">Back to the Blog Index</a>
+</ul>
+</div>
+</body>
+</html>
