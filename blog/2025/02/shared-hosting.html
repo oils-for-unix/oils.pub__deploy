@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Comments on Shared Hosting</title>
+  <meta name="twitter:title" content="Comments on Shared Hosting">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v6.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Comments on Shared Hosting</h1>
+<div class="date">
+  2025-02-04
+</div>
+<p>I've been recommending shared hosting for static sites for several years, and I think a few people have taken those recommendations.</p>
+<p>The logic is that basically these commodity of PHP hosts have good hardware and networks for serving PHP, and serving static sites is <strong>easy</strong> as a result.  And I also used Dreamhost for over <strong>15 years</strong> -- since 2009.  So I felt confident recommending it.</p>
+<p>--</p>
+<p>Well, Oils has moved from Dreamhost to Mythic Beasts, and I probably won't go out of my way to recommend it anymore.</p>
+<p>I'm now us [Mythic Beasts][], which after 6 months of experimentation, seems to be excellent.  And I hope I will stay on it for a long time.</p>
+<p>But I think the general concept is.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#dreamhost-problems-fastcgi-ssh-and-log-rotation">Dreamhost Problems: FastCGI, SSH, and Log Rotation</a></div>
+  <div class="toclevel2"><a href="#note-i-dont-blame-them">Note: I Don't Blame Them</a></div>
+  <div class="toclevel1"><a href="#alternatives">Alternatives</a></div>
+  <div class="toclevel2"><a href="#mythic-beasts">Mythic Beasts</a></div>
+  <div class="toclevel2"><a href="#opalstack-promising">OpalStack - Promising</a></div>
+  <div class="toclevel2"><a href="#a2hosting-how-bad-can-shared-hosting-be">A2Hosting - How Bad Can Shared Hosting Be?</a></div>
+  <div class="toclevel2"><a href="#nearlyfreespeech-freebsd">NearlyFreeSpeech - FreeBSD</a></div>
+  <div class="toclevel2"><a href="#others">Others</a></div>
+  <div class="toclevel1"><a href="#im-not-alone">I'm Not Alone?</a></div>
+  <div class="toclevel1"><a href="#cloud-hosting-lack-of-protocols-lindy-effect">Cloud Hosting: Lack of Protocols, Lindy Effect</a></div>
+  <div class="toclevel1"><a href="#survey-of-cloud-hosting">Survey of Cloud Hosting</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+</div> 
+<a name="dreamhost-problems-fastcgi-ssh-and-log-rotation"></a>
+<h2>Dreamhost Problems: FastCGI, SSH, and Log Rotation</h2>
+<p>Aside from CGI dying, and FastCGI dying</p>
+<ul>
+<li>Decaying preetty quickly!</li>
+</ul>
+<a name="note-i-dont-blame-them"></a>
+<h3>Note: I Don't Blame Them</h3>
+<p>This sounds like a big complaint.</p>
+<p>But businesses</p>
+<p>Also <strong>15 years</strong> is probably.  In some ways Dreamhost has been the <strong>best</strong> subscription I've had!</p>
+<p>I don't think I've subscribed to <strong>anything</strong> else for 15 years!</p>
+<p>I imagine:</p>
+<ul>
+<li>Almost no customers use FastCGI.  Mythic Beasts doesn't use FastCGI.</li>
+<li>I'm sure most customers don't have cron jobs to sync <code>access.log.*.gz</code> and analyze them with Python and R.  Most people are probably using web analytics</li>
+<li>The SSH thing is less forgivable IMO.  I think most people deploying PHP probably use SSH, or rsync over SSH, though I'm not entirely sure.</li>
+</ul>
+<a name="alternatives"></a>
+<h2>Alternatives</h2>
+<a name="mythic-beasts"></a>
+<h3>Mythic Beasts</h3>
+<p>This is one  I'm actually using.</p>
+<p>It has dynamic</p>
+<a name="opalstack-promising"></a>
+<h3>OpalStack - Promising</h3>
+<ul>
+<li>uwsgi is the main thing.  I don't like this</li>
+</ul>
+<p>I prefer <strong>process-based</strong> or <strong>exterior</strong> protocols:</p>
+<ul>
+<li>FastCGI</li>
+<li>HTTP Daemon, e.g. gunicorn/systemd on Mythic Beasts</li>
+</ul>
+<hr />
+<ul>
+<li>Old base image with bash 4.2
+<ul>
+<li>Blog post in October changing this</li>
+<li>Like with Dreamhost, I don't imagine that many customers care what shell they use.  This complaint is extremely particular to me.</li>
+</ul>
+</li>
+</ul>
+<a name="a2hosting-how-bad-can-shared-hosting-be"></a>
+<h3>A2Hosting - How Bad Can Shared Hosting Be?</h3>
+<p>I think this is one of the &quot;old ass&quot;.</p>
+<p>This is one of the horrible &quot;screen&quot;.</p>
+<a name="nearlyfreespeech-freebsd"></a>
+<h3>NearlyFreeSpeech - FreeBSD</h3>
+<p>It's BSD and has a slow disk.</p>
+<a name="others"></a>
+<h3>Others</h3>
+<ul>
+<li>uberspace.de was mentinoed</li>
+</ul>
+<a name="im-not-alone"></a>
+<h2>I'm Not Alone?</h2>
+<p>I'm looking for static site hosting mainly.</p>
+<p>With a little bit of dynamism.</p>
+<a name="cloud-hosting-lack-of-protocols-lindy-effect"></a>
+<h2>Cloud Hosting: Lack of Protocols, Lindy Effect</h2>
+<p>Well I used Dreamhost for <strong>15 years</strong></p>
+<p>I don't like moving between web hosts</p>
+<ul>
+<li>Render
+<ul>
+<li>Page I just looked at: Render vs. Heroku</li>
+</ul>
+</li>
+<li>Vercel</li>
+</ul>
+<p>Static Oriented</p>
+<ul>
+<li>Netlify</li>
+<li>Github Pages
+<ul>
+<li>I recommended this to Samuel for static-only sites</li>
+<li>However I wanted some dynamic</li>
+</ul>
+</li>
+<li>Cloudflare Pages</li>
+</ul>
+<hr />
+<p>I want the model of the &quot;mildly dynamic website&quot;.  Most of my comment is static.</p>
+<p>Heroku is</p>
+<p>Render vs. Heroku</p>
+<a name="survey-of-cloud-hosting"></a>
+<h2>Survey of Cloud Hosting</h2>
+<p>I am thinking of this problem.</p>
+<p>The apache model:</p>
+<ul>
+<li>Static Content</li>
+<li>Dynamic content sometimes mixed in.</li>
+</ul>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>I just want to SSH to a Unix box :)  I guess I am in the minority.</p>
+<p>I am not going to recommend shared hosting in general anymore.</p>
+<p>Mythic Beasts seems very nice so far.  You can host dynamic sites there too, and I will be experimenting with that.</p>
+<p>But since Iev only used them for 6 months, and not years, I am not going to make a loud recommendation :)  Everything so far has been good though.  Only issue is I had to work around access.log.</p>
+
+<div id="post-footer">
+<ul>
+<li><a href="TODO">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>
