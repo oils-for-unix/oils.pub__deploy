@@ -1,10 +1,16 @@
 RewriteEngine On
 
-# 2024-06: Dreamhost FastCGI is broken on Ubuntu - fall back to CGI
+# 2025-02: Enable CGI on Mythic Beasts
 
-#RewriteRule ^.*\.wwz/(.*)$ /wwz-bin/dispatch.fcgi/$1 [L]
+Options +ExecCGI
+# no .py, we should have CGI shell wrappers
+AddHandler cgi-script .cgi
 
 RewriteRule ^.*\.wwz/(.*)$ /wwz-bin/wwz.cgi/$1 [L]
+
+# 2024-06: Dreamhost FastCGI is broken on Ubuntu - fall back to CGI
+#RewriteRule ^.*\.wwz/(.*)$ /wwz-bin/dispatch.fcgi/$1 [L]
+
 # Stupid guy spamming me once a minute for weeks.  This gives him a 403 but
 # doesn't get him out of my logs!
 deny from 45.33.78.24
