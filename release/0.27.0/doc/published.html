@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Published Docs</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/published.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.27.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Published Docs</h1>
+<p>This page links to docs that are ready to read.</p>
+<p>See <a href="index.html">All Docs</a> for links to drafts.</p>
+<h2>Good Places to Start</h2>
+<ul>
+<li><a href="getting-started.html">Getting Started</a></li>
+<li><a href="ysh-tour.html">A Tour of YSH</a></li>
+<li><a href="idioms.html">YSH vs. Shell Idioms</a></li>
+<li><a href="ref/index.html"><strong>Oils Reference</strong></a> - underlies the <a href="ref/chap-builtin-cmd.html#help">help</a> builtin</li>
+<li><a href="faq-doc.html">FAQ on Docs</a>.  <strong>Look here if you can't find
+something</strong>.</li>
+</ul>
+<p>Build/packaging:</p>
+<ul>
+<li><a href="INSTALL.html">INSTALL</a>. How do I install Oils?  This text file is also in
+the <code>oils-for-unix</code> tarball.
+<ul>
+<li><a href="help-mirror.html">Oils Build <code>--help</code> Mirror</a></li>
+<li><a href="portability.html">Portability</a></li>
+</ul>
+</li>
+</ul>
+<h2>More</h2>
+<p>OSH:</p>
+<ul>
+<li><a href="known-differences.html">Known Differences Between OSH and Other Shells</a> |
+<a href="quirks.html">Quirks</a> | <a href="headless.html">Headless Mode</a> | <a href="shell-idioms.html">Shell
+Idioms</a></li>
+</ul>
+<p>YSH:</p>
+<ul>
+<li>
+<p><a href="syntax-feelings.html">A Feel For YSH Syntax</a> | <a href="style-guide.html">YSH Style
+Guide</a> | <a href="upgrade-breakage.html">What Breaks When You Upgrade to
+YSH</a> | <a href="ysh-faq.html">YSH Language FAQ</a></p>
+</li>
+<li>
+<p>Comparisons: <a href="ysh-vs-shell.html">YSH vs. Shell</a> | <a href="ysh-vs-python.html">YSH Expressions vs.
+Python</a></p>
+</li>
+<li>
+<p>Features: <a href="eggex.html">Egg Expressions (YSH Regexes)</a>
+| <a href="ysh-regex-api.html">YSH Regex API</a>
+| <a href="ysh-error.html">Guide to YSH Error Handling</a>
+| <a href="proc-func.html">Guide to Procs and Funcs</a>
+| <a href="error-handling.html">YSH Fixes Shell's Error Handling</a>
+| <a href="simple-word-eval.html">Simple Word Evaluation</a>
+| <a href="variables.html">Variable Declaration, Mutation, and Scope</a>
+| <a href="hay.html">Hay - Custom Languages for Unix Systems</a></p>
+</li>
+</ul>
+<p>Data Languages:</p>
+<ul>
+<li><a href="json.html">JSON</a> | <a href="j8-notation.html">J8 Notation</a> | <a href="byo.html">BYO
+Protocols</a></li>
+</ul>
+<p>Language Design:</p>
+<ul>
+<li><a href="syntactic-concepts.html">Syntactic Concepts</a>
+| <a href="command-vs-expression-mode.html">Command vs. Expression Mode</a>
+| <a href="language-influences.html">Language Influences</a>
+<ul>
+<li>Notes: <a href="novelties.html">Novelties in OSH and YSH</a> | <a href="warts.html">Warts</a></li>
+</ul>
+</li>
+</ul>
+<p>The Shared Oils Runtime</p>
+<ul>
+<li><a href="types.html">Types in the Oils Runtime</a> | <a href="xtrace.html">Tracing Execution</a></li>
+</ul>
+<p>Reference:</p>
+<ul>
+<li><a href="error-catalog.html">Oils Error Catalog, With Hints</a></li>
+</ul>
+<p>For contributors:</p>
+<ul>
+<li><a href="ul-table.html">ul-table: Markdown Tables Without New Syntax</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 15 Feb 2025 22:55:57 -0500</i>
+    </div>
+  </body>
+</html>

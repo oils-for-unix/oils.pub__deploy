@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Installing Oils - old CPython build</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/install.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/INSTALL-old.txt" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.27.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Building and Installing Oils - old CPython build</h1>
+<p>Oils is a new Unix shell.  This file is INSTALL-old.txt, and it describes how
+to configure, build, and install the oil-$VERSION tarball.</p>
+<p>The tarball contains an older, slower reference implementation based on CPython
+code.</p>
+<p>You may want INSTALL.txt instead, which tells you how to build the fast
+oils-for-unix-$VERSION tarball.</p>
+<h2>Quick Start</h2>
+<p>If you haven't already done so, extract the tarball:</p>
+<pre><code>tar -x --xz &lt; oil-0.27.0.tar.xz
+cd oil-0.27.0
+</code></pre>
+<p>Either install as /usr/local/bin/osh:</p>
+<pre><code>./configure      # completes very quickly
+make             # 30-60 seconds
+sudo ./install
+</code></pre>
+<p>or install as ~/bin/osh and the man page as ~/.local/share/man/man1/osh.1:</p>
+<pre><code>./configure --prefix ~ --datarootdir ~/.local/share
+make
+./install
+</code></pre>
+<p>The latter doesn't require root access, but it requires:</p>
+<ul>
+<li>~/bin to be in your $PATH</li>
+<li>Pages under ~/.local/share/man to be found by 'man'.
+(See manpath or $MANPATH.)</li>
+</ul>
+<p>NOTE: Out-of-tree builds are NOT currently supported, so you have to be in the
+oil-0.27.0 directory.</p>
+<h2>Smoke Test</h2>
+<p>OSH behaves like a POSIX shell:</p>
+<pre><code>$ osh -c 'echo hi'
+hi
+</code></pre>
+<p>This parses and prints a syntax tree for the 'configure' script.</p>
+<pre><code>osh -n configure
+</code></pre>
+<h2>More Documentation</h2>
+<p>Every release has a home page with links, e.g.</p>
+<pre><code>https://oilshell.org/release/0.27.0/
+</code></pre>
+<h2>System Requirements</h2>
+<p>Roughly speaking, you need:</p>
+<ul>
+<li>an ANSI C environment (compiler and libc)</li>
+<li>GNU Bash</li>
+<li>GNU Make.</li>
+</ul>
+<p>(I want to remove the GNU requirements and require only POSIX sh instead).</p>
+<p>Optional:</p>
+<ul>
+<li>GNU readline library, for interactive features
+(https://cnswww.cns.cwru.edu/php/chet/readline/rltop.html)</li>
+</ul>
+<p>Debian/Ubuntu and derivatives:</p>
+<pre><code>sudo apt install build-essential libreadline-dev
+</code></pre>
+<p>Alpine Linux:</p>
+<pre><code>apk add libc-dev gcc bash make readline-dev
+</code></pre>
+<p>OSH has been tested in several Linux distros and OS X.  It aims to run on any
+POSIX system.  If it doesn't, file a bug here:</p>
+<pre><code>https://github.com/oilshell/oil/issues
+</code></pre>
+<h2>Build Options</h2>
+<p>./configure --help will show the options.  Right now, the only significant
+options are --prefix and --{with,without}-readline.</p>
+<h2>Notes</h2>
+<ul>
+<li>The oil.ovm executable behaves like busybox, and osh is a symlink to it.</li>
+<li>Oil contains a fork of the Python 2.7 runtime, so it should compile with most
+popular compiler/OS combinations.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 15 Feb 2025 22:55:57 -0500</i>
+    </div>
+  </body>
+</html>

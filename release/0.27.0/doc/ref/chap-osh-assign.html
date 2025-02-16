@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OSH Assignment (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-osh-assign.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.27.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>OSH Assignment</strong></p>
+</div>
+<p>This chapter describes OSH assignment, which looks like <code>x=value</code>.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Operators">Operators</a> <br/>
+  <a class="dense-toc-h3" href="#sh-assign">sh-assign</a> <br/>
+  <a class="dense-toc-h3" href="#sh-append">sh-append</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Compound-Data">Compound Data</a> <br/>
+  <a class="dense-toc-h3" href="#sh-array">sh-array</a> <br/>
+  <a class="dense-toc-h3" href="#sh-assoc">sh-assoc</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Builtins">Builtins</a> <br/>
+  <a class="dense-toc-h3" href="#local">local</a> <br/>
+  <a class="dense-toc-h3" href="#readonly">readonly</a> <br/>
+  <a class="dense-toc-h3" href="#export">export</a> <br/>
+  <a class="dense-toc-h3" href="#unset">unset</a> <br/>
+  <a class="dense-toc-h3" href="#shift">shift</a> <br/>
+  <a class="dense-toc-h3" href="#declare">declare</a> <br/>
+  <a class="dense-toc-h3" href="#typeset">typeset</a> <br/>
+</div>
+</div>
+</div>
+<a name="Operators"></a>
+<h2>Operators</h2>
+<a name="sh-assign"></a>
+<h3>sh-assign</h3>
+<a name="sh-append"></a>
+<h3>sh-append</h3>
+<a name="Compound-Data"></a>
+<h2>Compound Data</h2>
+<a name="sh-array"></a>
+<h3>sh-array</h3>
+<p>Array literals in shell accept any sequence of words, just like a command does:</p>
+<pre><code>ls $mystr &quot;$@&quot; *.py
+
+<span class="sh-comment"># Put it in an array</span>
+a=(ls $mystr &quot;$@&quot; *.py)
+</code></pre>
+<p>Their type is <a href="chap-type-method.html#BashArray">BashArray</a>.</p>
+<p>In YSH, use a <a href="chap-expr-lang.html#list-literal">list-literal</a> to create a <a href="chap-type-method.html#List">List</a> instance.</p>
+<a name="sh-assoc"></a>
+<h3>sh-assoc</h3>
+<p>Associative arrays map strings to strings:</p>
+<pre><code>declare -A assoc=(['k']=v ['k2']=v2)
+</code></pre>
+<p>Their type is <a href="chap-type-method.html#BashAssoc">BashAssoc</a>.</p>
+<p>In YSH, use a <a href="chap-expr-lang.html#dict-literal">dict-literal</a> to create a <a href="chap-type-method.html#Dict">Dict</a> instance.</p>
+<a name="Builtins"></a>
+<h2>Builtins</h2>
+<a name="local"></a>
+<h3>local</h3>
+<a name="readonly"></a>
+<h3>readonly</h3>
+<a name="export"></a>
+<h3>export</h3>
+<a name="unset"></a>
+<h3>unset</h3>
+<a name="shift"></a>
+<h3>shift</h3>
+<a name="declare"></a>
+<h3>declare</h3>
+<a name="typeset"></a>
+<h3>typeset</h3>
+<p>Another name for the <a href="#declare">declare</a> builtin.</p>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 15 Feb 2025 22:55:57 -0500</i>
+    </div>
+  </body>
+</html>

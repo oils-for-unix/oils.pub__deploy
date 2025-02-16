@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ul-table Comparison</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ul-table-compare.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.27.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>ul-table Comparison</h1>
+<p>TODO: This may go on the blog.</p>
+<p>Main doc: <a href="ul-table.html">ul-table: Markdown Tables Without New Syntax</a></p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#markdown-based">Markdown-Based</a></div>
+  <div class="toclevel2"><a href="#ul-table">ul-table</a></div>
+  <div class="toclevel2"><a href="#plain-markdown">Plain Markdown</a></div>
+  <div class="toclevel2"><a href="#commonmark">CommonMark</a></div>
+  <div class="toclevel2"><a href="#github-flavored-markdown">Github-Flavored Markdown</a></div>
+  <div class="toclevel1"><a href="#non-markdown">Non-Markdown</a></div>
+  <div class="toclevel2"><a href="#restructuredtext">reStructuredText</a></div>
+  <div class="toclevel2"><a href="#asciidoc">AsciiDoc</a></div>
+  <div class="toclevel2"><a href="#mediawiki-wikipedia">MediaWiki (Wikipedia)</a></div>
+</div>
+<a name="markdown-based"></a>
+<h2>Markdown-Based</h2>
+<a name="ul-table"></a>
+<h3>ul-table</h3>
+<a name="plain-markdown"></a>
+<h3>Plain Markdown</h3>
+<ul>
+<li>You can't write inline HTML</li>
+</ul>
+<a name="commonmark"></a>
+<h3>CommonMark</h3>
+<p>Tedious Inline HTML!</p>
+<p>Here's the equivalent in CommonMark:</p>
+<pre><code>&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Shell&lt;/td&gt;
+      &lt;td&gt;Version&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tr&gt;
+    &lt;td&gt;
+
+&lt;!-- be careful not to indent this 4 spaces! --&gt;
+[bash](https://www.gnu.org/software/bash/)
+
+    &lt;/td&gt;
+    &lt;td&gt;5.2&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;
+
+[OSH](https://oils.pub/)
+
+    &lt;/td&gt;
+    &lt;td&gt;0.25.0&lt;/td&gt;
+  &lt;/tr&gt;
+
+&lt;/table&gt;
+</code></pre>
+<p>It uses the rule where you can embed Markdown inside HTML inside Markdown.
+With <code>ul-table</code>, you <strong>don't</strong> need this mutual nesting.</p>
+<p>The <code>ul-table</code> text is also shorter!</p>
+<hr />
+<p>Trivia: with CommonMark, you get an extra <code>&lt;p&gt;</code> element:</p>
+<pre><code>&lt;td&gt;
+  &lt;p&gt;OSH&lt;/p&gt;
+&lt;/td&gt;
+</code></pre>
+<p><code>ul-table</code> can produce simpler HTML:</p>
+<pre><code>&lt;td&gt;
+  OSH
+&lt;/td&gt;
+</code></pre>
+<ul>
+<li>Inline HTML</li>
+</ul>
+<p>CommonMark Doesn't Have Tables.  Related discussions:</p>
+<ul>
+<li>2014: <a href="https://talk.commonmark.org/t/tables-in-pure-markdown/81">Tables in pure Markdown</a></li>
+<li>2022: <a href="https://talk.commonmark.org/t/obvious-markdown-syntax-for-tables/4143/9">Obvious Markdown syntax for Tables</a></li>
+</ul>
+<a name="github-flavored-markdown"></a>
+<h3>Github-Flavored Markdown</h3>
+<p>Github Tables are Awkward.</p>
+<p>Github-flavored Markdown has an non-standard extension for tables:</p>
+<ul>
+<li><a href="https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables">Github: Organizing Information With Tables</a></li>
+</ul>
+<p>This style is hard to read and write, especially with large tables:</p>
+<pre><code>| Command | Description |
+| --- | --- |
+| git status | List all new or modified files |
+| git diff | Show file differences that haven't been staged |
+</code></pre>
+<p>Our style is less noisy, and more easily editable:</p>
+<pre><code>&lt;table&gt;
+
+- thead
+  - Command
+  - Description
+- tr
+  - git status
+  - List all new or modified files
+- tr
+  - git diff
+  - Show file differences that haven't been staged
+
+&lt;/table&gt;
+</code></pre>
+<ul>
+<li>Related wiki page: <a href="https://github.com/oilshell/oil/wiki/Markdown-Tables">Markdown Tables</a></li>
+</ul>
+<a name="non-markdown"></a>
+<h2>Non-Markdown</h2>
+<a name="restructuredtext"></a>
+<h3>reStructuredText</h3>
+<p>ul-table looks similar to <a href="https://sublime-and-sphinx-guide.readthedocs.io/en/latest/tables.html">tables in
+reStructuredText</a>.</p>
+<a name="asciidoc"></a>
+<h3>AsciiDoc</h3>
+<p>TODO</p>
+<a name="mediawiki-wikipedia"></a>
+<h3>MediaWiki (Wikipedia)</h3>
+<p>Here is a <strong>long</strong> page describing how to make tables on Wikipedia:</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Help:Table">https://en.wikipedia.org/wiki/Help:Table</a></li>
+</ul>
+<p>I created the equivalent of the opening example:</p>
+<pre><code>{| class=&quot;wikitable&quot;
+! Shell !! Version
+|-
+| [https://www.gnu.org/software/bash/ Bash] || 5.2
+|-
+| [https://www.oilshell.org/ OSH] || 0.25.0
+|}
+</code></pre>
+<p>In general, it has more &quot;ASCII art&quot;, and invents a lot of new syntax.</p>
+<p>I prefer <code>ul-table</code> because it reuses Markdown and HTML syntax.</p>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 15 Feb 2025 22:55:57 -0500</i>
+    </div>
+  </body>
+</html>
