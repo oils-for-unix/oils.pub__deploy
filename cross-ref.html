@@ -112,13 +112,13 @@ glue, as opposed to a user interface.</p>
 <a href="https://github.com/oilshell/oil/wiki/Headless-Mode">FANOS: File descriptors And Netstrings Over Sockets</a> —
 A protocol we invented for shells and GUIs to communicate.  Key idea: the GUI passes file descriptors pointing to a <strong>terminal</strong> to the shell via a Unix domain socket.  The shell's child processes will inherit those descriptors, which allows <code>ls --color</code> to work as usual.  That is, when <code>ls</code> calls <code>isatty()</code>, it will work correctly and return <code>true</code>.</p>
 <p><a name=eggex>#eggex</a><br/>
-<a href="//oilshell.org/release/latest/doc/eggex.html">Egg Expression</a> —
+<a href="release/latest/doc/eggex.html">Egg Expression</a> —
 The regular expression syntax for YSH, which has pattern composition and
 seamless integration with <a href="#grep">egrep</a>, <a href="#awk">awk</a>, and other Unix tools.
 It resembles Perl-style regex syntax, but literals are quoted and you can use
 whitespace to make patterns more readable.</p>
 <p><a name=hay>#hay</a><br/>
-<a href="//oilshell.org/release/latest/doc/hay.html">Hay - Hay Ain't YAML</a> —
+<a href="release/latest/doc/hay.html">Hay - Hay Ain't YAML</a> —
 A YSH feature that lets you declare <strong>data</strong> with the same syntax as code, in a Lisp-like fashion.  Code and data can be interleaved, which is useful for config files and internal DSLs.</p>
 <p><a name=mycpp>#mycpp</a><br/>
 <a href="https://github.com/oilshell/oil/blob/master/mycpp/README.md">mycpp</a> —
@@ -507,7 +507,7 @@ in a pipeline with Ctrl-C.</p>
 <a name="oils-terms"></a>
 <h3>Oils Terms</h3>
 <p><a name=proc>#proc</a><br/>
-<a href="//oilshell.org/release/latest/doc/oil-proc-func-block.html">YSH Procs</a> —
+<a href="release/latest/doc/oil-proc-func-block.html">YSH Procs</a> —
 In YSH, shell-like functions are declared with the <code>proc</code> keyword.  Think of
 them as &quot;procedures&quot; or &quot;processes&quot;.</p>
 <ul>
@@ -861,19 +861,19 @@ tagged <code>#utf8</code></a>.</p>
 A versionless interchange format for hierarchical data.  It was derived from the
 syntax of JavaScript.</p>
 <p><a name=j8-notation>#j8-notation</a><br/>
-<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">J8 Notation</a> —
+<a href="release/latest/doc/j8-notation.html">J8 Notation</a> —
 A collection of data languages based on JSON.  It specifies concrete representations for strings/bytes, records (<a href="/cross-ref.html?tag=JSON8#JSON8">JSON8</a>), and tables (<a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>).</p>
 <p><a name=j8-string>#j8-string</a><br/>
-<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">J8 String</a> —
+<a href="release/latest/doc/j8-notation.html">J8 String</a> —
 An extension of JSON strings with <code>\yff</code> for binary data and <code>\u{123456}</code> to move past surrogate pairs.  Example: <code>u'mu = \u{3bc}'</code>.</p>
 <p><a name=JSON8>#JSON8</a><br/>
-<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">JSON8</a> —
+<a href="release/latest/doc/j8-notation.html">JSON8</a> —
 An extension of JSON with <a href="/cross-ref.html?tag=j8#j8">J8 strings</a>.  Any language that has JSON library should also have a JSON8 library.</p>
 <p><a name=TSV>#TSV</a><br/>
 <a href="https://en.wikipedia.org/wiki/Tab-separated_values">Tab-Separated Values</a> —
 A text format for tables, where cells are separated by tabs, and each row is a line.  There's no standard way to denote a literal tab or newline in a cell.</p>
 <p><a name=TSV8>#TSV8</a><br/>
-<a href="https://www.oilshell.org/release/latest/doc/j8-notation.html">TSV8</a> —
+<a href="release/latest/doc/j8-notation.html">TSV8</a> —
 An extension of TSV with <a href="/cross-ref.html?tag=j8#j8">J8 strings</a>.  Any language that has a JSON and JSON8 library should also have
 a TSV8 library.</p>
 <p><a name=YAML>#YAML</a><br/>
@@ -882,22 +882,6 @@ A human-editable configuration file syntax that's a superset of JSON.  It's
 quirky, but widely used in the cloud.  It <a href="https://news.ycombinator.com/item?id=26671136">confuses
 values</a> like the string &quot;NO&quot; and
 the boolean <code>false</code>.</p>
-<p><a name=QSN>#QSN</a><br/>
-<a href="//oilshell.org/release/latest/doc/qsn.html">Quoted String Notation (QSN)</a> —
-A data format for strings which looks like <code>'foo \x00 bar\n'</code>.  It's an
-adaptation of Rust's string literal syntax with two main use cases:</p>
-<ul>
-<li>To exchange data between different programs, like JSON (which can't express
-arbitrary byte strings).</li>
-<li>To print arbitrary filenames to a terminal.</li>
-</ul>
-<p>QSN will be deprecated in favor of <a href="/cross-ref.html?tag=j8#j8">J8 Strings</a>.</p>
-<p><a name=QTT>#QTT</a><br/>
-<a href="//oilshell.org/release/latest/doc/qtt.html">Quoted, Typed Tables</a> —
-An obsolete name, now <a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>.</p>
-<p><a name=QTSV>#QTSV</a><br/>
-<a href="//oilshell.org/release/latest/doc/qtt.html">QTSV</a> —
-An obsolete name, now <a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>.</p>
 <a name="books"></a>
 <h2>Books</h2>
 <p><a name=APUE>#APUE</a><br/>
