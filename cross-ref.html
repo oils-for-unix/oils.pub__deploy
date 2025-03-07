@@ -70,7 +70,7 @@ ways</a></li>
 <p>You run it with <code>bin/ysh</code>.</p>
 <p><strong>Important</strong>: Before March 2023, this shell language was called <strong>Oil</strong>.  We
 will clean up the many references to the old name over time.</p>
-<p>For a taste of the syntax, see <a href="blog/2020/01/simplest-explanation.html">The Simplest Explanation of
+<p>For a taste of the syntax, see <a href="//www.oilshell.org/blog/2020/01/simplest-explanation.html">The Simplest Explanation of
 Oil</a> and <a href="release/latest/doc/ysh-tour.html">A Tour of
 YSH</a>.</p>
 <p>It shares the same runtime as OSH, so it's a smooth upgrade from both
@@ -81,24 +81,19 @@ Options</a>.</p>
 A <strong>compatible</strong> shell language based on the common use of shell (including
 POSIX, <a href="#bash">bash</a>, and others).  The design criteria for the language are:</p>
 <ul>
-<li>It runs real shell programs, including <a href="blog/2018/01/15.html">distro build
-scripts</a> and <a href="blog/2019/02/05.html">completion
+<li>It runs real shell programs, including <a href="//www.oilshell.org/blog/2018/01/15.html">distro build
+scripts</a> and <a href="//www.oilshell.org/blog/2019/02/05.html">completion
 plugins</a>.  The former are completely unmodified, while
 the latter require small patches.</li>
 <li>We should able to write a manual &quot;with a straight face&quot;.  This can't be done
 with <a href="#bash">bash</a>.</li>
 </ul>
 <p>You run it with <code>bin/osh</code>.</p>
-<p>In addition, it has <a href="blog/2020/10/osh-features.html">four features that justify a new
+<p>In addition, it has <a href="//www.oilshell.org/blog/2020/10/osh-features.html">four features that justify a new
 shell</a>: reliable error handling, safe
 processing of user-supplied data, lack of &quot;quoting hell&quot;, and better error
 messages and tools.  These features are <strong>opt-in</strong>, as OSH is compatible by
 default.</p>
-<p><a name=oil-language>#oil-language</a><br/>
-<a href="blog/2017/02/05.html">Oil Language</a> —
-The <strong>old name</strong> for the shell language influenced by Python, JavaScript, and Ruby.</p>
-<p>In March 2023, Oil was <strong>renamed</strong> to <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.  We will no longer refer to
-the &quot;Oil language&quot;, but there are still many links that point to this entry.</p>
 <p><a name=osh-language>#osh-language</a><br/>
 <a href="/">OSH Language</a> —
 A synonym for <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, or <code>bin/osh</code>.</p>
@@ -129,38 +124,6 @@ general-purpose translator.</p>
 recent <a href="https://github.com/python/mypy/blob/master/mypyc/README.md">mypyc</a>
 compiler and the old <a href="https://en.wikipedia.org/wiki/Shed_Skin">Shed Skin</a>
 compiler.</p>
-<p><a name=opy>#opy</a><br/>
-<a href="blog/2018/03/04.html">OPy</a> —
-A Python bytecode compiler based on <a href="#pgen2">pgen2</a> and
-<a href="#compiler2">compiler2</a>.  This small piece of code allows us to adapt Python to
-the needs of the Oils project.  See <a href="/blog/2018/03/04.html">Building Oil with the OPy Bytecode
-Compiler</a>.</p>
-<p>As of December 2019, we expect OPy to be replaced by <a href="#mycpp">mycpp</a>, which
-generates faster code.</p>
-<p><a name=boil>#boil</a><br/>
-<a href="/">Boil</a> —
-<em>(obsolete)</em>
-The working name for the part of Oils that subsumes GNU Make.  No code for this
-exists yet.</p>
-<p><a name=oil-native>#oil-native</a><br/>
-<a href="blog/2019/12/09.html">oil-native</a> —
-The build of Oils translated to C++ with <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a>.  The resulting shell
-is 100% native code: i.e. there's no bytecode.  When it's done, it will be the
-only Oils build, and we'll just call it &quot;Oils&quot;.</p>
-<p><a name=OVM>#OVM</a><br/>
-<a href="blog/2017/04/24.html">OVM</a> —
-<em>(obsolete)</em>
-A slice of the <a href="#cpython">CPython</a> interpreter, used as the Oils VM while it's
-being prototyped.  It will be replaced with C++ code &quot;metaprogrammed&quot; with
-Python.</p>
-<p><a name=OVM2>#OVM2</a><br/>
-<a href="blog/2018/11/15.html">OVM2</a> —
-<em>(obsolete)</em>
-A nascent VM to replace our use of the <a href="#cpython">CPython</a> VM.</p>
-<p><a name=OHeap2>#OHeap2</a><br/>
-<a href="blog/2018/12/16.html#toc_3">OHeap2</a> —
-A data format for <a href="#OVM2">OVM2</a> that is like a <a href="https://stackoverflow.com/questions/3561145/what-is-a-smalltalk-image">SmallTalk image</a> or <a href="https://v8.dev/blog/custom-startup-snapshots">v8 snapshot</a>.
-Inspired by the <a href="/blog/tags.html?tag=oheap#oheap">first version of oheap</a>.</p>
 <p><a name=readline>#readline</a><br/>
 <a href="https://tiswww.case.edu/php/chet/readline/rltop.html">readline</a> —
 A line-editing library derived from <a href="#bash">bash</a>.  It has <code>emacs</code> and <code>vi</code>
@@ -331,7 +294,7 @@ former is more consistent with all other regular expression dialects, including
 A classic Unix tool that walks a directory tree, filters its entries, and
 performs actions.  GNU findutils implements it.</p>
 <p>Many users don't realize that <code>find</code> is  an expression language like
-<a href="#expr">expr</a> or <a href="blog/2017/08/31.html">test</a>.  It looks nothing like
+<a href="#expr">expr</a> or <a href="//www.oilshell.org/blog/2017/08/31.html">test</a>.  It looks nothing like
 <a href="#awk">Awk</a>, but they both apply predicates and actions to a stream.</p>
 <p><a name=xargs>#xargs</a><br/>
 <a href="https://en.wikipedia.org/wiki/Xargs">xargs</a> —
@@ -376,8 +339,8 @@ use it to express multiple lexers in the Oils project.</p>
 <a href="https://www.cs.princeton.edu/research/techreps/TR-554-97">Zephyr ASDL</a> —
 Oils uses this domain-specific language to declare <a href="#adt">algebraic data types</a>
 in Python and C++.  We use it to represent both the syntax of shell programs
-and the interpreter's runtime data structures. See <a href="blog/2016/12/11.html">What is Zephyr
-ASDL?</a> and <a href="blog/tags.html?tag=ASDL#ASDL">posts tagged
+and the interpreter's runtime data structures. See <a href="//www.oilshell.org/blog/2016/12/11.html">What is Zephyr
+ASDL?</a> and <a href="//www.oilshell.org/blog/tags.html?tag=ASDL#ASDL">posts tagged
 ASDL</a>.</p>
 <p><a href="http://eli.thegreenplace.net/2014/06/04/using-asdl-to-describe-asts-in-compilers">This article</a> describes its use in Python.  <a href="http://asdl.sourceforge.net/">This SourceForge
 project</a> contains the code.</p>
@@ -394,7 +357,7 @@ open-sourced by Google.</p>
 <p><a name=spec-test>#spec-test</a><br/>
 <a href="https://github.com/oilshell/oil/blob/master/test/sh_spec.py">sh_spec.py</a> —
 A test framework written for <code>osh</code> that runs shell snippets against many
-shells.  See <a href="https://github.com/oilshell/oil/wiki/Spec-Tests">Spec Tests</a> and <a href="blog/2017/06/22.html">How I Use Tests</a> (2017).</p>
+shells.  See <a href="https://github.com/oilshell/oil/wiki/Spec-Tests">Spec Tests</a> and <a href="//www.oilshell.org/blog/2017/06/22.html">How I Use Tests</a> (2017).</p>
 <p><a name=wild-test>#wild-test</a><br/>
 <a href="https://github.com/oilshell/oil/blob/master/test/wild-runner.sh">Wild Tests</a> —
 A test framework that tortures the OSH parser with real-world shell scripts.</p>
@@ -575,13 +538,13 @@ OpenBSD shell and <a href="#mksh">mksh</a>.</p>
 <a name="language-concepts"></a>
 <h3>Language Concepts</h3>
 <p><a name=metaprogramming>#metaprogramming</a><br/>
-<a href="blog/2017/12/17.html">Metaprogramming</a> —
+<a href="//www.oilshell.org/blog/2017/12/17.html">Metaprogramming</a> —
 A very general term for <strong>code that operates on code</strong>.  Textual code
 generation, C macros, C++ templates, Python reflection, non-standard evaluation
 in R, and Lisp macros are all examples of metaprogramming.</p>
 <p>In dynamic languages, the metaprogramming language is typically the language
 itself, while statically-typed languages require a different metaprogramming
-language.  See <a href="blog/2016/12/05.html">Type Checking vs. Metaprogramming; ML vs.
+language.  See <a href="//www.oilshell.org/blog/2016/12/05.html">Type Checking vs. Metaprogramming; ML vs.
 Lisp</a>.</p>
 <p><a name=metalanguage>#metalanguage</a><br/>
 <a href="https://en.wikipedia.org/wiki/Metalanguage">Metalanguage</a> —
@@ -598,7 +561,7 @@ Python's <code>re</code> module.  It's an abstract program but we cobbled togeth
 concrete tools to express it.</li>
 </ul>
 <p><a name=language-composition>#language-composition</a><br/>
-<a href="blog/2017/12/17.html">Language Composition</a> —
+<a href="//www.oilshell.org/blog/2017/12/17.html">Language Composition</a> —
 When parsing almost any language, it's useful to think of it as a composition
 of <strong>sublanguages</strong>.  Shell is an extreme case of this, but it's true for
 Python, JavaScript, HTML, etc.</p>
@@ -739,21 +702,21 @@ syntax for Perl-style backtracking constructs.</p>
 <a href="http://bford.info/packrat/">Parsing Expression Grammar</a> -- An alternative formalism to context-free
 grammars, which may be better-suited to expressing shell syntax.</p>
 <p><a name=lexical-state>#lexical-state</a><br/>
-<a href="blog/2016/10/19.html">Lexical State</a> —
+<a href="//www.oilshell.org/blog/2016/10/19.html">Lexical State</a> —
 A simple parsing technique for dealing with language composition, i.e.
 &quot;sublanguages&quot; or &quot;dialects&quot;.  Renamed to <a href="#lexer-modes">lexer modes</a> (because
 the lexer has other unrelated state).</p>
 <p><a name=lexer-modes>#lexer-modes</a><br/>
-<a href="blog/2017/12/17.html">Lexer Modes</a> —
+<a href="//www.oilshell.org/blog/2017/12/17.html">Lexer Modes</a> —
 A simple parsing technique for dealing with language composition, i.e.
 &quot;sublanguages&quot; or &quot;dialects&quot;.  Formerly <a href="#lexical-state">lexical state</a>.  See
 posts on #<a href="/blog/tags.html?tag=lexing#lexing">lexing</a>.</p>
 <p><a name=precedence-climbing>#precedence-climbing</a><br/>
 <a href="http://eli.thegreenplace.net/2012/08/02/parsing-expressions-by-precedence-climbing">Precedence Climbing</a> -- A simple algorithm for top-down
-parsing of expressions.  It's <a href="blog/2016/11/01.html">a special case</a> of <a href="#tdop-parsing">top-down operator precedence
+parsing of expressions.  It's <a href="//www.oilshell.org/blog/2016/11/01.html">a special case</a> of <a href="#tdop-parsing">top-down operator precedence
 parsing</a>.</p>
 <p><a name=tdop-parsing>#tdop-parsing</a><br/>
-<a href="blog/2016/11/03.html">Top-Down Operator Precedence Parsing</a> -- Also called Pratt
+<a href="//www.oilshell.org/blog/2016/11/03.html">Top-Down Operator Precedence Parsing</a> -- Also called Pratt
 parsing, this is a general algorithm for parsing expressions with multiple
 levels of precedence.</p>
 <p><a name=recursive-descent>#recursive-descent</a><br/>
@@ -779,7 +742,7 @@ has some simplifications or annotations over a parse tree, depending on what
 you need to do with it: source-to-source translation, interpretation, code
 generation, etc.</p>
 <p><a name=LST>#LST</a><br/>
-<a href="blog/2017/02/11.html">Lossless Syntax Tree</a> —
+<a href="//www.oilshell.org/blog/2017/02/11.html">Lossless Syntax Tree</a> —
 An syntax tree with enough detail to reproduce the original source code.</p>
 <ul>
 <li>Compared to a parse tree, it has <strong>less</strong> information: it doesn't contain
@@ -792,7 +755,7 @@ For example, it retains information about whitespace and comments.</li>
 A data model of sum and product types.  This model is particularly convenient
 for representing the structure of programming languages.</p>
 <p><a name=data-frame>#data-frame</a><br/>
-<a href="/blog/2018/11/30.html">Data Frame</a> —
+<a href="//www.oilshell.org/blog/2018/11/30.html">Data Frame</a> —
 A table data structure with dynamically typed columns.  The <a href="#r-language">R
 language</a> is built around data frames, and the <a href="https://pandas.pydata.org/">Pandas</a>
 library borrowed this idea.  It's similar to an SQL table, except that it
