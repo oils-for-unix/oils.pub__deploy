@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Pure Mode: For Config Files and Functions</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/pure-mode.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.28.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Oils Pure Mode: For Config Files and Functions</h1>
+<p>The interpreter can run in pure mode</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#why-does-oils-have-pure-mode">Why does Oils have Pure Mode?</a></div>
+  <div class="toclevel2"><a href="#webassembly-analogy">WebAssembly Analogy</a></div>
+  <div class="toclevel1"><a href="#when-is-it-active">When is it active?</a></div>
+  <div class="toclevel2"><a href="#eval-pure"><code>--eval-pure</code></a></div>
+  <div class="toclevel2"><a href="#eval-and-evalexpr"><code>eval()</code> and <code>evalExpr()</code></a></div>
+  <div class="toclevel2"><a href="#pure-functions">Pure Functions</a></div>
+  <div class="toclevel1"><a href="#whats-allowed-in-pure-mode-not-allowed">What's allowed in Pure Mode?  Not allowed?</a></div>
+  <div class="toclevel1"><a href="#notes">Notes</a></div>
+</div>
+<a name="why-does-oils-have-pure-mode"></a>
+<h2>Why does Oils have Pure Mode?</h2>
+<ul>
+<li>config files should be isolated to git</li>
+<li><strong>data</strong> versus <strong>code</strong></li>
+</ul>
+<hr />
+<ul>
+<li>JSON is data.
+<ul>
+<li>TSV, HTML is data</li>
+<li>J8 Notation is data.</li>
+</ul>
+</li>
+<li>Hay is programmable data.
+<ul>
+<li>it doesn't format your hard drive.</li>
+</ul>
+</li>
+</ul>
+<a name="webassembly-analogy"></a>
+<h3>WebAssembly Analogy</h3>
+<p>WebAssembly is also pure computation, and can be used in a variety of contexts.</p>
+<p>It has <code>io</code> too.</p>
+<a name="when-is-it-active"></a>
+<h2>When is it active?</h2>
+<a name="eval-pure"></a>
+<h3><code>--eval-pure</code></h3>
+<p>vs <code>--eval</code></p>
+<p>TODO: link to doc/reef</p>
+<a name="eval-and-evalexpr"></a>
+<h3><code>eval()</code> and <code>evalExpr()</code></h3>
+<p>vs. <code>io-&gt;eval()</code> and <code>io-&gt;evalExpr()</code></p>
+<p>TODO: link to doc/reef</p>
+<a name="pure-functions"></a>
+<h3>Pure Functions</h3>
+<ul>
+<li>TODO: <code>func</code></li>
+</ul>
+<a name="whats-allowed-in-pure-mode-not-allowed"></a>
+<h2>What's allowed in Pure Mode?  Not allowed?</h2>
+<p>What's not allowed:</p>
+<ul>
+<li>external commands</li>
+<li>any process construct
+<ul>
+<li>pipelines</li>
+<li>subshell</li>
+<li>command sub and process sub</li>
+<li>background jobs with <code>&amp;</code></li>
+</ul>
+</li>
+<li>many builtins
+<ul>
+<li>most of these do I/O</li>
+</ul>
+</li>
+<li>globbing - touches the file system</li>
+<li>time and randomness
+<ul>
+<li>$SECONDS and $RANDOM</li>
+</ul>
+</li>
+</ul>
+<hr />
+<ul>
+<li><a href="chap-front-end.html#shell-flags"><code>shell-flags</code></a> for <code>--eval-pure</code></li>
+<li><a href="chap-builtin-func.html#func/eval"><code>func/eval</code></a> and
+<a href="chap-builtin-func.html#func/evalExpr"><code>func/evalExpr</code></a></li>
+<li><a href="chap-ysh-cmd.html#func"><code>func</code></a> - functions are pure</li>
+<li><a href="chap-type-method.html#io"><code>io</code></a> and <a href="chap-type-method.html#vm"><code>vm</code></a> - impure
+behavior is attached to these objects</li>
+</ul>
+<a name="notes"></a>
+<h2>Notes</h2>
+<p>Pure mode is a bit like functional programming, but the style <strong>inside</strong> a
+function is not functional.</p>
+<p>In YSH, it's natural to write pure functions in an imperative style.  Just like
+you can do this in Python or JavaScript (although there is no enforcement,
+unlike Oils)</p>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 16 Mar 2025 15:41:21 -0400</i>
+    </div>
+  </body>
+</html>

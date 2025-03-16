@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Parser Architecture</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/parser-architecture.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.28.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Parser Architecture</h1>
+<p>This doc has rough notes on the architecture of the parser.</p>
+<p><a href="https://www.oilshell.org/blog/2019/02/07.html">How to Parse Shell Like a Programming Language</a> (2019 blog post)
+covers some of the same material.  (As of 2024, it's still pretty accurate,
+although there have been minor changes.)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#the-lossless-invariant">The Lossless Invariant</a></div>
+  <div class="toclevel1"><a href="#lexing">Lexing</a></div>
+  <div class="toclevel2"><a href="#list-of-regex-based-lexers">List of Regex-Based Lexers</a></div>
+  <div class="toclevel2"><a href="#sublanguages-we-dont-lex-or-parse">Sublanguages We Don't Lex or Parse</a></div>
+  <div class="toclevel2"><a href="#lexer-unread">Lexer Unread</a></div>
+  <div class="toclevel1"><a href="#parsing-issues">Parsing Issues</a></div>
+  <div class="toclevel2"><a href="#re-parsing-reading-text-more-than-once">Re-parsing - reading text more than once</a></div>
+  <div class="toclevel2"><a href="#re-parsing-that-doesnt-affect-the-ysh-ify-or-fmt-tools">Re-parsing that doesn't affect the <code>ysh-ify</code> or <code>fmt</code> tools</a></div>
+  <div class="toclevel2"><a href="#revisiting-tokens-not-text">Revisiting Tokens, Not Text</a></div>
+  <div class="toclevel2"><a href="#lookahead-in-recursive-descent-parsers">Lookahead in Recursive Descent Parsers</a></div>
+  <div class="toclevel2"><a href="#where-parsers-are-instantiated">Where Parsers are Instantiated</a></div>
+  <div class="toclevel1"><a href="#runtime-parsing">Runtime Parsing</a></div>
+  <div class="toclevel2"><a href="#where-osh-dynamically-parses">Where OSH Dynamically Parses</a></div>
+  <div class="toclevel2"><a href="#where-bash-dynamically-parses-perhaps-unintentionally">Where Bash Dynamically Parses (perhaps unintentionally)</a></div>
+  <div class="toclevel2"><a href="#parse-errors-at-runtime-need-line-numbers">Parse Errors at Runtime (Need Line Numbers)</a></div>
+</div>
+<a name="the-lossless-invariant"></a>
+<h2>The Lossless Invariant</h2>
+<p>The test suite <a href="https://github.com/oils-for-unix/oils/blob/master/test/lossless.sh">test/lossless.sh</a> invokes <code>osh --tool lossless-cat $file</code>.</p>
+<p>The <code>lossless-cat</code> tool does this:</p>
+<ol>
+<li>Parse the file</li>
+<li>Collect <strong>all</strong> tokens, from 0 to N</li>
+<li>Print the text of each token.</li>
+</ol>
+<p>Now, do the tokens &quot;add up&quot; to the original file?  That's what we call the
+<em>lossless invariant</em>.</p>
+<p>It will be the foundation for tools that statically understand shell:</p>
+<ul>
+<li><code>--tool ysh-ify</code> - change style of <code>do done</code> → <code>{ }</code>, etc.</li>
+<li><code>--tool fmt</code> - fix indentation, maybe some line wrapping</li>
+</ul>
+<p>The sections on <strong>re-parsing</strong> explain some obstacles which we had to overcome.</p>
+<a name="lexing"></a>
+<h2>Lexing</h2>
+<a name="list-of-regex-based-lexers"></a>
+<h3>List of Regex-Based Lexers</h3>
+<p>Oils uses regex-based lexers, which are turned into efficient C code with
+<a href="/cross-ref.html?tag=re2c#re2c">re2c</a>.  We intentionally avoid hand-written code that manipulates
+strings char-by-char, since that strategy is error prone; it's inevitable that
+rare cases will be mishandled.</p>
+<p>The list of lexers can be found by looking at <a href="https://github.com/oils-for-unix/oils/blob/master/native/fastlex.c">native/fastlex.c</a>.</p>
+<ul>
+<li>The large, modal OSH/YSH lexer in <a href="https://github.com/oils-for-unix/oils/blob/master/frontend/lexer_def.py">frontend/lexer_def.py</a>.</li>
+<li>Lexers for OSH sublanguages
+<ul>
+<li>For <code>echo -e</code></li>
+<li>For <code>PS1</code> backslash escapes.</li>
+<li>For history expansion, e.g. <code>!$</code>.</li>
+<li>For globs, to implement <code>${x/foo*/replace}</code> via conversion to ERE.  We need
+position information, and the <code>fnmatch()</code> API doesn't provide it, but
+<code>regexec()</code> does.
+<ul>
+<li>NOTE: We'll also need one for converting extended globs to EREs, for
+portability.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<a name="sublanguages-we-dont-lex-or-parse"></a>
+<h3>Sublanguages We Don't Lex or Parse</h3>
+<p>These constructs aren't recognized by the Oils front end.  Instead, they're
+punted to <a href="/cross-ref.html?tag=libc#libc">libc</a>:</p>
+<ul>
+<li>Glob patterns, e.g. <code>*.py</code> (in most cases)</li>
+<li>Extended glob patterns, e.g. <code>@(*.py|*.sh)</code></li>
+<li><code>strftime</code> format strings, e.g. <code>printf '%(%Y-%m-%d)T' $timestamp</code></li>
+</ul>
+<a name="lexer-unread"></a>
+<h3>Lexer Unread</h3>
+<p><a href="https://github.com/oils-for-unix/oils/blob/master/osh/word_parse.py">osh/word_parse.py</a> calls <code>lexer.MaybeUnreadOne()</code> to handle right
+parens in this case:</p>
+<pre><code>(case x in x) ;; esac )
+</code></pre>
+<p>This is sort of like the <code>ungetc()</code> I've seen in other shell lexers.</p>
+<a name="parsing-issues"></a>
+<h2>Parsing Issues</h2>
+<p>This section is about extra passes / &quot;irregularities&quot; at <strong>parse time</strong>.  In
+the &quot;Runtime Issues&quot; section below, we discuss cases that involve parsing after
+variable expansion, etc.</p>
+<a name="re-parsing-reading-text-more-than-once"></a>
+<h3>Re-parsing - reading text more than once</h3>
+<p>We try to avoid re-parsing, but it happens in 4 places.</p>
+<p>It complicates error messages with source location info.  It also implications
+for <code>--tool ysh-ify</code> and <code>--tool fmt</code>, because it affects the <strong>&quot;lossless invariant&quot;</strong>.</p>
+<p>This command is perhaps a quicker explanation than the text below:</p>
+<pre><code>$ grep do_lossless */*.py
+...
+osh/cmd.py: ...
+osh/word_parse.py: ...
+</code></pre>
+<p>Where re-parse:</p>
+<ol>
+<li>
+<p><a href="/cross-ref.html?tag=here-doc#here-doc">Here documents</a>:  We first read lines, and then parse them.</p>
+<ul>
+<li><code>VirtualLineReader</code> in <a href="https://github.com/oils-for-unix/oils/blob/master/osh/cmd_parse.py">osh/cmd_parse.py</a></li>
+<li>This is re-parsing from <strong>lines</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>Array L-values</strong> like <code>a[x+1]=foo</code>.  bash allows splitting arithmetic
+expressions across word boundaries: <code>a[x + 1]=foo</code>.  But I don't see this
+used, and it would significantly complicate the OSH parser.</p>
+<ul>
+<li><code>_MakeAssignPair</code> in <a href="https://github.com/oils-for-unix/oils/blob/master/osh/cmd_parse.py">osh/cmd_parse.py</a> has <code>do_lossless</code> condition</li>
+<li>This is re-parsing from <strong>tokens</strong></li>
+</ul>
+</li>
+<li>
+<p><strong>Backticks</strong>, the legacy form of <code>$(command sub)</code>.  There's an extra level
+of backslash quoting that may happen compared with <code>$(command sub)</code>.</p>
+<ul>
+<li><code>_ReadCommandSubPart</code> in <a href="https://github.com/oils-for-unix/oils/blob/master/osh/word_parse.py">osh/word_parse.py</a> has <code>do_lossless</code>
+condition</li>
+<li>This is re-parsing from <strong>tokens</strong></li>
+</ul>
+</li>
+</ol>
+<a name="re-parsing-that-doesnt-affect-the-ysh-ify-or-fmt-tools"></a>
+<h3>Re-parsing that doesn't affect the <code>ysh-ify</code> or <code>fmt</code> tools</h3>
+<ol start="4">
+<li><code>alias</code> expansion
+<ul>
+<li><code>SnipCodeString</code> in <a href="https://github.com/oils-for-unix/oils/blob/master/osh/cmd_parse.py">osh/cmd_parse.py</a></li>
+<li>This is re-parsing from <strong>tokens</strong>, but it only happens <strong>after running</strong>
+something like <code>alias ls=foo</code>.  So it doesn't affect the lossless
+invariant that <code>--tool ysh-ify</code> and <code>--tool fmt</code> use.</li>
+</ul>
+</li>
+</ol>
+<a name="revisiting-tokens-not-text"></a>
+<h3>Revisiting Tokens, Not Text</h3>
+<p>These language constructs are handled statically, but not in a single pass of
+parsing:</p>
+<ul>
+<li>Assignment vs. Env binding detection: <code>FOO=bar declare a[x]=1</code>.
+We make another pass with <code>_SplitSimpleCommandPrefix()</code>.
+<ul>
+<li>Related: <code>s=1</code> doesn't cause reparsing, but <code>a[x+1]=y</code> does.</li>
+</ul>
+</li>
+<li>Brace Detection in a few places: <code>echo {a,b}</code></li>
+<li>Tilde Detection: <code>echo ~bob</code>, <code>home=~bob</code></li>
+</ul>
+<p>This is less problematic, since it doesn't affect error messages
+(<code>ctx_SourceCode</code>) or the lossless invariant.</p>
+<a name="lookahead-in-recursive-descent-parsers"></a>
+<h3>Lookahead in Recursive Descent Parsers</h3>
+<ul>
+<li><code>myfunc() { echo hi; }</code> vs.  <code>myfunc=()  # an array</code></li>
+<li><code>shopt -s parse_equals</code>: For <code>x = 1 + 2*3</code></li>
+</ul>
+<a name="where-parsers-are-instantiated"></a>
+<h3>Where Parsers are Instantiated</h3>
+<ul>
+<li>See <a href="https://github.com/oils-for-unix/oils/blob/master/frontend/parse_lib.py">frontend/parse_lib.py</a> and its callers.</li>
+</ul>
+<a name="runtime-parsing"></a>
+<h2>Runtime Parsing</h2>
+<a name="where-osh-dynamically-parses"></a>
+<h3>Where OSH Dynamically Parses</h3>
+<ol>
+<li><strong>Alias expansion</strong> like <code>alias foo='ls | wc -l'</code>.  Aliases are like
+&quot;lexical macros&quot;.</li>
+<li><strong>Prompt strings</strong>.  <code>$PS1</code> and family first undergo <code>\</code> substitution, and
+then the resulting strings are parsed as words, with <code>$</code> escaped to <code>\$</code>.</li>
+<li><strong>Builtins</strong>.
+<ul>
+<li><code>eval</code></li>
+<li><code>trap</code> builtin
+<ul>
+<li>exit</li>
+<li>debug</li>
+<li>err</li>
+<li>signals</li>
+</ul>
+</li>
+<li><code>source</code> — the filename is formed dynamically, but the code is generally
+static.</li>
+</ul>
+</li>
+</ol>
+<a name="where-bash-dynamically-parses-perhaps-unintentionally"></a>
+<h3>Where Bash Dynamically Parses (perhaps unintentionally)</h3>
+<p>All of the cases above, plus:</p>
+<p>(1) Recursive <strong>Arithmetic Evaluation</strong>:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">a='1+2'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">b='a+3'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $(( b ))</span>
+6
+</code></pre>
+<p>This also happens for the operands to <code>[[ x -eq x ]]</code>.</p>
+<p>Note that <code>a='$(echo 3)'</code> results in a <strong>syntax error</strong>.  I believe this was
+due to the ShellShock mitigation.</p>
+<p>(2) The <strong><code>unset</code> builtin</strong> takes an LValue.  (not yet implemented in OSH)</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">a=(1 2 3 4)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">expr='a[1+1]'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">unset &quot;$expr&quot;</span>
+<span class="sh-prompt">$</span> <span class="sh-command">argv &quot;${a[@]}&quot;</span>
+['1', '2', '4']
+</code></pre>
+<p>(3) <strong>printf -v</strong> takes an &quot;LValue&quot;.</p>
+<p>(4) <strong>Var refs</strong> with <code>${!x}</code> takes a &quot;cell&quot;.  (not yet implemented OSH.
+Relied on by <code>bash-completion</code>, as discovered by Greg Price)</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">a=(1 2 3 4)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">expr='a[$(echo 2 | tee BAD)]'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo ${!expr}</span>
+3
+<span class="sh-prompt">$</span> <span class="sh-command">cat BAD</span>
+2
+</code></pre>
+<p>(5) <strong>test -v</strong> takes a &quot;cell&quot;.</p>
+<p>(6) ShellShock (removed from bash): <code>export -f</code>, all variables were checked for
+a certain pattern.</p>
+<a name="parse-errors-at-runtime-need-line-numbers"></a>
+<h3>Parse Errors at Runtime (Need Line Numbers)</h3>
+<ul>
+<li><code>test</code> / <code>[</code>, e.g. <code>[ -a -a -a ]</code></li>
+<li>Command line flag usage errors</li>
+<li><a href="osh-help.html?topic=alias#alias">alias</a> parse errors</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 16 Mar 2025 15:41:21 -0400</i>
+    </div>
+  </body>
+</html>

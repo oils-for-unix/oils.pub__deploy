@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notes on Oils Architecture</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/architecture-notes.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.28.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Notes on Oils Architecture</h1>
+<p>This doc is for contributors or users who want to understand the Oils codebase.
+These internal details are subject to change.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+  <div class="toclevel1"><a href="#source-code">Source Code</a></div>
+  <div class="toclevel2"><a href="#build-dependencies">Build Dependencies</a></div>
+  <div class="toclevel2"><a href="#borrowed-code">Borrowed Code</a></div>
+  <div class="toclevel2"><a href="#metaprogramming-generated-code">Metaprogramming / Generated Code</a></div>
+  <div class="toclevel1"><a href="#other-cross-cutting-observations">Other Cross-Cutting Observations</a></div>
+  <div class="toclevel2"><a href="#where-ifs-is-used">Where $IFS is Used</a></div>
+  <div class="toclevel2"><a href="#shell-function-callbacks">Shell Function Callbacks</a></div>
+  <div class="toclevel2"><a href="#where-unicode-is-respected">Where Unicode is Respected</a></div>
+  <div class="toclevel2"><a href="#parse-time-and-runtime-pairs">Parse-time and Runtime Pairs</a></div>
+  <div class="toclevel1"><a href="#state-machines">State Machines</a></div>
+  <div class="toclevel1"><a href="#error-locations-and-fallbacks">Error Locations and Fallbacks</a></div>
+  <div class="toclevel1"><a href="#other-topics">Other Topics</a></div>
+</div>
+<a name="links"></a>
+<h2>Links</h2>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/Contributing">Contributing</a> (wiki) helps you change the code for the first time.</li>
+<li><a href="oils-repo/README.html">README</a> describes how the code is organized.</li>
+<li><a href="interpreter-state.html">Interpreter State</a> describes the interpreter's user-facing data
+structures.</li>
+<li><a href="parser-architecture.html">Parser Architecture</a></li>
+<li><a href="https://github.com/oilshell/oil/wiki/OSH-Word-Evaluation-Algorithm">OSH Word Evaluation Algorithm</a> (wiki) describes shell's complex
+word evaluation.  Oils uses <a href="simple-word-eval.html">Simple Word Evaluation</a>
+instead.</li>
+</ul>
+<a name="source-code"></a>
+<h2>Source Code</h2>
+<a name="build-dependencies"></a>
+<h3>Build Dependencies</h3>
+<ul>
+<li>Essential: <a href="/cross-ref.html?tag=libc#libc">libc</a></li>
+<li>Optional: GNU <a href="/cross-ref.html?tag=readline#readline">readline</a> (TODO: other line editing libraries).</li>
+<li>Only in the OVM build (as of March 2020): <a href="/cross-ref.html?tag=yajl#yajl">yajl</a></li>
+</ul>
+<a name="borrowed-code"></a>
+<h3>Borrowed Code</h3>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/asdl/">ASDL</a> front end from <a href="/cross-ref.html?tag=cpython#cpython">CPython</a> (heavily
+refactored)</li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/frontend/tdop.py">frontend/tdop.py</a>: Adapted from tinypy, but almost no original code
+remains</li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/pgen2/">pgen2</a></li>
+<li>All of OPy (will be obsolete)
+<ul>
+<li>compiler2 from stdlib</li>
+<li>byterun</li>
+</ul>
+</li>
+<li>Build Dependency: <a href="/cross-ref.html?tag=mypy#mypy">MyPy</a></li>
+</ul>
+<a name="metaprogramming-generated-code"></a>
+<h3>Metaprogramming / Generated Code</h3>
+<ul>
+<li>Try <code>ls */*_def.py */*_gen.py</code>
+<ul>
+<li>The <code>def.py</code> files are abstract definitions.  They're not translated by
+<a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a>.</li>
+<li>The <code>gen.py</code> files generate source code in Python and C++ from these
+definitions.</li>
+<li>For example, we define the core <code>Id</code> type and the lexing rules abstractly.</li>
+<li><em>TODO: Details on each <code>def</code> / <code>gen</code> pair</em>.</li>
+</ul>
+</li>
+<li>See <a href="https://github.com/oils-for-unix/oils/blob/master/build/dev.sh">build/dev.sh</a> and <a href="https://github.com/oils-for-unix/oils/blob/master/build/codegen.sh">build/codegen.sh</a></li>
+</ul>
+<a name="other-cross-cutting-observations"></a>
+<h2>Other Cross-Cutting Observations</h2>
+<a name="where-ifs-is-used"></a>
+<h3>Where $IFS is Used</h3>
+<ul>
+<li>Splitting of unquoted substitutions</li>
+<li>The <a href="osh-help.html?topic=read#read">read</a> builtin</li>
+<li>To split words in <code>compgen -W</code> (bash only)</li>
+</ul>
+<a name="shell-function-callbacks"></a>
+<h3>Shell Function Callbacks</h3>
+<ul>
+<li>Completion hooks registered by <code>complete -F ls_complete_func ls</code></li>
+<li>bash has a <code>command_not_found</code> hook; OSH doesn't yet</li>
+</ul>
+<a name="where-unicode-is-respected"></a>
+<h3>Where Unicode is Respected</h3>
+<p>See the doc on <a href="unicode.html">Unicode</a>.</p>
+<a name="parse-time-and-runtime-pairs"></a>
+<h3>Parse-time and Runtime Pairs</h3>
+<p>In OSH:</p>
+<ul>
+<li><code>echo -e '\x00\n'</code> and <code>echo $'\x00\n'</code> (OSH shares lexer rules between them)</li>
+<li><code>test</code> / <code>[</code> and <code>[[</code> (OSH shares the parser and evaluator)</li>
+<li>Static vs. Dynamic Assignment.  <code>local x=$y</code> vs. <code>s='x=$y'; local $s</code>.
+<ul>
+<li>All shells have both notions!</li>
+</ul>
+</li>
+</ul>
+<p>Other Pairs:</p>
+<ul>
+<li><code>expr</code> and <code>$(( ))</code> (<code>expr</code> not in shell)</li>
+<li>Later:
+<ul>
+<li><a href="osh-help.html?topic=printf#printf">printf</a> can have a static variant like <code>${myfloat %.3f}</code></li>
+<li><code>find</code> and our own language (although this may be done with blocks)</li>
+</ul>
+</li>
+</ul>
+<a name="state-machines"></a>
+<h2>State Machines</h2>
+<ul>
+<li><code>$IFS</code> splitting in <code>osh/split.py</code></li>
+<li><a href="osh-help.html?topic=compadjust#compadjust">compadjust</a> needs to split partial <code>argv</code> by user-defined delimiters,
+e.g.  <code>:=</code></li>
+</ul>
+<p>The point of a state machine is to make sure all cases are handled!</p>
+
+<a name="error-locations-and-fallbacks"></a>
+<h2>Error Locations and Fallbacks</h2>
+<ul>
+<li><code>ExecuteAndCatch</code> uses mem.CurrentLocation()</li>
+<li><code>Failglob</code> uses mem.CurrentLocation()</li>
+<li><code>mem.GetVar $LINENO</code> uses <code>current_tok</code>, but it can be buggy
+<ul>
+<li>this is difference than <code>BASH_LINENO</code>, which is for the call stack!</li>
+</ul>
+</li>
+</ul>
+<p>Other:</p>
+<ul>
+<li><code>ui.ctx_Location</code>
+<ul>
+<li>So builtins can call <code>errfmt.Print_()</code> without locations</li>
+</ul>
+</li>
+<li><code>alloc.ctx_SourceCode</code> for assigning <code>source_t</code> to tokens</li>
+</ul>
+<a name="other-topics"></a>
+<h2>Other Topics</h2>
+<ul>
+<li><a href="/cross-ref.html?tag=dependency-injection#dependency-injection">Dependency Injection</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 16 Mar 2025 15:41:21 -0400</i>
+    </div>
+  </body>
+</html>

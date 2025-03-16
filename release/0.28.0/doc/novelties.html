@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Novelties in OSH and YSH</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/novelties.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.28.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Novelties in OSH and YSH</h1>
+<p>Oils usually cleans up existing practice, rather than inventing brand new
+things.  But here are a few features that may be unfamiliar.</p>
+<p>Related: <a href="known-differences.html">Known Differences</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#global-options-in-the-interpreter">Global Options in the Interpreter</a></div>
+  <div class="toclevel1"><a href="#the-first-word-of-a-command">The First Word of a Command</a></div>
+  <div class="toclevel2"><a href="#mutation-uses-the-setvar-keyword">Mutation Uses the <code>setvar</code> Keyword</a></div>
+  <div class="toclevel2"><a href="#evaluate-expressions-with-the-call-and-keywords">Evaluate Expressions with the <code>call</code> and <code>=</code> Keywords</a></div>
+  <div class="toclevel2"><a href="#hay-case-sensitivity">Hay Case Sensitivity</a></div>
+  <div class="toclevel1"><a href="#lazy-arg-lists">Lazy Arg Lists</a></div>
+  <div class="toclevel1"><a href="#three-quotation-types">Three Quotation Types</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="global-options-in-the-interpreter"></a>
+<h2>Global Options in the Interpreter</h2>
+<p>The interpreter has a big list of global settings!  Print them with <code>shopt -p</code>.</p>
+<p>This idea comes from shell, and they can be tamed with blocks to <code>shopt</code>:</p>
+<pre><code>shopt --unset errexit {
+  touch /let
+  touch /it
+  touch /fail
+}
+</code></pre>
+<p>We use options to upgrade OSH to YSH:</p>
+<pre><code>shopt --set ysh:upgrade
+</code></pre>
+<p>It's a bit like <code>use strict;</code> in Perl and JavaScript, or <code>from __future__</code> in
+Python.</p>
+<a name="the-first-word-of-a-command"></a>
+<h2>The First Word of a Command</h2>
+<p>The Python-like features in YSH have to co-exist with shell like <code>echo &quot;hello $name&quot;</code>, so there are more &quot;first words&quot;.</p>
+<a name="mutation-uses-the-setvar-keyword"></a>
+<h3>Mutation Uses the <code>setvar</code> Keyword</h3>
+<p>In YSH, mutation looks like this:</p>
+<pre><code>setvar x = 42
+setvar x += 3
+</code></pre>
+<p>Not like JavaScript or Python</p>
+<pre><code>x = 42  <span class="sh-comment"># doesn't work</span>
+x += 3  <span class="sh-comment"># nope</span>
+</code></pre>
+<a name="evaluate-expressions-with-the-call-and-keywords"></a>
+<h3>Evaluate Expressions with the <code>call</code> and <code>=</code> Keywords</h3>
+<p>In YSH, you use the <code>call</code> keyword to throw away the result of an expression.
+It's most often used with functions and methods:</p>
+<pre><code>call myFunc(x)
+
+call mylist-&gt;pop()
+</code></pre>
+<p>The <code>=</code> operator works the same way, but prints the return value:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= mylist-&gt;pop()</span>  <span class="sh-comment"># pretty-print result with = operator</span>
+(Str)    &quot;x&quot;
+
+<span class="sh-prompt">$</span> <span class="sh-command">= 42 + a[i]</span>
+(Int)    43
+</code></pre>
+<p>See <a href="command-vs-expression-mode.html">Command vs. Expression Mode</a> for more.</p>
+<a name="hay-case-sensitivity"></a>
+<h3>Hay Case Sensitivity</h3>
+<p>Attribute nodes start with capital letters, and this changes the parsing mode
+to allow &quot;bare&quot; assignment:</p>
+<pre><code>hay define Package
+
+Package {
+  name = 'cpython'  <span class="sh-comment"># assignment without var/setvar keyword</span>
+  version = '3.12'
+}
+</code></pre>
+<a name="lazy-arg-lists"></a>
+<h2>Lazy Arg Lists</h2>
+<p>These use <code>[]</code> instead of <code>()</code>:</p>
+<pre><code>assert [42 === x]  <span class="sh-comment"># assert can pretty-print the expression</span>
+
+ls8 | where [size &gt; 10]  <span class="sh-comment"># not implemented</span>
+</code></pre>
+<p>It's motivated by idioms from Awk and R.</p>
+<a name="three-quotation-types"></a>
+<h2>Three Quotation Types</h2>
+<p>YSH is Lisp-y!  These <strong>unevaluated</strong> quotation types don't appear in Python
+and JS:</p>
+<pre><code>var myblock = ^(ls /tmp | wc -l)  
+
+var myexpr = ^[age &gt; 10]  <span class="sh-comment"># use evalExpr()</span>
+
+var mytemplate = ^&quot;$name is $age years old&quot;  <span class="sh-comment"># not implemented</span>
+</code></pre>
+<p>TODO: Explain more.</p>
+
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="quirks.html">Quirks</a> is about OSH.</li>
+<li><a href="warts.html">Warts</a> is about YSH.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 16 Mar 2025 15:41:21 -0400</i>
+    </div>
+  </body>
+</html>

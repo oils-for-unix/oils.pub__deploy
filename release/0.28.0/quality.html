@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils 0.28.0 Quality</title>
+    <link rel="stylesheet" type="text/css" href="web/base.css" />
+<link rel="stylesheet" type="text/css" href="web/toc.css" />
+<link rel="stylesheet" type="text/css" href="web/release-index.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/release-quality.md" id="source-link">source</a> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils 0.28.0 Quality</h1>
+
+<span class="date">
+2025-03-16
+</span>
+<p>This is a supplement to the <a href="index.html">main release page</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#test-results">Test Results</a></div>
+  <div class="toclevel2"><a href="#spec-tests">Spec Tests</a></div>
+  <div class="toclevel2"><a href="#primary-test-suites">Primary Test Suites</a></div>
+  <div class="toclevel2"><a href="#more-tests">More Tests</a></div>
+  <div class="toclevel1"><a href="#benchmarks">Benchmarks</a></div>
+  <div class="toclevel1"><a href="#metrics">Metrics</a></div>
+  <div class="toclevel1"><a href="#source-code">Source Code</a></div>
+  <div class="toclevel1"><a href="#old">Old</a></div>
+</div>
+<a name="test-results"></a>
+<h2>Test Results</h2>
+<a name="spec-tests"></a>
+<h3>Spec Tests</h3>
+<ul>
+<li><a href="test/spec.wwz/osh-py/index.html">OSH Survey</a>.  Test OSH with existing shells,
+and compare their behavior.
+<ul>
+<li><a href="test/spec.wwz/osh-cpp/compare.html">OSH in C++</a>.  The progress of the C++
+translation.</li>
+</ul>
+</li>
+<li><a href="test/spec.wwz/ysh-py/index.html">YSH</a>.  The legacy-free language.
+<ul>
+<li><a href="test/spec.wwz/ysh-cpp/compare.html">YSH in C++</a>.  The progress of the C++
+translation.</li>
+</ul>
+</li>
+<li><a href="test/spec.wwz/stateful/index.html">Stateful Tests</a>.  Tests that use
+<a href="/cross-ref.html?tag=pexpect#pexpect">pexpect</a>.</li>
+</ul>
+<a name="primary-test-suites"></a>
+<h3>Primary Test Suites</h3>
+<ul>
+<li><a href="more-tests.wwz/suite-logs/gold.txt">Gold Tests</a>.  Compare OSH with bash
+(using implicit assertions, not golden output.)</li>
+<li><a href="test/wild.wwz/">Wild Tests</a>.  Parse and translate thousands of shell scripts
+with OSH.</li>
+<li><a href="more-tests.wwz/unit/">Python Unit Tests</a>.</li>
+<li><a href="test/coverage.wwz/unified/html/index.html">C++ Test Coverage</a> measured by
+Clang.
+<ul>
+<li><a href="test/coverage.wwz/log-files.html">Log Files</a></li>
+</ul>
+</li>
+<li><a href="more-tests.wwz/process-table/">Process Table</a>.  Are child processes in the
+right state for job control?</li>
+</ul>
+<a name="more-tests"></a>
+<h3>More Tests</h3>
+<ul>
+<li><a href="http://shell.cs.pomona.edu/">Smoosh</a> test suite (from <a href="https://github.com/mgree/smoosh/tree/master/tests/shell">mgree/smoosh</a>):
+<ul>
+<li><a href="test/spec.wwz/smoosh/smoosh.html">smoosh</a>
+| <a href="test/spec.wwz/smoosh/smoosh-hang.html">smoosh-hang</a></li>
+</ul>
+</li>
+<li><a href="more-tests.wwz/suite-logs/parse-errors.txt">parse-errors</a>.  A list of all parse errors.
+<ul>
+<li><a href="more-tests.wwz/suite-logs/parse-errors-osh-cpp.txt">parse-errors-osh-cpp</a>.
+With the native binary.</li>
+</ul>
+</li>
+<li><a href="more-tests.wwz/suite-logs/runtime-errors.txt">runtime-errors</a>.  A list of shell runtime
+errors.</li>
+<li><a href="more-tests.wwz/suite-logs/ysh-runtime-errors.txt">ysh-runtime-errors</a>.  YSH
+runtime errors.</li>
+<li><a href="more-tests.wwz/suite-logs/ysh-parse-errors.txt">ysh-parse-errors</a>.  YSH
+parse errors.</li>
+<li><a href="more-tests.wwz/suite-logs/ysh-every-string.txt">ysh-every-string</a>.  String
+literal stress test.</li>
+<li><a href="more-tests.wwz/suite-logs/ysh-large.txt">ysh-large</a></li>
+<li><a href="more-tests.wwz/suite-logs/lossless.txt">lossless</a>.  Test an invariant of the parser.</li>
+<li><a href="more-tests.wwz/suite-logs/osh-usage.txt">osh-usage</a>.  Misc tests of the <code>osh</code> binary.</li>
+<li><a href="more-tests.wwz/suite-logs/tools-deps.txt">tools-deps</a>.  Tests for a subcommand in
+progress.</li>
+<li><a href="more-tests.wwz/syscall/-wwz-index">syscall</a>. How many syscalls do we make,
+and how many processes do we start?</li>
+<li><a href="more-tests.wwz/suite-logs/ysh-ify.txt">ysh-ify Tests</a>.  Test OSH to YSH
+translation.</li>
+</ul>
+<a name="benchmarks"></a>
+<h2>Benchmarks</h2>
+<ul>
+<li><a href="benchmarks.wwz/osh-parser/">Parser</a>.  How fast does OSH
+parse compared to other shells?</li>
+<li><a href="benchmarks.wwz/osh-runtime/">Runtime</a>.  How fast does OSH run shell
+scripts?</li>
+<li><a href="benchmarks.wwz/compute/">Compute</a>.  How fast does OSH run small programs
+without I/O?</li>
+<li><a href="benchmarks.wwz/ovm-build/">Build</a>.  How long does it take for end users to
+build Oils?  How big is the resulting binary?</li>
+<li><a href="benchmarks.wwz/vm-baseline/">Virtual Memory Baseline</a>.  How much memory do
+shells use at startup?</li>
+<li><a href="benchmarks.wwz/mycpp-examples/">mycpp</a>.  Compares Python and generated C++
+on small examples.</li>
+<li>Memory Management Overhead.  How much time do we spend managing memory,
+compared with the shell interpreter?
+<ul>
+<li><a href="benchmarks.wwz/gc/">benchmarks/gc</a>.  Stats from the OS and our GC runtime.</li>
+<li><a href="benchmarks.wwz/gc-cachegrind/">benchmarks/gc-cachegrind</a>.  Stable
+measurements.</li>
+</ul>
+</li>
+<li><a href="benchmarks.wwz/uftrace/">uftrace</a>.  Stable measurements for parsing and
+runtime.</li>
+</ul>
+<a name="metrics"></a>
+<h2>Metrics</h2>
+<ul>
+<li>Lines of source, counted in different ways:
+<ul>
+<li><a href="pub/metrics.wwz/line-counts/overview.html">overview</a>.  The whole Oils
+repo, organized by type of source file.</li>
+<li><a href="pub/metrics.wwz/line-counts/for-translation.html">for-translation</a>.  An
+overview of the &quot;compiler engineer&quot; project.</li>
+<li><a href="pub/metrics.wwz/line-counts/cloc-report.txt">cloc-report</a>.  Significant
+lines of code, as measured by the <a href="https://github.com/AlDanial/cloc">cloc</a> tool.</li>
+</ul>
+</li>
+<li>Generated C++ code
+<ul>
+<li><a href="pub/metrics.wwz/line-counts/oils-cpp.txt">oils-cpp</a>.  The C++ code in the
+<code>oils-for-unix</code> tarball.</li>
+<li><a href="pub/metrics.wwz/preprocessed/-wwz-index">preprocessed</a>.  How much code is
+passed to the compiler?
+<ul>
+<li><a href="pub/metrics.wwz/preprocessed/cxx-dbg.txt">cxx-dbg</a>,
+<a href="pub/metrics.wwz/preprocessed/cxx-opt.txt">cxx-opt</a></li>
+</ul>
+</li>
+<li><a href="pub/metrics.wwz/oils-for-unix/-wwz-index">Binary code size</a> reported by
+<a href="https://github.com/google/bloaty">Bloaty</a>.  How much code is output by the compiler?
+<ul>
+<li><a href="pub/metrics.wwz/oils-for-unix/overview.txt">overview</a>,
+<a href="pub/metrics.wwz/oils-for-unix/symbols.txt">symbols</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="doc/metrics.txt">Doc Metrics</a></li>
+</ul>
+<a name="source-code"></a>
+<h2>Source Code</h2>
+<p>These files may help you understand how Oils is implemented, i.e. with
+domain-specific languages and code generation.</p>
+<ul>
+<li><a href="pub/src-tree.wwz/_gen/frontend/id_kind.asdl_c.h.html">_gen/frontend/id_kind.asdl_c.h</a>.
+A list of language elements, used in the lexer and in multiple parsers and
+evaluators.</li>
+<li>The regex-based lexer uses two stages of code generation:
+<ul>
+<li><a href="pub/src-tree.wwz/frontend/lexer_def.py.html">frontend/lexer_def.py</a>
+| <a href="pub/src-tree.wwz/_gen/_tmp/match.re2c-input.h.html">_gen/_tmp/match.re2c-input.h</a>
+| <a href="pub/src-tree.wwz/_gen/frontend/match.re2c.h">_gen/frontend/match.re2c.h</a></li>
+</ul>
+</li>
+<li><a href="pub/src-tree.wwz/frontend/syntax.asdl.html">frontend/syntax.asdl</a>. The syntax tree
+for OSH and YSH.</li>
+<li><a href="pub/src-tree.wwz/ysh/grammar.pgen2.html">ysh/grammar.pgen2</a>. The
+expression grammar for YSH.  In contrast, the OSH parsers are hand-written.</li>
+</ul>
+<p>Also see the <a href="https://github.com/oils-for-unix/oils">oils-for-unix/oils</a> repository.</p>
+<a name="old"></a>
+<h2>Old</h2>
+<p>These links describe the CPython / &quot;<a href="/cross-ref.html?tag=OVM#OVM">OVM</a>&quot; build, which should become
+the &quot;experimental&quot; version of Oils.</p>
+<a name="opy-ovm-metrics"></a>
+<h4>OPy / OVM Metrics</h4>
+<ul>
+<li>Lines of dependencies:
+<ul>
+<li><a href="pub/metrics.wwz/line-counts/pydeps.txt">pydeps</a>.  Oils code plus the Python
+standard library.</li>
+<li><a href="pub/metrics.wwz/line-counts/nativedeps.txt">nativedeps</a>.  Oils code plus a
+slice of CPython.</li>
+</ul>
+</li>
+<li>Bytecode Metrics
+<ul>
+<li><a href="pub/metrics.wwz/bytecode/overview.txt">overview</a> - Compare OPy vs. CPython.</li>
+<li><a href="pub/metrics.wwz/bytecode/oil-with-opy.txt">oil-with-opy</a> - Oils compiled with
+OPy.</li>
+<li><a href="pub/metrics.wwz/bytecode/oil-with-cpython.txt">oil-with-cpython</a> - Oils
+compiled with CPython (for comparison).</li>
+<li><a href="pub/metrics.wwz/bytecode/src-bin-ratio-with-opy.txt">src-bin-ratio-with-opy</a> -
+How big is the compiled output?</li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 16 Mar 2025 15:41:21 -0400</i>
+    </div>
+  </body>
+</html>

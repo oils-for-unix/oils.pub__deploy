@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Word Language (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-word-lang.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.28.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>Word Language</strong></p>
+</div>
+<p>This chapter describes the word language for OSH and YSH.  Words evaluate to
+strings, or arrays of strings.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#expression">Expressions to Words</a> <br/>
+  <a class="dense-toc-h3" href="#expr-sub">expr-sub</a> <br/>
+  <a class="dense-toc-h3" href="#expr-splice">expr-splice</a> <br/>
+  <a class="dense-toc-h3" href="#var-splice">var-splice</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#formatting">Formatting Typed Data as Strings</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-printf">ysh-printf</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-format">ysh-format</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Quotes">Quotes</a> <br/>
+  <a class="dense-toc-h3" href="#osh-string">osh-string</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-string">ysh-string</a> <br/>
+  <a class="dense-toc-h3" href="#triple-quoted">triple-quoted</a> <br/>
+  <a class="dense-toc-h3" href="#tagged-str">tagged-str</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Substitutions">Substitutions</a> <br/>
+  <a class="dense-toc-h3" href="#command-sub">command-sub</a> <br/>
+  <a class="dense-toc-h3" href="#var-sub">var-sub</a> <br/>
+  <a class="dense-toc-h3" href="#arith-sub">arith-sub</a> <br/>
+  <a class="dense-toc-h3" href="#tilde-sub">tilde-sub</a> <br/>
+  <a class="dense-toc-h3" href="#proc-sub">proc-sub</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Var-Ops">Var Ops</a> <br/>
+  <a class="dense-toc-h3" href="#op-bracket">op-bracket</a> <br/>
+  <a class="dense-toc-h3" href="#op-indirect">op-indirect</a> <br/>
+  <a class="dense-toc-h3" href="#op-test">op-test</a> <br/>
+  <a class="dense-toc-h3" href="#op-strip">op-strip</a> <br/>
+  <a class="dense-toc-h3" href="#op-patsub">op-patsub</a> <br/>
+  <a class="dense-toc-h3" href="#op-slice">op-slice</a> <br/>
+  <a class="dense-toc-h3" href="#op-format">op-format</a> <br/>
+</div>
+</div>
+</div>
+<a name="Expressions-to-Words"></a>
+<h2 id="expression">Expressions to Words</h2>
+<a name="expr-sub"></a>
+<h3>expr-sub</h3>
+<p>Try to turn an expression into a string.  Examples:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo $[3 * 2]</span>
+6
+
+<span class="sh-prompt">$</span> <span class="sh-command">var s = 'foo'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $[s[1:]]</span>
+oo
+</code></pre>
+<p>Some types can't be stringified, like Dict and List:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var d = {k: 42}</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo $[d]</span>
+fatal: expected Null, Bool, Int, Float, Eggex
+</code></pre>
+<p>You can explicitly use <code>toJson8</code> or <code>toJson()</code>:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo $[toJson8(d)]</span>
+{&quot;k&quot;:42}
+</code></pre>
+<p>(This is similar to <code>json write (d)</code>)</p>
+<a name="expr-splice"></a>
+<h3>expr-splice</h3>
+<p>Splicing puts the elements of a <code>List</code> into a string array context:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var foods = ['ale', 'bean', 'corn']</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo pizza @[foods[1:]] worm</span>
+pizza bean corn worm
+</code></pre>
+<p>This syntax is enabled by <code>shopt --set</code> <a href="chap-option.html#ysh:upgrade">parse_at</a>, which is part of YSH.</p>
+<a name="var-splice"></a>
+<h3>var-splice</h3>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var foods = ['ale', 'bean', 'corn']</span>
+echo @foods
+</code></pre>
+<p>This syntax is enabled by <code>shopt --set</code> <a href="chap-option.html#ysh:upgrade">parse_at</a>, which is part of YSH.</p>
+<a name="Formatting-Typed-Data-as-Strings"></a>
+<h2 id="formatting">Formatting Typed Data as Strings</h2>
+<a name="ysh-printf"></a>
+<h3>ysh-printf</h3>
+<p>Not done.</p>
+<pre><code>echo ${x %.3f}
+</code></pre>
+<a name="ysh-format"></a>
+<h3>ysh-format</h3>
+<p>Not done.</p>
+<pre><code>echo ${x|html}
+</code></pre>
+<a name="Quotes"></a>
+<h2>Quotes</h2>
+<a name="osh-string"></a>
+<h3>osh-string</h3>
+<ul>
+<li>Single quotes</li>
+<li>Double Quotes</li>
+<li>C-style strings: <code>$'\n'</code></li>
+</ul>
+<p>TODO: elaborate</p>
+<a name="ysh-string"></a>
+<h3>ysh-string</h3>
+<p>YSH strings in the word language are the same as in the expression language.</p>
+<p>See <a href="chap-expr-lang.html#ysh-string">ysh-string in chap-expr-lang</a>.</p>
+<a name="triple-quoted"></a>
+<h3>triple-quoted</h3>
+<p>Triple-quoted in the word language are the same as in the expression language.</p>
+<p>See <a href="chap-expr-lang.html#triple-quoted">triple-quoted in chap-expr-lang</a>.</p>
+<a name="tagged-str"></a>
+<h3>tagged-str</h3>
+<p>Not done.</p>
+<a name="Substitutions"></a>
+<h2>Substitutions</h2>
+<a name="command-sub"></a>
+<h3>command-sub</h3>
+<p>Executes a command and captures its stdout.</p>
+<p>OSH has shell-compatible command sub like <code>$(echo hi)</code>.  If a trailing newline
+is returned, it's removed:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">hostname</span>
+example.com
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;/tmp/$(hostname)&quot;</span>
+/tmp/example.com
+</code></pre>
+<p>YSH has spliced command subs, enabled by <code>shopt --set parse_at</code>.  The result is
+a <strong>List</strong> of strings, rather than a single string.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">write -- @(echo foo; echo 'with spaces')</span>
+foo
+with-spaces
+</code></pre>
+<p>The command's stdout parsed as the &quot;J8 Lines&quot; format, where each line is
+either:</p>
+<ol>
+<li>An unquoted string, which must be valid UTF-8.  Whitespace is allowed, but
+not other ASCII control chars.</li>
+<li>A quoted J8 string (JSON style <code>&quot;&quot;</code> or J8-style <code>b'' u'' ''</code>)</li>
+<li>An <strong>ignored</strong> empty line</li>
+</ol>
+<p>See <a href="../j8-notation.html">J8 Notation</a> for more details.</p>
+<a name="var-sub"></a>
+<h3>var-sub</h3>
+<p>Evaluates to the value of a variable:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">x=X</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $x ${x}</span>
+X X
+</code></pre>
+<a name="arith-sub"></a>
+<h3>arith-sub</h3>
+<p>Shell has C-style arithmetic:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo $(( 1 + 2*3 ))</span>
+7
+</code></pre>
+<a name="tilde-sub"></a>
+<h3>tilde-sub</h3>
+<p>Used as a shortcut for a user's home directory:</p>
+<pre><code>~/src     <span class="sh-comment"># my home dir</span>
+~bob/src  <span class="sh-comment"># user bob's home dir</span>
+</code></pre>
+<a name="proc-sub"></a>
+<h3>proc-sub</h3>
+<p>Open stdout as a named file in <code>/dev/fd</code>, which can be passed to a command:</p>
+<pre><code>diff &lt;(sort L.txt) &lt;(sort R.txt)
+</code></pre>
+<p>Open stdin as a named file in <code>/dev/fd</code>:</p>
+<pre><code>seq 3 | tee &gt;(sleep 1; tac)
+</code></pre>
+<a name="Var-Ops"></a>
+<h2>Var Ops</h2>
+<p>There are three types of braced variable expansions:</p>
+<pre><code>${!name*} or ${!name@}
+${!name[@]} or ${!name[*]}
+${ops var ops}
+</code></pre>
+<p><code>name</code> needs to be a valid identifier.  If the expansion matches the first
+form, the variable names starting with <code>name</code> are generated.  Otherwise, if the
+expansion matches the second form, the keys of the indexed or associative array
+named <code>name</code> are generated.  When the expansion does not much either the first
+or second forms, it is interpreted as the third form of the variable name
+surrounded by operators.</p>
+<a name="op-bracket"></a>
+<h3>op-bracket</h3>
+<p>The value within brackets is called an &quot;index&quot;, and retrieves a value from an
+array:</p>
+<pre><code>${A[i+1]}
+${A['key']}
+</code></pre>
+<p>If <code>A</code> is an indexed array, the index is interpreted as an arithmetic
+expression.  Arithmetic evaluation is performed, and the value at that numeric
+offset is retrieved.</p>
+<p>If <code>A</code> is an associative array, the index is interpreted as a string.  The
+value associated with that string is retrieved.</p>
+<p>If <code>A</code> is a string, it's treated as an indexed array with a single element,
+i.e. so that <code>${A[0]}</code> is <code>${A}</code>.</p>
+<hr />
+<pre><code>${A[*]}
+${A[@]}
+</code></pre>
+<p>The index expressions <code>[*]</code> and <code>[@]</code> are special cases.  Both generate a word
+list of all elements in <code>a</code>.</p>
+<p>When the variable substitution is <strong>unquoted</strong>, there's no difference between
+<code>[*]</code> and <code>[@]</code>:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">A=(1 2 3)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">printf '&lt;%s&gt;\n' ${A[*]}</span>
+&lt;1&gt;
+&lt;2&gt;
+&lt;3&gt;
+
+<span class="sh-prompt">$</span> <span class="sh-command">printf '&lt;%s&gt;\n' ${A[@]}</span>
+&lt;1&gt;
+&lt;2&gt;
+&lt;3&gt;
+</code></pre>
+<p>When double-quoted, the <code>[*]</code> form joins the elements by the first character of
+<code>IFS</code>:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">IFS=x</span>
+<span class="sh-prompt">$</span> <span class="sh-command">printf '&lt;%s&gt;\n' &quot;${A[*]}&quot;</span>
+&lt;1x2x3&gt;
+</code></pre>
+<p>When double-quoted, the <code>[@]</code> form generates a word list by splitting the word
+at the boundary of every element in <code>A</code>:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">printf '&lt;%s&gt;\n' &quot;-${A[@]}-&quot;</span>
+&lt;-1&gt;
+&lt;2&gt;
+&lt;3-&gt;
+</code></pre>
+<p>If the container <code>A</code> has no elements, and the variable substitution has no
+other parts, <code>[@]</code> evaluates to an empty word list:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">empty=()</span>
+<span class="sh-prompt">$</span> <span class="sh-command">set -- &quot;${empty[@]}&quot;</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $#</span>
+0
+</code></pre>
+<hr />
+<p>These rules for <code>[*]</code> and <code>[@]</code> also apply to:</p>
+<ul>
+<li><code>$*</code> and <code>$@</code></li>
+<li><code>${!name*}</code> and <code>${!name@}</code></li>
+<li><code>${!name[*]}</code> and <code>${!name[@]}</code>, etc.</li>
+</ul>
+
+<a name="op-indirect"></a>
+<h3>op-indirect</h3>
+<p>The indirection operator <code>!</code> is a prefix operator, and it interprets the
+received string as a variable name <code>name</code>, an array element <code>name[key]</code>, or an
+arrat list <code>name[@]</code> / <code>name[*]</code> and reads its values.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">a=1234</span>
+<span class="sh-prompt">$</span> <span class="sh-command">v=a</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $v</span>
+a
+<span class="sh-prompt">$</span> <span class="sh-command">echo ${!v}</span>
+1234
+</code></pre>
+<a name="op-test"></a>
+<h3>op-test</h3>
+<p>Shell has boolean operations within <code>${}</code>.  I use <code>:-</code> most frequently:</p>
+<pre><code>x=${1:-default}
+osh=${OSH:-default}
+</code></pre>
+<p>This idiom is also useful:</p>
+<pre><code>: ${LIB_OSH=stdlib/osh}
+</code></pre>
+<hr />
+<p>There are test operators with colons, and without:</p>
+<pre><code>${x-default}
+${x:-default}
+
+${x=default}
+${x:=default}
+
+${x+other}
+${x:+other}
+
+${x?error}
+${x:?error}
+</code></pre>
+<p><strong>Without</strong> the colon, the shell checks whether a value is <strong>defined</strong>.  In the
+case of a word list, e.g. generated by <code>$*</code> or <code>$@</code>, it tests whether there is
+at least one element.</p>
+<p><strong>With</strong> the colon, the shell checks whether the value is <strong>non-empty</strong> (is not
+the empty string).  In the case of a word list, the test is performed after
+joining the elements by a space.</p>
+<p>Elements are joined by the first character of <code>IFS</code> only with double-quoted
+<code>&quot;${*:-}&quot;</code>.</p>
+<p>In contrast, <code>${*:-}</code>, <code>${@:-}</code>, and <code>&quot;${@:-}&quot;</code> are joined by a space.  This is
+because the joining of <code>&quot;$*&quot;</code> by <code>IFS</code> is performed earlier than the joining by
+space for the test.</p>
+
+<a name="op-strip"></a>
+<h3>op-strip</h3>
+<p>Remove prefixes or suffixes from strings:</p>
+<pre><code>echo ${y#prefix}
+echo ${y##'prefix'}
+
+echo ${y%suffix}
+echo ${y%%'suffix'}
+</code></pre>
+<p>The prefix and suffix can be glob patterns, but this usage is discouraged
+because it may be slow.</p>
+<a name="op-patsub"></a>
+<h3>op-patsub</h3>
+<p>Replace a substring or pattern.</p>
+<p>The character after the first <code>/</code> can be <code>/</code> to replace all occurrences:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">x=food</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo ${x//o/--}    </span>  <span class="sh-comment"># replace 1 o with 2 --</span>
+f----d
+</code></pre>
+<p>It can be <code>#</code> or <code>%</code> for an anchored replacement:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo ${x/#f/--}    </span>  <span class="sh-comment"># left anchored f</span>
+--ood
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo ${x/%d/--}    </span>  <span class="sh-comment"># right anchored d</span>
+foo--
+</code></pre>
+<p>The pattern can also be a glob:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo ${x//[a-z]/o} </span>  <span class="sh-comment"># replace 1 char with o</span>
+oooo
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo ${x//[a-z]+/o}</span>  <span class="sh-comment"># replace multiple chars</span>
+o
+</code></pre>
+<a name="op-slice"></a>
+<h3>op-slice</h3>
+<pre><code>echo ${a[@]:1:2}
+echo ${@:1:2}
+</code></pre>
+<a name="op-format"></a>
+<h3>op-format</h3>
+<p>${x@P} evaluates x as a prompt string, i.e. the string that would be printed if
+PS1=$x.</p>
+<hr />
+<p><code>${x@Q}</code> quotes the value of <code>x</code>, if necessary, so that it can be evaluated as
+a shell word.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">x='&lt;'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;value = $x, quoted = ${x@Q}.&quot;</span>
+value = &lt;, quoted = '&lt;'.
+
+<span class="sh-prompt">$</span> <span class="sh-command">x=a</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;value = $x, quoted = ${x@Q}.&quot;</span>
+value = a, quoted = a.
+</code></pre>
+<p>In the second case, the string <code>a</code> doesn't need to be quoted.</p>
+<hr />
+<p>Format operations like <code>@Q</code> generally treat <strong>empty</strong> variables differently
+than <strong>unset</strong> variables.</p>
+<p>That is, <code>${empty@Q}</code> is the string <code>''</code>, while <code>${unset@Q}</code> is an empty
+string:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">x=''</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;value = $x, quoted = ${x@Q}.&quot;</span>
+value = , quoted = ''.
+
+<span class="sh-prompt">$</span> <span class="sh-command">unset -v x</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;value = $x, quoted = ${x@Q}.&quot;</span>
+value = , quoted = .
+</code></pre>
+<hr />
+<p><code>${x@a}</code> returns characters that represent the attributes of the <code>${x}</code>, or
+more precisely, the <em>h-value</em> of <code>${x}</code>.</p>
+<p>Definitions:</p>
+<ul>
+<li><em>h-value</em> is the variable (or the object that the variable directly points)
+from which the result of <code>${x}</code> would originally come.</li>
+<li><em>r-value</em> is the value of the expansion of <code>${x}</code></li>
+</ul>
+<p>For example, with <code>arr=(1 2 3)</code>:</p>
+<style>
+table { 
+  width: 100%;
+  margin-left: 2em;  /* matches p text in manual.css */
+}
+thead {
+  text-align: left;
+}
+</style>
+<table>
+<thead>
+<tr>
+  <th>Reference</th>
+  <th>Expression</th>
+  <th>H-value</th>
+  <th>R-value</th>
+  <th>Flags returned</th>
+</tr>
+</thead>
+<tr>
+  <td>
+
+</td>
+  <td><code>${arr[0]@a}</code> or <br/> <code>${arr@a}</code></td>
+  <td>array<br/> <code>(1 2 3)</code></td>
+  <td>string<br/> <code>1</code></td>
+  <td><code>a</code></td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>${arr[@]@a}</code></td>
+  <td>array<br/> <code>(1 2 3)</code></td>
+  <td>array<br/> <code>(1 2 3)</code></td>
+  <td><code>a a a</code></td>
+</tr>
+<tr>
+  <td><code>ref=arr</code> or <code>ref=arr[0]</code></td>
+  <td><code>${!ref@a}</code></td>
+  <td>array<br/> <code>(1 2 3)</code></td>
+  <td>string<br/> <code>1</code></td>
+  <td><code>a</code></td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td><code>ref=arr[@]</code></td>
+  <td><code>${!ref@a}</code></td>
+  <td>array<br/> <code>(1 2 3)</code></td>
+  <td>array<br/> <code>(1 2 3)</code></td>
+  <td><code>a a a</code></td>
+</tr>
+</table>
+<p>When <code>${x}</code> would result in a word list, <code>${x@a}</code> returns a word list
+containing the attributes of the <em>h-value</em> of each word.</p>
+<hr />
+<p>These characters may be returned:</p>
+<table>
+<thead>
+<tr>
+  <th>Character</th>
+  <th>Where <code>${x}</code> would be obtained</th>
+</tr>
+</thead>
+<tr>
+  <td><code>a</code></td>
+  <td>indexed array</td>
+</tr>
+<tr>
+  <td><code>A</code></td>
+  <td>associative array</td>
+</tr>
+<tr>
+  <td><code>r</code></td>
+  <td>readonly container</td>
+</tr>
+<tr>
+  <td><code>x</code></td>
+  <td>exported variable</td>
+</tr>
+<tr>
+  <td><code>n</code></td>
+  <td>name reference (OSH extension)</td>
+</tr>
+</table>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 16 Mar 2025 15:41:21 -0400</i>
+    </div>
+  </body>
+</html>
