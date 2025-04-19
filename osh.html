@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nine Reasons to Use OSH</title>
+  <meta name="twitter:title" content="Nine Reasons to Use OSH">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/">oils.pub</a></p>
+<h1>Nine Reasons to Use OSH</h1>
+<style>
+body { font-family: sans-serif; }
+
+p, h2, h3 { text-align: center; }
+h2, h3 { padding-top: 3em; padding-bottom: 1em; }
+
+ul { margin: 0 auto; width: 75%; align: align: center; }
+table { margin: 0 auto; width: 75%; }
+
+.table-text { text-align: center; }
+.number { color: grey }
+
+
+/* table { text-align: center; } */
+
+
+</style>
+<p>OSH is part of the <a href="/">Oils</a> project.</p>
+<p>It's a modern, compatible implementation of Unix shell.</p>
+<p>It's focused on <strong>scripting</strong>, and has interactive features.</p>
+<p>Why use it?</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#if-you-know-shell">If You Know Shell ...</a></div>
+  <div class="toclevel2"><a href="#1-it-runs-existing-shell-scripts"><span class="number">(1) </span> It Runs Existing Shell Scripts</a></div>
+  <div class="toclevel2"><a href="#2-you-get-precise-error-messages"><span class="number">(2) </span> You Get Precise Error Messages</a></div>
+  <div class="toclevel2"><a href="#3-learn-and-debug-with-pretty-printing"><span class="number">(3) </span> Learn and Debug with Pretty Printing</a></div>
+  <div class="toclevel2"><a href="#4-strict-mode-improves-shell-scripts"><span class="number">(4) </span> Strict Mode Improves Shell Scripts</a></div>
+  <div class="toclevel2"><a href="#5-more-features-of-the-oils-runtime"><span class="number">(5) </span> More Features of the Oils Runtime</a></div>
+  <div class="toclevel1"><a href="#if-you-build-systems">If You Build Systems ...</a></div>
+  <div class="toclevel2"><a href="#6-osh-is-small-with-few-dependencies"><span class="number">(6) </span> OSH is Small, With Few Dependencies</a></div>
+  <div class="toclevel2"><a href="#7-you-can-build-a-gui-on-top-of-it"><span class="number">(7) </span> You Can Build a GUI on Top Of It</a></div>
+  <div class="toclevel1"><a href="#more-reasons">More Reasons</a></div>
+  <div class="toclevel2"><a href="#8-you-can-upgrade-to-ysh"><span class="number">(8) </span> You Can Upgrade to YSH</a></div>
+  <div class="toclevel2"><a href="#9-you-can-contribute"><span class="number">(9) </span> You Can Contribute</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+</div>
+<a name="if-you-know-shell"></a>
+<h2>If You Know Shell ...</h2>
+<a name="1-it-runs-existing-shell-scripts"></a>
+<h3><span class="number">(1) </span> It Runs Existing Shell Scripts</h3>
+<table cellpadding=5 cellspacing=0>
+<thead>
+<tr>
+  <th>
+
+</th>
+  <th></th>
+</tr>
+</thead>
+<tr>
+  <td class="table-text">POSIX Shell</td>
+  <td>
+<pre><code class="language-oils-sh">name=world
+echo &quot;hello $name&quot;  <span class="sh-comment"># =&gt; hello world</span>
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="table-text">And Bash</td>
+  <td>
+<pre><code>if [[ name =~ ^A.*Z$ ]]; then
+  echo matched
+fi
+</code></pre>
+</td>
+</tr>
+</table>
+<p>Run <code>osh myscript.sh</code>, or change the <code>#!</code> line</p>
+<p>For <strong>nine years</strong>, OSH has become more and more compatible!</p>
+<p>(If you don't want a compatible shell, you may like <a href="ysh.html">YSH</a>)</p>
+
+<a name="2-you-get-precise-error-messages"></a>
+<h3><span class="number">(2) </span> You Get Precise Error Messages</h3>
+<p>Other shells don't point to the source of the error like this:</p>
+<pre><code class="language-oils-sh">  echo &quot;hello $nme&quot;
+              ^~~~  <span class="sh-comment"># precise!</span>
+example.sh:3: fatal: Undefined variable 'nme'
+</code></pre>
+<a name="3-learn-and-debug-with-pretty-printing"></a>
+<h3><span class="number">(3) </span> Learn and Debug with Pretty Printing</h3>
+<p>What's inside this string?</p>
+<p><img src="image/pretty-print-string.png" alt="" /></p>
+<p>What's inside this bash data structure?</p>
+<p><img src="image/pretty-print-assoc.png" alt="" /></p>
+<p>Use the <code>=</code> keyword to find out</p>
+<p>It helps you learn what shell does, and what your programs do</p>
+
+<a name="4-strict-mode-improves-shell-scripts"></a>
+<h3><span class="number">(4) </span> Strict Mode Improves Shell Scripts</h3>
+<p>Opt in to this mode to disallow code that may have mistakes:</p>
+<pre><code class="language-oils-sh">shopt --set strict:all  <span class="sh-comment"># Enable more than a dozen checks</span>
+</code></pre>
+<p>An error that's flagged:</p>
+<pre><code>    if shell-func; then
+    ^~
+demo/home-page.sh:9: errexit was disabled for this construct
+
+    if shell-func; then
+       ^~~~~~~~~~
+demo/home-page.sh:9: fatal: Can't run functions or procs while errexit is disabled (OILS-ERR-301)
+</code></pre>
+<p><code>OILS-ERR-301</code> is a section in the <a href="//oils.pub/release/latest/doc/error-catalog.html#OILS-ERR-301">Oils Error Catalog</a>, which suggests ways to improve your code</p>
+<p>With strict mode, your scripts <strong>still run</strong> under other shells</p>
+<p>(Strict mode is complementary to <a href="https://www.shellcheck.net/">ShellCheck</a>)</p>
+
+<a name="5-more-features-of-the-oils-runtime"></a>
+<h3><span class="number">(5) </span> More Features of the Oils Runtime</h3>
+<p>OSH and <a href="ysh.html">YSH</a> live in the same <code>oils-for-unix</code> binary</p>
+<p>We are polishing:</p>
+<ul>
+<li>The small OSH Standard Library, with
+<ul>
+<li><strong>Task files</strong> - automate everything, remember what you learned</li>
+<li><strong>Test Framework</strong> - test code written in <em>other</em> languages, not just shell!</li>
+</ul>
+</li>
+<li>Tracing and Profiling</li>
+<li>The Interactive Shell</li>
+</ul>
+<p>(in progress)</p>
+
+
+<a name="if-you-build-systems"></a>
+<h2>If You Build Systems ...</h2>
+<a name="6-osh-is-small-with-few-dependencies"></a>
+<h3><span class="number">(6) </span> OSH is Small, With Few Dependencies</h3>
+<p>To build it, you need only a C++ compiler and ~30 seconds</p>
+<p>To run it, you need only a POSIX system!  And ~2MB of disk space</p>
+<p>Optional dependencies <a href="//oils.pub/release/latest/doc/portability.html">are documented</a> (GNU readline, libc extensions, ...)</p>
+<a name="7-you-can-build-a-gui-on-top-of-it"></a>
+<h3><span class="number">(7) </span> You Can Build a GUI on Top Of It</h3>
+<p>We created a <a href="https://www.oilshell.org/blog/2023/12/screencasts.html#headless-protocol-oils-web_shell">headless shell protocol</a> to <strong>divorce</strong> the shell and the terminal</p>
+<p>We'd like others to be creative with it!</p>
+<a name="more-reasons"></a>
+<h2>More Reasons</h2>
+<a name="8-you-can-upgrade-to-ysh"></a>
+<h3><span class="number">(8) </span> You Can Upgrade to <a href="ysh.html">YSH</a></h3>
+<p>YSH is the ultimate glue language</p>
+
+<p>It's like shell + Python + JSON + YAML, put together seamlessly</p>
+<p>It's for one machine, or many machines (the cloud)</p>
+<pre><code class="language-oils-sh">shopt --set ysh:upgrade  <span class="sh-comment"># One line to start using YSH!</span>
+
+echo hi
+</code></pre>
+<p>(It's also valid to use OSH forever!)</p>
+<a name="9-you-can-contribute"></a>
+<h3><span class="number">(9) </span> You Can Contribute</h3>
+<ul>
+<li>If you know Python, you can add features and fix bugs, according to your needs</li>
+<li>Our code <a href="https://www.oilshell.org/blog/2024/09/line-counts.html">is small</a>, because it's written in high-level DSLs
+<ul>
+<li>It's statically typed, via <a href="https://mypy-lang.org">MyPy</a></li>
+</ul>
+</li>
+<li>OSH is faster than shells written in C on <a href="//oils.pub/release/latest/quality.html">many benchmarks</a>
+<ul>
+<li>It's also memory-safe</li>
+</ul>
+</li>
+</ul>
+<a name="links"></a>
+<h2>Links</h2>
+<p><a href="https://oils.pub/release/latest/">Latest Release</a> and <a href="https://oils.pub/release/latest/doc/published.html">Published Docs</a></p>
+<p>Oils Reference &gt; <a href="https://oils.pub/release/latest/doc/ref/toc-osh.html">OSH Table of Contents</a></p>
+<p>Ask Questions on <a href="https://oilshell.zulipchat.com/">Zulip</a> or <a href="https://github.com/oils-for-unix/oils">Github</a></p>
+<p> 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </p>
+</body>
+</html>

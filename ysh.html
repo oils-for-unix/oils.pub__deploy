@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What is YSH?</title>
+  <meta name="twitter:title" content="What is YSH?">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width40">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/">oils.pub</a></p>
+<h1>What is YSH?</h1>
+<style>
+
+</style>
+<p>YSH is part of the <a href="/">Oils</a> project.</p>
+<p>It's a new Unix shell, focused on <strong>scripting</strong> and <strong>cloud</strong> configuration.</p>
+<p>It's <em>Shell: The Good Parts</em> + Real Data Structures and JSON.  It also has interactive features.</p>
+<p>This page is a brief overview of YSH, meant for skimming.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#problem-unix-sludge-cloud-sludge">Problem: Unix Sludge + Cloud Sludge</a></div>
+  <div class="toclevel1"><a href="#ysh-the-ultimate-glue-language">YSH - the Ultimate Glue Language</a></div>
+  <div class="toclevel1"><a href="#ysh-at-a-glance">YSH At a Glance</a></div>
+  <div class="toclevel2"><a href="#four-legacy-issues-we-fixed">Four Legacy Issues We Fixed</a></div>
+  <div class="toclevel2"><a href="#seven-parts-of-the-language">Seven Parts of the Language</a></div>
+  <div class="toclevel2"><a href="#23-types-in-the-oils-runtime">23 Types in the Oils Runtime</a></div>
+  <div class="toclevel2"><a href="#only-8-new-keywords">Only 8 New Keywords</a></div>
+  <div class="toclevel1"><a href="#where-to-use-it">Where To Use It?</a></div>
+  <div class="toclevel2"><a href="#on-one-machine">On One Machine</a></div>
+  <div class="toclevel2"><a href="#on-many-machines-the-cloud">On Many Machines (the Cloud)</a></div>
+  <div class="toclevel1"><a href="#ysh-is-for-system-builders">YSH is for System Builders</a></div>
+  <div class="toclevel2"><a href="#define-your-own-dialects-hay-aint-yaml">Define Your Own Dialects - Hay Ain't YAML</a></div>
+  <div class="toclevel2"><a href="#small-and-self-contained">Small and Self-Contained</a></div>
+  <div class="toclevel2"><a href="#you-can-contribute">You Can Contribute</a></div>
+  <div class="toclevel1"><a href="#future-visions">Future Visions</a></div>
+  <div class="toclevel2"><a href="#a-cloud-that-doesnt-feel-like-a-mainframe">A Cloud That Doesn't Feel Like a Mainframe</a></div>
+  <div class="toclevel1"><a href="#more-slogans">More Slogans</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+</div>
+<a name="problem-unix-sludge-cloud-sludge"></a>
+<h2>Problem: Unix Sludge + Cloud Sludge</h2>
+<p>Here's some 1970's style <em>Unix sludge</em>:</p>
+<pre><code>%.d: %.c
+        @set -e; rm -f $@; \
+         $(CC) -M $(CPPFLAGS) $&lt; &gt; $@.$$$$; \
+         sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' &lt; $@.$$$$ &gt; $@; \
+</code></pre>
+<p>It's a mixture of Make, shell, and sed — recommended by the <a href="https://www.gnu.org/software/make/manual/html_node/Automatic-Prerequisites.html">GNU Make manual</a>!</p>
+<p>Another example: the 2024 <a href="https://research.swtch.com/xz-script">xz shell script backdoor</a> relied on expert C programmers not being able to read this type of code.</p>
+<hr />
+<p>In the 2000's, we added <em>cloud sludge</em>:</p>
+<pre><code>- name: Generate output
+  id: gen_output
+  run: |
+    version=&quot;${{ matrix.version }}&quot;
+    echo &quot;output_${version}=${version}&quot; &gt;&gt; &quot;$GITHUB_OUTPUT&quot;
+</code></pre>
+<p>This example from the <a href="https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions">Github Actions Manual</a> also has <strong>three</strong> languages, pasted together: YAML, shell, and a <code>${{ }}</code> language that looks like shell, but is different.</p>
+<p>A <a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Dockerfile</a> also mixes shell with another language.</p>
+<hr />
+<p>These are quick <strong>hacks</strong> based on gluing together <strong>weak</strong> languages!</p>
+
+<a name="ysh-the-ultimate-glue-language"></a>
+<h2>YSH - the Ultimate Glue Language</h2>
+<p>Shell is the oldest glue language, but it's still too weak.  So we upgraded it to support these modern use cases.</p>
+<p><strong>YSH</strong> is <em>Shell: The Good Parts</em> + Real Data Structures.</p>
+<ul>
+<li>It evolved from <a href="osh.html">OSH</a>, retaining shell's power</li>
+<li>We added the power of languages like Python and JavaScript</li>
+<li>We removed the legacy, making it <strong>smaller</strong> than shell!</li>
+</ul>
+<p>You can also use YSH for declarative config files, which we call:</p>
+<ul>
+<li><strong>Hay</strong>: Hay Ain't YAML</li>
+</ul>
+<p>So you can think of YSH as <strong>shell+Python+JSON+YAML</strong>, squished together in <strong>one</strong> language.</p>
+<p>That way, we don't need to paste together many weak languages.</p>
+<p>(YSH is a bit like Lisp, but it looks more conventional.)</p>
+<a name="ysh-at-a-glance"></a>
+<h2>YSH At a Glance</h2>
+<a name="four-legacy-issues-we-fixed"></a>
+<h3>Four Legacy Issues We Fixed</h3>
+<p>Shell is not only <strong>too weak</strong>, it also has design flaws <strong>mandated by POSIX</strong>.</p>
+<p>Analogy: JavaScript got <code>use strict;</code> in ES5, and compatible enhancements like <code>let</code> (instead of <code>var</code>), but Unix shell never did.</p>
+<a name="precise-error-messages"></a>
+<h4>Precise Error Messages</h4>
+<pre><code>  ls | grep + | wc -l
+       ^~~~
+[ -c flag ]:1: errexit PID 468181: Pipeline failed with status 1
+</code></pre>
+<p>Other shells don't show you the precise column.</p>
+<a name="it-catches-every-command-error"></a>
+<h4>It Catches Every Command Error</h4>
+<p>According to POIX, all shells must lose this error:</p>
+<pre><code>$ readonly x=$(date %D); echo status=$?
+date: invalid date ‘%D’
+status=0
+</code></pre>
+<p>YSH doesn't:</p>
+<pre><code>ysh$ var date = $(date %D)
+date: invalid date ‘%D’
+[ interactive ]:1: errexit PID 468597: Command Sub exited with status 1
+</code></pre>
+<p>See <a href="//oils.pub/release/latest/doc/error-handling.html">YSH Fixes Shell's Error Handling (<code>errexit</code>)</a> for technical details.</p>
+
+<a name="no-word-splitting-by-default"></a>
+<h4>No Word Splitting by Default</h4>
+<p>In YSH, you can construct commands with the shell &quot;mangling&quot; your data:</p>
+<pre><code>ls $mystr @myarray @ARGV
+</code></pre>
+<p>POSIX shell requires double quoting, and a quirky array syntax:</p>
+<pre><code>ls &quot;$mystr&quot; &quot;${myarray[@]}&quot; &quot;$@&quot;
+</code></pre>
+<ul>
+<li><a href="//oils.pub/release/latest/doc/idioms.html">YSH vs. Shell Idioms</a> has more such idioms</li>
+<li>See <a href="//oils.pub/release/latest/doc/simple-word-eval.html">Simple Word Evaluation in Unix Shell</a> for technical details.</li>
+</ul>
+<a name="easy-safe-serialization"></a>
+<h4>Easy, Safe Serialization</h4>
+<p>Serialize arbitrary string over a pipe:</p>
+<pre><code>var tricky = $(printf '\x00 \n \xff')
+json8 write (tricky) | json8 read (&amp;round_tripped)
+assert [round_tripped === tricky]
+</code></pre>
+<p>See <a href="//oils.pub/release/latest/doc/j8-notation.html">J8 Notation</a> for technical details.</p>
+<hr />
+<p>In Unix, a filename is a <code>NUL</code>-terminated string.</p>
+<ul>
+<li>POSIX shell, or even bash or zsh, has no way to safely serialize arbitrary filenames across a pipe.
+For example, a common format is a list of lines, but filenames can contain newlines.</li>
+<li>Even JSON can't do this.  JSON represent Unicode strings (plus invalid UTF-16 surrogate halves), but can't represent byte strings.</li>
+</ul>
+<p>YSH has J8 Notation to fix this.  It's a modest extension of JSON:</p>
+<p>It's an <strong>optional</strong> extension -- you can use plain JSON.</p>
+<p>This is for <strong>exterior</strong> glue, or inter-process glue.</p>
+<p><a href="//www.oilshell.org/blog/2024/09/project-overview.html">What Oils Looks Like in 2024</a></p>
+<a name="seven-parts-of-the-language"></a>
+<h3>Seven Parts of the Language</h3>
+
+<p>Let's break <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> down into 7 parts.  Some of them correspond to <strong>chapters</strong> in the <a href="/release/0.23.0/doc/ref/index.html">Oils Reference</a>.</p>
+<p>For more detail, see <a href="/release/0.23.0/doc/ysh-tour.html">A Tour of YSH</a>.</p>
+<p> </p>
+<table cellpadding=5 cellspacing=0>
+<thead>
+<tr>
+  <th> Part</th>
+  <th>Notes</th>
+  <th>Example</th>
+</tr>
+</thead>
+<tr>
+  <td class="first-col">Commands and Words</td>
+  <td>simplified shell</td>
+  <td>
+<pre><code>ls /tmp | grep -e $pat | wc -l
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="first-col">Expressions</td>
+  <td>syntax like Python/JS</td>
+  <td>
+<pre><code>var person = {name: 'bob', age: 25}
+var x = 42 + a[i] + person.age + f(x)
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="first-col">Types and Methods</td>
+  <td>the runtime model</td>
+  <td>
+<pre><code>call mylist-&gt;append(42)
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="first-col">Procs</td>
+  <td>procedures / processes</td>
+  <td>
+<pre><code>proc my-copy (src, dest) {
+  cp --verbose $src $dest
+}
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="first-col">Funcs</td>
+  <td>pure functions</td>
+  <td>
+<pre><code>func f(io) {
+  var block = ^(ls /tmp)
+  return (io.captureStdout(block))
+}
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="first-col"><a href="/cross-ref.html?tag=hay#hay">Hay</a></td>
+  <td>express data with code</td>
+  <td>
+<pre><code>hay define Package
+
+Package cpython {
+  version = '3.12'
+  proc build {
+    ./configure
+    make
+  }
+}
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td class="first-col"><a href="/cross-ref.html?tag=eggex#eggex">Eggex</a></td>
+  <td>composable patterns</td>
+  <td>a
+<pre><code>var pat = / digit '-' digit /
+</code></pre>
+</td>
+</tr>
+</table>
+<a name="23-types-in-the-oils-runtime"></a>
+<h3>23 Types in the Oils Runtime</h3>
+<p>YSH</p>
+<p>OK I said it had data types</p>
+
+<a name="only-8-new-keywords"></a>
+<h3>Only 8 New Keywords</h3>
+<p>New keywords are:</p>
+<ul>
+<li><code>var const</code> and <code>setvar setglobal</code></li>
+<li><code>proc func</code></li>
+<li><code>call =</code></li>
+</ul>
+<p>YSH also has these keywords, which may already be familiar to you:</p>
+<ul>
+<li><code>if case</code></li>
+<li><code>for while</code> and <code>break continue</code></li>
+<li><code>return</code></li>
+</ul>
+
+<a name="where-to-use-it"></a>
+<h2>Where To Use It?</h2>
+<a name="on-one-machine"></a>
+<h3>On One Machine</h3>
+<p>Like shell, for scripting, automation</p>
+<a name="on-many-machines-the-cloud"></a>
+<h3>On Many Machines (the Cloud)</h3>
+<hr />
+<p>You can also think of YSH as the <strong>ultimate glue language</strong> for systems.</p>
+<p>It also has <strong>Ruby-like blocks</strong>, which enable patterns similar to Make, Docker, Chef, Ansible, and more.</p>
+<p>Slogan: <em>I don't want glue on top of my glue</em>.  I just want one kind of glue.</p>
+<a name="ysh-is-for-system-builders"></a>
+<h2>YSH is for System Builders</h2>
+<a name="define-your-own-dialects-hay-aint-yaml"></a>
+<h3>Define Your Own Dialects - Hay Ain't YAML</h3>
+<p>Hay Ain't YAML - Custom Languages for Unix Systems</p>
+<a name="small-and-self-contained"></a>
+<h3>Small and Self-Contained</h3>
+<p>Self-Contained Binary, Few Dependencies</p>
+<p>delivered as:</p>
+<ul>
+<li>~120K lines of pure C++ 11 code, which compiles in ~30 seconds</li>
+<li>2.3 MB binary</li>
+</ul>
+<p>It's also easy to <strong>version</strong></p>
+<a name="you-can-contribute"></a>
+<h3>You Can Contribute</h3>
+<a name="future-visions"></a>
+<h2>Future Visions</h2>
+<a name="a-cloud-that-doesnt-feel-like-a-mainframe"></a>
+<h3>A Cloud That Doesn't Feel Like a Mainframe</h3>
+<ul>
+<li>
+<p>It's glue for distributed systems, at build time and runtime</p>
+<ul>
+<li>build time - nicer than to CMake, similar to Starlark (from Bazel)</li>
+<li>runtime - nicer than Go Templates and YAML, akin to HCL</li>
+</ul>
+</li>
+<li>
+<p>It's for building clouds that Don't Feel Like Mainframes</p>
+<ul>
+<li>back to the 70's with serverless</li>
+<li>where you have an interactive shell on every node!  You can poke at it!</li>
+<li>where you can inspect the state</li>
+<li>like Erlang, but for every language, not just languages that run on the same language runtime</li>
+</ul>
+</li>
+<li>
+<p>Idea</p>
+<ul>
+<li>Dev Env === CI Env === Production Env</li>
+<li>Dev/Prod parity</li>
+</ul>
+</li>
+</ul>
+<a name="more-slogans"></a>
+<h2>More Slogans</h2>
+<p>What is shell?</p>
+<ul>
+<li>The Language of Process-Based Concurrency (shared-nothing, heterogeneous concurrency)</li>
+<li>The Language of Ad Hoc, Coarse-Grained Reuse - i.e. a language</li>
+<li>The Language of Heterogeneity and Diversity</li>
+</ul>
+<hr />
+<p>You want a healthy cloud ecosystem</p>
+<p>That can't be built on weak languages like YAML!</p>
+<ul>
+<li>
+<p><em>Plants Are Just As Important As Animals, and More Numerous</em> (for a healthy distributed system)</p>
+<ul>
+<li>&quot;animals&quot; are written in fat languages like C++, Go, or Rust</li>
+<li>&quot;plants&quot; are the glue</li>
+</ul>
+</li>
+<li>
+<p>Do You Need Seven Kinds of Languages To Make a Distributed System?</p>
+<ul>
+<li>link to HN comment</li>
+</ul>
+</li>
+<li>
+<p>YAML is Weird Machines - Machines Programmed Over the Network</p>
+<ul>
+<li>should be a blog post</li>
+</ul>
+</li>
+<li>
+<p>Language and Operating System People need to talk to each other!</p>
+</li>
+<li>
+<p>Wiki: <a href="https://github.com/oils-for-unix/oils/wiki/Slogans%2C-Fallacies%2C-and-Concepts">Slogans, Fallacies, and Concepts</a></p>
+</li>
+</ul>
+<a name="links"></a>
+<h2>Links</h2>
+
+<ul>
+<li>The <a href="https://oils.pub/release/latest/doc/ref/toc-ysh.html">YSH Table of Contents</a> in the Oils Reference</li>
+<li><a href="osh.html">OSH</a></li>
+</ul>
+<p> 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ </p>
+</body>
+</html>
