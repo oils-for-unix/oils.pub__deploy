@@ -57,25 +57,10 @@
 <a name="project-components"></a>
 <h2>Project Components</h2>
 <p><a name=YSH>#YSH</a><br/>
-<a href="release/latest/doc/oil-language-tour.html">YSH</a> —
-A <strong>legacy-free</strong> dialect of shell with:</p>
-<ul>
-<li>Python-like expressions over typed data, e.g. with the <code>var</code> keyword</li>
-<li>Ruby-like blocks, which enable DSLs and declarative configuration</li>
-<li>Procs: enhanced shell functions, which <a href="/blog/tags.html?tag=shell-the-good-parts#shell-the-good-parts">compose in unique
-ways</a></li>
-<li>New word syntax like <code>echo $[join(mylist)]</code></li>
-<li>New shell builtins like <code>try</code> and <code>append</code></li>
-</ul>
-<p>You run it with <code>bin/ysh</code>.</p>
-<p><strong>Important</strong>: Before March 2023, this shell language was called <strong>Oil</strong>.  We
-will clean up the many references to the old name over time.</p>
-<p>For a taste of the syntax, see <a href="//www.oilshell.org/blog/2020/01/simplest-explanation.html">The Simplest Explanation of
-Oil</a> and <a href="release/latest/doc/ysh-tour.html">A Tour of
-YSH</a>.</p>
-<p>It shares the same runtime as OSH, so it's a smooth upgrade from both
-<a href="/cross-ref.html?tag=bash#bash">bash</a> and OSH.  Compatibility is selectively broken with <a href="release/latest/doc/options.html">Shell
-Options</a>.</p>
+<a href="ysh.html">YSH</a> —
+A <strong>legacy-free</strong> dialect of shell, with real data structures, JSON, and reflective APIs.</p>
+<p>Run it with <code>bin/ysh</code>, which is part of the <code>oils-for-unix</code> binary.</p>
+<p>(Prior to March 2023, YSH was called <em>Oil</em>.)</p>
 <p><a name=OSH>#OSH</a><br/>
 <a href="osh.html">OSH</a> —
 A <strong>compatible</strong> shell language based on the common use of shell (including
