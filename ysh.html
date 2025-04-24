@@ -24,6 +24,7 @@
   <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
 <a href="/">oils.pub</a></p>
 <h1>What is YSH?</h1>
+
 <style>
 body { font-family: sans-serif; }
 
@@ -45,7 +46,6 @@ table { margin: 0 auto; width: 75%; }
 
 <p>It's like shell + Python + Regex + JSON + YAML, put together seamlessly</p>
 <p>It evolved from <a href="osh.html">OSH</a>, but it's <strong>smaller</strong>, and easier to learn</p>
-
 <div id="toc">
 <div id="toctitle">Table of Contents</div>
   <div class="toclevel1"><a href="#ysh-at-a-glance">YSH at a Glance</a></div>
@@ -94,7 +94,6 @@ hello
 <p>More: <a href="//oils.pub/release/latest/doc/ysh-tour.html">A Tour of YSH</a></p>
 <a name="five-legacy-issues-we-fixed"></a>
 <h3>Five Legacy Issues We Fixed</h3>
-
 <a name="1-precise-error-messages"></a>
 <h4><span class="number">(1) </span> Precise Error Messages</h4>
 <p>Other shells don't point to the error token:</p>
@@ -111,12 +110,9 @@ date: invalid date ‘%D’
 </code></pre>
 <p>In contrast, POSIX shells must <em>ignore</em> many errors</p>
 <p><a href="//oils.pub/release/latest/doc/ysh-error.html">Guide to YSH Error Handling</a></p>
-
-
 <a name="3-arrays-rather-than-word-splitting"></a>
 <h4><span class="number">(3) </span> Arrays Rather Than Word Splitting</h4>
 <p>YSH doesn't mangle your strings, even without quotes:</p>
-
 <pre><code>ls $mystr @myarray @ARGV
 </code></pre>
 <p>In contrast, shell requires these incantations:</p>
@@ -141,10 +137,8 @@ assert [result === mystr]
 <pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">proc p { echo hi }</span>
 </code></pre>
 <p><img src="image/pretty-print-proc.png" alt="" /></p>
-
 <p>In contrast, shell users print state with commands like<br/>
 <code>set -o</code> and <code>declare -p</code></p>
-
 <p> </p>
 <p>Learn more <a href="//oils.pub/release/latest/doc/idioms.html">YSH vs. Shell Idioms</a></p>
 <p> </p>
@@ -173,7 +167,6 @@ assert [result === mystr]
 <p>It's a mix of YAML, shell, and a custom <code>${{ }}</code> language that is not shell</p>
 <p>It's from the <a href="https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions">Github Actions Manual</a></p>
 <p>Likewise, a <a href="https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/">Dockerfile</a> is a mix of shell with another language.</p>
-
 <p> </p>
 <p> </p>
 <hr />
@@ -190,7 +183,6 @@ assert [result === mystr]
 <p>We added <strong>reflective</strong> APIs, for building domain-specific languages</p>
 <p> </p>
 <p>So <strong>YSH</strong> is <em>Shell: The Good Parts</em> + Structured Data + Reflection</p>
-
 <a name="a-summary"></a>
 <h2>A Summary</h2>
 <p>In the intro, we saw:</p>
@@ -328,7 +320,6 @@ if ('2025-04' ~ pat) {
 </table>
 <hr />
 <p><a href="//oils.pub/release/latest/doc/types.html">Types in the Oils Runtime</a></p>
-
 <a name="use-ysh-for-configuration"></a>
 <h2>Use YSH for Configuration</h2>
 <p>To declare data, pass a <strong>block</strong> to a command like <code>Package</code>:</p>
@@ -358,7 +349,6 @@ if (true) {
 
 <a name="and-domain-specific-languages"></a>
 <h3>And Domain-Specific Languages</h3>
-
 <p>YSH has <code>Command</code> and <code>Expr</code> types that let you control evaluation</p>
 <p>It also has polymorphic objects, with meta-methods like <code>__invoke__</code></p>
 <p>(in progress)</p>
