@@ -1,0 +1,174 @@
+17 chapters -> (doctools/make_help) -> 496 <h3> cards from 139 <h2> sections to None
+
+TOC:
+
+  toc-data.md
+    front-end
+    j8
+    errors
+  toc-osh.md
+    type-method
+    builtin-cmd
+    stdlib
+    front-end
+    cmd-lang
+    osh-assign
+    word-lang
+    mini-lang
+    option
+    special-var
+    plugin
+  toc-ysh.md
+    type-method
+    builtin-func
+    builtin-cmd
+    stdlib
+    stdlib
+    front-end
+    cmd-lang
+    ysh-cmd
+    expr-lang
+    word-lang
+    mini-lang
+    option
+    special-var
+    plugin
+
+TOC stats:
+  All Topics: 569
+  Unique topics: 536
+  Topics marked implemented: 455
+  Topics not implemented: 82
+  Sections not implemented (X): 9
+
+Chapter stats:
+  num chapters = 17
+  num_sections = 139
+  num_topics = 502
+  num unique topics = 496
+  topics with first draft (more than 5 words) = 428
+
+502 in link_to set: [('chap-builtin-cmd.html', 'alias'), ('chap-builtin-cmd.html', 'assert'), ('chap-builtin-cmd.html', 'bg'), ('chap-builtin-cmd.html', 'boolstatus'), ('chap-builtin-cmd.html', 'builtin'), ('chap-builtin-cmd.html', 'cd'), ('chap-builtin-cmd.html', 'cmd/append'), ('chap-builtin-cmd.html', 'cmd/eval'), ('chap-builtin-cmd.html', 'cmd/false'), ('chap-builtin-cmd.html', 'cmd/true')]
+
+540 in link_from set: [('chap-builtin-cmd.html', 'alias'), ('chap-builtin-cmd.html', 'assert'), ('chap-builtin-cmd.html', 'bg'), ('chap-builtin-cmd.html', 'bind'), ('chap-builtin-cmd.html', 'boolstatus'), ('chap-builtin-cmd.html', 'builtin'), ('chap-builtin-cmd.html', 'caller'), ('chap-builtin-cmd.html', 'cd'), ('chap-builtin-cmd.html', 'cmd/append'), ('chap-builtin-cmd.html', 'cmd/eval')]
+
+Topics in multiple chapters:
+  triple-quoted: chap-expr-lang.html chap-word-lang.html
+  ysh-string: chap-expr-lang.html chap-word-lang.html
+  rest: chap-builtin-func.html chap-stdlib.html
+  glob: chap-builtin-func.html chap-type-method.html
+  complete: chap-builtin-cmd.html chap-plugin.html
+  time: chap-cmd-lang.html chap-type-method.html
+
+Duplicate topics in TOC:
+
+                HOME: toc-osh.md toc-ysh.md
+        OILS_COMP_UI: toc-osh.md toc-ysh.md
+        OILS_VERSION: toc-osh.md toc-ysh.md
+                PATH: toc-osh.md toc-ysh.md
+    ascii-whitespace: toc-data.md toc-osh.md toc-ysh.md
+              braces: toc-osh.md toc-ysh.md
+         command-sub: toc-osh.md toc-ysh.md
+             comment: toc-osh.md toc-ysh.md
+          compadjust: toc-osh.md toc-ysh.md
+          compexport: toc-osh.md toc-ysh.md
+            complete: toc-osh.md toc-osh.md
+              config: toc-osh.md toc-ysh.md
+          exit-codes: toc-osh.md toc-ysh.md
+                 get: toc-ysh.md toc-ysh.md
+            glob-pat: toc-osh.md toc-ysh.md
+   line-continuation: toc-osh.md toc-ysh.md
+        line-editing: toc-osh.md toc-ysh.md
+          oils-usage: toc-osh.md toc-ysh.md
+                rest: toc-ysh.md toc-ysh.md
+           semicolon: toc-osh.md toc-ysh.md
+         shell-flags: toc-osh.md toc-ysh.md
+      simple-command: toc-osh.md toc-ysh.md
+             startup: toc-osh.md toc-ysh.md
+               table: toc-ysh.md toc-ysh.md toc-ysh.md toc-ysh.md toc-ysh.md toc-ysh.md toc-ysh.md
+       triple-quoted: toc-ysh.md toc-ysh.md
+          ysh-string: toc-ysh.md toc-ysh.md
+
+26 Broken Links:
+  ('chap-stdlib.html', 'align')
+  ('chap-stdlib.html', 'attr')
+  ('chap-stdlib.html', 'cat')
+  ('chap-stdlib.html', 'chop')
+  ('chap-stdlib.html', 'each-row')
+  ('chap-stdlib.html', 'each-word')
+  ('chap-stdlib.html', 'group-by')
+  ('chap-stdlib.html', 'header')
+  ('chap-stdlib.html', 'if-match')
+  ('chap-stdlib.html', 'if-split-by')
+  ('chap-stdlib.html', 'must-match')
+  ('chap-stdlib.html', 'mutate')
+  ('chap-stdlib.html', 'parse')
+  ('chap-stdlib.html', 'pick')
+  ('chap-stdlib.html', 'rename')
+  ('chap-stdlib.html', 'row')
+  ('chap-stdlib.html', 'slice')
+  ('chap-stdlib.html', 'sort-by')
+  ('chap-stdlib.html', 'split-by')
+  ('chap-stdlib.html', 'summary')
+  ('chap-stdlib.html', 'tabify')
+  ('chap-stdlib.html', 'table')
+  ('chap-stdlib.html', 'table/cols')
+  ('chap-stdlib.html', 'to-tsv')
+  ('chap-stdlib.html', 'transmute')
+  ('chap-stdlib.html', 'types')
+
+28 Orphaned Topics:
+  ('chap-cmd-lang.html', 'ysh-prefix-binding')
+  ('chap-front-end.html', 'osh-chapters')
+  ('chap-front-end.html', 'ysh-chapters')
+  ('chap-index.html', 'append')
+  ('chap-index.html', 'clear')
+  ('chap-index.html', 'eval')
+  ('chap-index.html', 'evalExpr')
+  ('chap-index.html', 'false')
+  ('chap-index.html', 'true')
+  ('chap-index.html', 'type')
+  ('chap-option.html', 'dashglob')
+  ('chap-option.html', 'errtrace')
+  ('chap-option.html', 'eval_unsafe_arith')
+  ('chap-option.html', 'extdebug')
+  ('chap-option.html', 'ignore_flags_not_impl')
+  ('chap-option.html', 'ignore_shopt_not_impl')
+  ('chap-option.html', 'nullglob')
+  ('chap-option.html', 'parse_ignored')
+  ('chap-option.html', 'parse_triple_quote')
+  ('chap-option.html', 'parse_ysh_string')
+  ('chap-option.html', 'sigpipe_status_ok')
+  ('chap-option.html', 'strict_control_flow')
+  ('chap-option.html', 'strict_nameref')
+  ('chap-option.html', 'strict_tilde')
+  ('chap-option.html', 'verbose')
+  ('chap-option.html', 'xtrace')
+  ('chap-special-var.html', '_status')
+  ('chap-stdlib.html', 'task-five')
+
+Short topics:
+      readarray  'Alias for mapfile.\n'
+           glob  'See glob-pat topic for syntax.\n'
+         sha1dc  "Git's algorithm.\n"
+             or  'ls || die "failed"\n'
+         return  'Return from a function.\n'
+        startup  'TODO:\n\nHistory is read\n...\n'
+        histsub  'History substitution uses !.\n'
+            PS3  'For the select builtin (unimplemented).\n'
+        _status  'DEPRECATED: Use _error.code instead.\n'
+           LANG  'TODO: bash compat\n'
+     GLOBIGNORE  'TODO: bash compat\n'
+     COMP_CWORD  'Discouraged; for compatibility with bash.\n'
+      COMP_LINE  'Discouraged; for compatibility with bash.\n'
+     COMP_POINT  'Discouraged; for compatibility with bash.\n'
+COMP_WORDBREAKS  'Discouraged; for compatibility with bash.\n'
+         RANDOM  'bash compat\n'
+          upper  'Respects unicode.\n'
+          lower  'Respects unicode.\n'
+           time  'TODO: Depends on system clock.\n'
+     ysh-printf  'Not done.\necho ${x %.3f}\n'
+     ysh-format  'Not done.\necho ${x|html}\n'
+     tagged-str  'Not done.\n'
+       op-slice  'echo ${a[@]:1:2}\necho ${@:1:2}\n'
+

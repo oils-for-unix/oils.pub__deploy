@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A Tour of YSH</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-tour.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.29.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>A Tour of YSH</h1>
+
+<p>This doc describes the <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> language from <strong>clean slate</strong>
+perspective.  We don't assume you know Unix shell, or the compatible
+<a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.  But shell users will see the similarity, with simplifications
+and upgrades.</p>
+<p>Remember, YSH is for Python and JavaScript users who avoid shell!  See the
+<a href="https://www.oilshell.org/blog/2021/01/why-a-new-shell.html">project FAQ</a> for more color on that.</p>
+<p>This document is <strong>long</strong> because it demonstrates nearly every feature of the
+language.  You may want to read it in multiple sittings, or read <a href="https://www.oilshell.org/blog/2020/01/simplest-explanation.html">The Simplest
+Explanation of
+Oil</a> first.
+(Until 2023, YSH was called the &quot;Oil language&quot;.)</p>
+<p>Here's a summary of what follows:</p>
+<ol>
+<li>YSH has interleaved <em>word</em>, <em>command</em>, and <em>expression</em> languages.
+<ul>
+<li>The command language has Ruby-like <em>blocks</em>, and the expression language
+has Python-like <em>data types</em>.</li>
+</ul>
+</li>
+<li>YSH has both builtin <em>commands</em> like <code>cd /tmp</code>, and builtin <em>functions</em> like
+<code>join()</code>.</li>
+<li>Languages for <em>data</em>, like <a href="https://json.org">JSON</a>, are complementary to YSH code.</li>
+<li>OSH and YSH share both an <em>interpreter data model</em> and a <em>process model</em>
+(provided by the Unix kernel).  Understanding these common models will make
+you both a better shell user and YSH user.</li>
+</ol>
+<p>Keep these points in mind as you read the details below.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#preliminaries">Preliminaries</a></div>
+  <div class="toclevel1"><a href="#examples">Examples</a></div>
+  <div class="toclevel2"><a href="#hello-world-script">Hello World Script</a></div>
+  <div class="toclevel2"><a href="#a-taste-of-ysh">A Taste of YSH</a></div>
+  <div class="toclevel2"><a href="#tip-use-the-operator-interactively">Tip: Use the <code>=</code> operator interactively</a></div>
+  <div class="toclevel1"><a href="#word-language-expressions-for-strings-and-arrays">Word Language: Expressions for Strings (and Arrays)</a></div>
+  <div class="toclevel2"><a href="#unquoted-words">Unquoted Words</a></div>
+  <div class="toclevel2"><a href="#three-kinds-of-string-literals">Three Kinds of String Literals</a></div>
+  <div class="toclevel2"><a href="#three-kinds-of-substitution">Three Kinds of Substitution</a></div>
+  <div class="toclevel2"><a href="#arrays-of-strings-globs-brace-expansion-splicing-and-splitting">Arrays of Strings: Globs, Brace Expansion, Splicing, and Splitting</a></div>
+  <div class="toclevel1"><a href="#command-language-io-control-flow-abstraction">Command Language: I/O, Control Flow, Abstraction</a></div>
+  <div class="toclevel2"><a href="#simple-commands">Simple Commands</a></div>
+  <div class="toclevel2"><a href="#redirects">Redirects</a></div>
+  <div class="toclevel2"><a href="#argv-and-env">ARGV and ENV</a></div>
+  <div class="toclevel2"><a href="#pipelines">Pipelines</a></div>
+  <div class="toclevel2"><a href="#multi-line-commands">Multi-line Commands</a></div>
+  <div class="toclevel2"><a href="#var-setvar-const-to-declare-and-mutate"><code>var</code>, <code>setvar</code>, <code>const</code> to Declare and Mutate</a></div>
+  <div class="toclevel2"><a href="#for-loop"><code>for</code> Loop</a></div>
+  <div class="toclevel2"><a href="#while-loop"><code>while</code> Loop</a></div>
+  <div class="toclevel2"><a href="#conditionals">Conditionals</a></div>
+  <div class="toclevel2"><a href="#error-handling">Error Handling</a></div>
+  <div class="toclevel2"><a href="#shell-like-proc">Shell-like <code>proc</code></a></div>
+  <div class="toclevel2"><a href="#ruby-like-block-arguments">Ruby-like Block Arguments</a></div>
+  <div class="toclevel2"><a href="#builtin-commands">Builtin Commands</a></div>
+  <div class="toclevel1"><a href="#expression-language-python-like-types">Expression Language: Python-like Types</a></div>
+  <div class="toclevel2"><a href="#python-like-func">Python-like <code>func</code></a></div>
+  <div class="toclevel2"><a href="#data-types-int-str-list-dict-obj">Data Types: <code>Int</code>, <code>Str</code>, <code>List</code>, <code>Dict</code>, <code>Obj</code>, ...</a></div>
+  <div class="toclevel2"><a href="#methods">Methods</a></div>
+  <div class="toclevel2"><a href="#place-type-out-params"><code>Place</code> type / &quot;out params&quot;</a></div>
+  <div class="toclevel2"><a href="#operators">Operators</a></div>
+  <div class="toclevel2"><a href="#egg-expressions-ysh-regexes">Egg Expressions (YSH Regexes)</a></div>
+  <div class="toclevel1"><a href="#interlude">Interlude</a></div>
+  <div class="toclevel2"><a href="#three-interleaved-languages">Three Interleaved Languages</a></div>
+  <div class="toclevel2"><a href="#how-do-they-work-together">How Do They Work Together?</a></div>
+  <div class="toclevel1"><a href="#data-notation-interchange-formats">Data Notation / Interchange Formats</a></div>
+  <div class="toclevel2"><a href="#utf-8">UTF-8</a></div>
+  <div class="toclevel2"><a href="#json">JSON</a></div>
+  <div class="toclevel2"><a href="#j8-notation">J8 Notation</a></div>
+  <div class="toclevel1"><a href="#ysh-modules-are-files">YSH Modules are Files</a></div>
+  <div class="toclevel1"><a href="#the-runtime-shared-by-osh-and-ysh">The Runtime Shared by OSH and YSH</a></div>
+  <div class="toclevel2"><a href="#interpreter-data-model">Interpreter Data Model</a></div>
+  <div class="toclevel2"><a href="#process-model-the-kernel">Process Model (the kernel)</a></div>
+  <div class="toclevel2"><a href="#advanced-reflecting-on-the-interpreter">Advanced: Reflecting on the Interpreter</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#related-docs">Related Docs</a></div>
+  <div class="toclevel2"><a href="#ysh-script-template">YSH Script Template</a></div>
+  <div class="toclevel2"><a href="#ysh-features-not-shown">YSH Features Not Shown</a></div>
+</div>
+<a name="preliminaries"></a>
+<h2>Preliminaries</h2>
+<p>Start YSH just like you start bash or Python:</p>
+
+<pre><code class="language-sh-prompt"><span class="sh-prompt">bash$</span> <span class="sh-command">ysh              </span>  <span class="sh-comment"># assuming it's installed</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">echo 'hello world'</span>  <span class="sh-comment"># command typed into YSH</span>
+hello world
+</code></pre>
+<p>In the sections below, we'll save space by showing output <strong>in comments</strong>, with
+<code>=&gt;</code>:</p>
+<pre><code>echo 'hello world'       <span class="sh-comment"># =&gt; hello world</span>
+</code></pre>
+<p>Multi-line output is shown like this:</p>
+<pre><code>echo one
+echo two
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># one</span>
+<span class="sh-comment"># two</span>
+</code></pre>
+<a name="examples"></a>
+<h2>Examples</h2>
+<a name="hello-world-script"></a>
+<h3>Hello World Script</h3>
+<p>You can also type commands into a file like <code>hello.ysh</code>.  This is a complete
+YSH program, which is identical to a shell program:</p>
+<pre><code>echo 'hello world'     <span class="sh-comment"># =&gt; hello world</span>
+</code></pre>
+<a name="a-taste-of-ysh"></a>
+<h3>A Taste of YSH</h3>
+<p>Unlike shell, YSH has <code>var</code> and <code>const</code> keywords:</p>
+<pre><code>const name = 'world'   <span class="sh-comment"># const is rarer, used the top-level</span>
+echo &quot;hello $name&quot;     <span class="sh-comment"># =&gt; hello world</span>
+</code></pre>
+<p>They take rich Python-like expressions on the right:</p>
+<pre><code>var x = 42             <span class="sh-comment"># an integer, not a string</span>
+setvar x = x * 2 + 1   <span class="sh-comment"># mutate with the 'setvar' keyword</span>
+
+setvar x += 5          <span class="sh-comment"># Increment by 5</span>
+echo $x                <span class="sh-comment"># =&gt; 6</span>
+
+var mylist = [x, 7]    <span class="sh-comment"># two integers [6, 7]</span>
+</code></pre>
+<p>Expressions are often surrounded by <code>()</code>:</p>
+<pre><code>if (x &gt; 0) {
+  echo 'positive'
+}  <span class="sh-comment"># =&gt; positive</span>
+
+for i, item in (mylist) {  <span class="sh-comment"># 'mylist' is a variable, not a string</span>
+  echo &quot;[$i] item $item&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># [0] item 6</span>
+<span class="sh-comment"># [1] item 7</span>
+</code></pre>
+<p>YSH has Ruby-like blocks:</p>
+<pre><code>cd /tmp {
+  echo hi &gt; greeting.txt  <span class="sh-comment"># file created inside /tmp</span>
+  echo $PWD               <span class="sh-comment"># =&gt; /tmp</span>
+}
+echo $PWD                 <span class="sh-comment"># prints the original directory</span>
+</code></pre>
+<p>And utilities to read and write JSON:</p>
+<pre><code>var person = {name: 'bob', age: 42}
+json write (person)
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># {</span>
+<span class="sh-comment">#   &quot;name&quot;: &quot;bob&quot;,</span>
+<span class="sh-comment">#   &quot;age&quot;: 42,</span>
+<span class="sh-comment"># }</span>
+
+echo '[&quot;str&quot;, 42]' | json read  <span class="sh-comment"># sets '_reply' variable by default</span>
+</code></pre>
+<a name="tip-use-the-operator-interactively"></a>
+<h3>Tip: Use the <code>=</code> operator interactively</h3>
+<p>The <code>=</code> keyword evaluates and prints an expression:</p>
+<pre><code>= _reply
+<span class="sh-comment"># =&gt; (List)   [&quot;str&quot;, 42]</span>
+</code></pre>
+<p>(Think of it like <code>var x = _reply</code>, without the <code>var</code>.)</p>
+<p>The <strong>best way</strong> to learn YSH is to type these examples and see what happens!</p>
+<a name="word-language-expressions-for-strings-and-arrays"></a>
+<h2>Word Language: Expressions for Strings (and Arrays)</h2>
+<p>Let's describe the word language first, and then talk about commands and
+expressions.  Words are a rich language because <strong>strings</strong> are a central
+concept in shell.</p>
+<a name="unquoted-words"></a>
+<h3>Unquoted Words</h3>
+<p>Words denote strings, but you often don't need to quote them:</p>
+<pre><code>echo hi  <span class="sh-comment"># =&gt; hi</span>
+</code></pre>
+<p>Quotes are useful when a string has spaces, or punctuation characters like <code>( ) ;</code>.</p>
+<a name="three-kinds-of-string-literals"></a>
+<h3>Three Kinds of String Literals</h3>
+<p>You can choose the style that's most convenient to write a given string.</p>
+<a name="double-quoted-single-quoted-and-j8-strings-like-json"></a>
+<h4>Double-Quoted, Single-Quoted, and J8 strings (like JSON)</h4>
+<p>Double-quoted strings allow <strong>interpolation</strong>, with <code>$</code>:</p>
+<pre><code>var person = 'alice'
+echo &quot;hi $person, $(echo bye)&quot;  <span class="sh-comment"># =&gt; hi alice, bye</span>
+</code></pre>
+<p>Write operators by escaping them with <code>\</code>:</p>
+<pre><code>echo &quot;\$ \&quot; \\ &quot;                <span class="sh-comment"># =&gt; $ &quot; \</span>
+</code></pre>
+<p>In single-quoted strings, all characters are <strong>literal</strong> (except <code>'</code>, which
+can't be expressed):</p>
+<pre><code>echo 'c:\Program Files\'        <span class="sh-comment"># =&gt; c:\Program Files\</span>
+</code></pre>
+<p>If you want C-style backslash <strong>character escapes</strong>, use a J8 string, which is
+like JSON, but with single quotes:</p>
+<pre><code>echo u' A is \u{41} \n line two, with backslash \\'
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment">#  A is A</span>
+<span class="sh-comment">#  line two, with backslash \</span>
+</code></pre>
+<p>The <code>u''</code> strings are guaranteed to be valid Unicode (unlike JSON).  You can
+also use <code>b''</code> strings:</p>
+<pre><code>echo b'byte \yff'  <span class="sh-comment"># Byte that's not valid unicode, like \xff in C.</span>
+                   <span class="sh-comment"># Don't confuse it with \u{ff}.</span>
+</code></pre>
+<a name="multi-line-strings"></a>
+<h4>Multi-line Strings</h4>
+<p>Multi-line strings are surrounded with triple quotes.  They come in the same
+three varieties, and leading whitespace is stripped in a convenient way.</p>
+<pre><code>sort &lt;&lt;&lt; &quot;&quot;&quot;
+var sub: $x
+command sub: $(echo hi)
+expression sub: $[x + 3]
+&quot;&quot;&quot;
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># command sub: hi</span>
+<span class="sh-comment"># expression sub: 9</span>
+<span class="sh-comment"># var sub: 6</span>
+
+sort &lt;&lt;&lt; '''
+$2.00  <span class="sh-comment"># literal $, no interpolation</span>
+$1.99
+'''
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># $1.99</span>
+<span class="sh-comment"># $2.00</span>
+
+sort &lt;&lt;&lt; u'''
+C\tD
+A\tB
+'''  <span class="sh-comment"># b''' strings also supported</span>
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># A        B</span>
+<span class="sh-comment"># C        D</span>
+</code></pre>
+<p>(Use multiline strings instead of shell's <a href="/cross-ref.html?tag=here-doc#here-doc">here docs</a>.)</p>
+<a name="three-kinds-of-substitution"></a>
+<h3>Three Kinds of Substitution</h3>
+<p>YSH has syntax for 3 types of substitution, all of which start with <code>$</code>.  That
+is, you can convert any of these things to a <strong>string</strong>:</p>
+<ol>
+<li>Variables</li>
+<li>The output of commands</li>
+<li>The value of expressions</li>
+</ol>
+<a name="variable-sub"></a>
+<h4>Variable Sub</h4>
+<p>The syntax <code>$a</code> or <code>${a}</code> converts a variable to a string:</p>
+<pre><code>var a = 'ale'
+echo $a                          <span class="sh-comment"># =&gt; ale</span>
+echo _${a}_                      <span class="sh-comment"># =&gt; _ale_</span>
+echo &quot;_ $a _&quot;                    <span class="sh-comment"># =&gt; _ ale _</span>
+</code></pre>
+<p>The shell operator <code>:-</code> is occasionally useful in YSH:</p>
+<pre><code>echo ${not_defined:-'default'}   <span class="sh-comment"># =&gt; default</span>
+</code></pre>
+<a name="command-sub"></a>
+<h4>Command Sub</h4>
+<p>The <code>$(echo hi)</code> syntax runs a command and captures its <code>stdout</code>:</p>
+<pre><code>echo $(hostname)                 <span class="sh-comment"># =&gt; example.com</span>
+echo &quot;_ $(hostname) _&quot;           <span class="sh-comment"># =&gt; _ example.com _</span>
+</code></pre>
+<a name="expression-sub"></a>
+<h4>Expression Sub</h4>
+<p>The <code>$[myexpr]</code> syntax evaluates an expression and converts it to a string:</p>
+<pre><code>echo $[a]                        <span class="sh-comment"># =&gt; ale</span>
+echo $[1 + 2 * 3]                <span class="sh-comment"># =&gt; 7</span>
+echo &quot;_ $[1 + 2 * 3] _&quot;          <span class="sh-comment"># =&gt; _ 7 _</span>
+</code></pre>
+
+<a name="arrays-of-strings-globs-brace-expansion-splicing-and-splitting"></a>
+<h3>Arrays of Strings: Globs, Brace Expansion, Splicing, and Splitting</h3>
+<p>There are four constructs that evaluate to a <strong>list of strings</strong>, rather than a
+single string.</p>
+<a name="globs"></a>
+<h4>Globs</h4>
+<p>Globs like <code>*.py</code> evaluate to a list of files.</p>
+<pre><code>touch foo.py bar.py  <span class="sh-comment"># create the files</span>
+write *.py
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># foo.py</span>
+<span class="sh-comment"># bar.py</span>
+</code></pre>
+<p>If no files match, it evaluates to an empty list (<code>[]</code>).</p>
+<a name="brace-expansion"></a>
+<h4>Brace Expansion</h4>
+<p>The brace expansion mini-language lets you write strings without duplication:</p>
+<pre><code>write {alice,bob}@example.com
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># alice@example.com</span>
+<span class="sh-comment"># bob@example.com</span>
+</code></pre>
+<a name="splicing"></a>
+<h4>Splicing</h4>
+<p>The <code>@</code> operator splices an array into a command:</p>
+<pre><code>var myarray = :| ale bean |
+write S @myarray E
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># S</span>
+<span class="sh-comment"># ale</span>
+<span class="sh-comment"># bean</span>
+<span class="sh-comment"># E</span>
+</code></pre>
+<p>You also have <code>@[]</code> to splice an expression that evaluates to a list:</p>
+<pre><code>write -- @[split('ale bean')]
+<span class="sh-comment"># =&gt; </span>
+<span class="sh-comment"># ale</span>
+<span class="sh-comment"># bean</span>
+</code></pre>
+<p>Each item will be converted to a string.</p>
+<a name="split-command-sub-split-builtin-sub"></a>
+<h4>Split Command Sub / Split Builtin Sub</h4>
+<p>There's also a variant of <em>command sub</em> that decodes J8 lines into a sequence
+of strings:</p>
+<pre><code>write @(seq 3)  <span class="sh-comment"># write is passed 3 args</span>
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># 1</span>
+<span class="sh-comment"># 2</span>
+<span class="sh-comment"># 3</span>
+</code></pre>
+<a name="command-language-io-control-flow-abstraction"></a>
+<h2>Command Language: I/O, Control Flow, Abstraction</h2>
+<a name="simple-commands"></a>
+<h3>Simple Commands</h3>
+<p>A simple command is a space-separated list of words.  YSH looks up the first
+word to determine if it's a builtin command, or a user-defined <code>proc</code>.</p>
+<pre><code>echo 'hello world'   <span class="sh-comment"># The shell builtin 'echo'</span>
+
+proc greet (name) {  <span class="sh-comment"># Define a unit of code</span>
+  echo &quot;hello $name&quot;
+}
+
+<span class="sh-comment"># The first word now resolves to the proc you defined</span>
+greet alice          <span class="sh-comment"># =&gt; hello alice</span>
+</code></pre>
+<p>If it's neither, then it's assumed to be an external command:</p>
+<pre><code>ls -l /tmp           <span class="sh-comment"># The external 'ls' command</span>
+</code></pre>
+<p>Commands accept traditional string arguments, as well as typed arguments in
+parentheses:</p>
+<pre><code><span class="sh-comment"># 'write' is a string arg; 'x' is a typed expression arg</span>
+json write (x)
+</code></pre>
+
+<a name="redirects"></a>
+<h3>Redirects</h3>
+<p>You can <strong>redirect</strong> <code>stdin</code> and <code>stdout</code> of simple commands:</p>
+<pre><code>echo hi &gt; tmp.txt  <span class="sh-comment"># write to a file</span>
+sort &lt; tmp.txt
+</code></pre>
+<p>Here are the most common idioms for using <code>stderr</code> (identical to shell):</p>
+<pre><code>ls /tmp 2&gt;errors.txt
+echo 'fatal error' &gt;&amp;2
+</code></pre>
+<a name="argv-and-env"></a>
+<h3>ARGV and ENV</h3>
+<p>At the top level, the <code>ARGV</code> list holds the arguments passed to the shell:</p>
+<pre><code>var num_args = len(ARGV)
+ls /tmp @ARGV            <span class="sh-comment"># pass shell's arguments through</span>
+</code></pre>
+<p>Inside a <code>proc</code> without declared parameters, <code>ARGV</code> holds the arguments passed
+to the <code>proc</code>.  (Procs are explained below.)</p>
+<hr />
+<p>You can add to the environment of a new process with a <em>prefix binding</em>:</p>
+<pre><code>PYTHONPATH=vendor ./demo.py  <span class="sh-comment"># os.environ will have {'PYTHONPATH': 'vendor'}</span>
+</code></pre>
+<p>Under the hood, the prefix binding temporarily augments the <code>ENV</code> object, which
+is the current environment.</p>
+<p>You can also mutate the <code>ENV</code> object:</p>
+<pre><code>setglobal ENV.PYTHONPATH = '.'
+./demo.py  <span class="sh-comment"># all future invocations have a different PYTHONPATH</span>
+./demo.py
+</code></pre>
+<p>And get its attributes:</p>
+<pre><code>echo $[ENV.PYTHONPATH]  <span class="sh-comment"># =&gt; .</span>
+</code></pre>
+<a name="pipelines"></a>
+<h3>Pipelines</h3>
+<p>Pipelines are a powerful method manipulating data streams:</p>
+<pre><code>ls | wc -l                       <span class="sh-comment"># count files in this directory</span>
+find /bin -type f | xargs wc -l  <span class="sh-comment"># count files in a subtree</span>
+</code></pre>
+<p>The stream may contain (lines of) text, binary data, JSON, TSV, and more.
+Details below.</p>
+<a name="multi-line-commands"></a>
+<h3>Multi-line Commands</h3>
+<p>The <code>...</code> prefix lets you write long commands, pipelines, and <code>&amp;&amp;</code> chains
+without <code>\</code> line continuations.</p>
+<pre><code>... find /bin               <span class="sh-comment"># traverse this directory and</span>
+    -type f -a -executable  <span class="sh-comment"># print executable files</span>
+  | sort -r                 <span class="sh-comment"># reverse sort</span>
+  | head -n 30              <span class="sh-comment"># limit to 30 files</span>
+  ;
+</code></pre>
+<p>When this mode is active:</p>
+<ul>
+<li>A single newline behaves like a space</li>
+<li>A blank line (two newlines in a row) is illegal, but a line that has only a
+comment is allowed.  This prevents confusion if you forget the <code>;</code>
+terminator.</li>
+</ul>
+<a name="var-setvar-const-to-declare-and-mutate"></a>
+<h3><code>var</code>, <code>setvar</code>, <code>const</code> to Declare and Mutate</h3>
+<p>Constants can't be modified:</p>
+<pre><code>const myconst = 'mystr'
+<span class="sh-comment"># setvar myconst = 'foo' would be an error</span>
+</code></pre>
+<p>Modify variables with the <code>setvar</code> keyword:</p>
+<pre><code>var num_beans = 12
+setvar num_beans = 13
+</code></pre>
+<p>A more complex example:</p>
+<pre><code>var d = {name: 'bob', age: 42}  <span class="sh-comment"># dict literal</span>
+setvar d.name = 'alice'         <span class="sh-comment"># d.name is a synonym for d['name']</span>
+echo $[d.name]                  <span class="sh-comment"># =&gt; alice</span>
+</code></pre>
+<p>That's most of what you need to know about assignments.  Advanced users may
+want to use <code>setglobal</code> or <code>call myplace-&gt;setValue(42)</code> in certain situations.</p>
+
+<p>More info: <a href="variables.html">Variable Declaration and Mutation</a>.</p>
+<a name="for-loop"></a>
+<h3><code>for</code> Loop</h3>
+<a name="words"></a>
+<h4>Words</h4>
+<p>Shell-style for loops iterate over <strong>words</strong>:</p>
+<pre><code>for word in 'oils' $num_beans {pea,coco}nut {
+  echo $word
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># oils</span>
+<span class="sh-comment"># 13</span>
+<span class="sh-comment"># peanut</span>
+<span class="sh-comment"># coconut</span>
+</code></pre>
+<p>You can ask for the loop index with <code>i,</code>:</p>
+<pre><code>for i, word in README.md *.py {
+  echo &quot;$i - $word&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># 0 - README.md</span>
+<span class="sh-comment"># 1 - __init__.py</span>
+</code></pre>
+<a name="typed-data"></a>
+<h4>Typed Data</h4>
+<p>To iterate over a typed data, use parentheses around an <strong>expression</strong>.  The
+expression should evaluate to an integer <code>Range</code>, <code>List</code>, <code>Dict</code>, or <code>io.stdin</code>.</p>
+<p>Range:</p>
+<pre><code>for i in (3 ..&lt; 5) {  <span class="sh-comment"># range operator ..&lt;</span>
+  echo &quot;i = $i&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># i = 3</span>
+<span class="sh-comment"># i = 4</span>
+</code></pre>
+<p>List:</p>
+<pre><code>var foods = ['ale', 'bean']
+for item in (foods) {
+  echo $item
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># ale</span>
+<span class="sh-comment"># bean</span>
+</code></pre>
+<p>Again, you can request the index with <code>for i, item in ...</code>.</p>
+<hr />
+<p>There are <strong>three</strong> ways of iterating over a <code>Dict</code>:</p>
+<pre><code>var mydict = {pea: 42, nut: 10}
+for key in (mydict) {
+  echo $key
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># pea</span>
+<span class="sh-comment"># nut</span>
+
+for key, value in (mydict) {
+  echo &quot;$key $value&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># pea - 42</span>
+<span class="sh-comment"># nut - 10</span>
+
+for i, key, value in (mydict) {
+  echo &quot;$i $key $value&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># 0 - pea - 42</span>
+<span class="sh-comment"># 1 - nut - 10</span>
+</code></pre>
+<p>That is, if you ask for two things, you'll get the key and value.  If you ask
+for three, you'll also get the index.</p>
+<p>(One way to think of it: <code>for</code> loops in YSH have the functionality Python's
+<code>enumerate()</code>, <code>items()</code>, <code>keys()</code>, and <code>values()</code>.)</p>
+<hr />
+<p>The <code>io.stdin</code> object iterates over lines:</p>
+<pre><code>for line in (io.stdin) {
+  echo $line
+}
+<span class="sh-comment"># lines are buffered, so it's much faster than `while read --raw-line`</span>
+</code></pre>
+
+<a name="while-loop"></a>
+<h3><code>while</code> Loop</h3>
+<p>While loops can use a <strong>command</strong> as the termination condition:</p>
+<pre><code>while test --file lock {
+  sleep 1
+}
+</code></pre>
+<p>Or an <strong>expression</strong>, which is surrounded in <code>()</code>:</p>
+<pre><code>var i = 3
+while (i &lt; 6) {
+  echo &quot;i = $i&quot;
+  setvar i += 1
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># i = 3</span>
+<span class="sh-comment"># i = 4</span>
+<span class="sh-comment"># i = 5</span>
+</code></pre>
+<a name="conditionals"></a>
+<h3>Conditionals</h3>
+<a name="if-elif"></a>
+<h4><code>if elif</code></h4>
+<p>If statements test the exit code of a command, and have optional <code>elif</code> and
+<code>else</code> clauses:</p>
+<pre><code>if test --file foo {
+  echo 'foo is a file'
+  rm --verbose foo     <span class="sh-comment"># delete it</span>
+} elif test --dir foo {
+  echo 'foo is a directory'
+} else {
+  echo 'neither'
+}
+</code></pre>
+<p>Invert the exit code with <code>!</code>:</p>
+<pre><code>if ! grep alice /etc/passwd { 
+  echo 'alice is not a user'
+}
+</code></pre>
+<p>As with <code>while</code> loops, the condition can also be an <strong>expression</strong> wrapped in
+<code>()</code>:</p>
+<pre><code>if (num_beans &gt; 0) {
+  echo 'so many beans'
+}
+
+var done = false
+if (not done) {        <span class="sh-comment"># negate with 'not' operator (contrast with !)</span>
+  echo &quot;we aren't done&quot;
+}
+</code></pre>
+<a name="case"></a>
+<h4><code>case</code></h4>
+<p>The case statement is a series of conditionals and executable blocks.  The
+condition can be either an unquoted glob pattern like <code>*.py</code>, an eggex pattern
+like <code>/d+/</code>, or a typed expression like <code>(42)</code>:</p>
+<pre><code>var s = 'README.md'
+case (s) {
+  *.py           { echo 'Python' }
+  *.cc | *.h     { echo 'C++' }
+  *              { echo 'Other' }
+}
+<span class="sh-comment"># =&gt; Other</span>
+
+case (s) {
+  / dot* '.md' / { echo 'Markdown' }
+  (30 + 12)      { echo 'the integer 42' }
+  (else)         { echo 'neither' }
+}
+<span class="sh-comment"># =&gt; Markdown</span>
+</code></pre>
+
+<a name="error-handling"></a>
+<h3>Error Handling</h3>
+<p>If statements are also used for <strong>error handling</strong>.  Builtins and external
+commands use this style:</p>
+<pre><code>if ! test -d /bin {
+  echo 'not a directory'
+}
+
+if ! cp foo /tmp {
+  echo 'error copying'  <span class="sh-comment"># any non-zero status</span>
+}
+</code></pre>
+<p>Procs use this style (because of shell's <em>disabled <code>errexit</code> quirk</em>):</p>
+<pre><code>try {
+  myproc
+}
+if failed {
+  echo 'failed'
+}
+</code></pre>
+<p>For a complete list of examples, see <a href="ysh-error.html">YSH Error
+Handling</a>.  For design goals and a reference, see <a href="error-handling.html">YSH
+Fixes Shell's Error Handling</a>.</p>
+<a name="exit-break-continue-return"></a>
+<h4>exit, break, continue, return</h4>
+<p>The <code>exit</code> <strong>keyword</strong> exits a process.  (It's not a shell builtin.)</p>
+<p>The other 3 control flow keywords behave like they do in Python and JavaScript.</p>
+<a name="shell-like-proc"></a>
+<h3>Shell-like <code>proc</code></h3>
+<p>You can define units of code with the <code>proc</code> keyword.  A <code>proc</code> is like a
+<em>procedure</em> or <em>process</em>.</p>
+<pre><code>proc my-ls {
+  ls -a -l @ARGV  <span class="sh-comment"># pass args through</span>
+}
+</code></pre>
+<p>Simple procs like this are invoked like a shell command:</p>
+<pre><code>my-ls /dev/null /etc/passwd
+</code></pre>
+<p>You can name the parameters, and add a doc comment with  <code>###</code>:</p>
+<pre><code>proc mycopy (src, dest) {
+  <span class="sh-comment">### Copy verbosely</span>
+
+  mkdir -p $dest
+  cp --verbose $src $dest
+}
+touch log.txt
+mycopy log.txt /tmp   <span class="sh-comment"># first word 'mycopy' is a proc</span>
+</code></pre>
+<p>Procs have many features, including <strong>four</strong> kinds of arguments:</p>
+<ol>
+<li>Word args (which are always strings)</li>
+<li>Typed, positional args</li>
+<li>Typed, named args</li>
+<li>A final block argument, which may be written with <code>{ }</code>.</li>
+</ol>
+<p>At the call site, they can look like any of these forms:</p>
+<pre><code>ls /tmp                      <span class="sh-comment"># word arg</span>
+
+json write (d)               <span class="sh-comment"># word arg, then positional arg</span>
+
+try {
+  error 'failed' (status=9)  <span class="sh-comment"># word arg, then named arg</span>
+}
+
+cd /tmp { echo $PWD }        <span class="sh-comment"># word arg, then block arg</span>
+
+pp value ([1, 2])            <span class="sh-comment"># positional, typed arg </span>
+</code></pre>
+
+<p>At the definition site, the kinds of parameters are separated with <code>;</code>, similar
+to the Julia language:</p>
+<pre><code>proc p2 (word1, word2; pos1, pos2, ...rest_pos) {
+  echo &quot;$word1 $word2 $[pos1 + pos2]&quot;
+  json write (rest_pos)
+}
+
+proc p3 (w ; ; named1, named2, ...rest_named; block) {
+  echo &quot;$w $[named1 + named2]&quot;
+  call io-&gt;eval(block)
+  json write (rest_named)
+}
+
+proc p4 (; ; ; block) {
+  call io-&gt;eval(block)
+}
+</code></pre>
+<p>YSH also has Python-like functions defined with <code>func</code>.  These are part of the
+expression language, which we'll see later.</p>
+<p>For more info, see the <a href="proc-func.html">Guide to Procs and Funcs</a>.</p>
+<a name="ruby-like-block-arguments"></a>
+<h3>Ruby-like Block Arguments</h3>
+<p>A block is a value of type <code>Command</code>.  For example, <code>shopt</code> is a builtin
+command that takes a block argument:</p>
+<pre><code>shopt --unset errexit {  <span class="sh-comment"># ignore errors</span>
+  cp ale /tmp
+  cp bean /bin
+}
+</code></pre>
+<p>In this case, the block doesn't form a new scope.</p>
+<a name="block-scope-closures"></a>
+<h4>Block Scope / Closures</h4>
+<p>However, by default, block arguments capture the frame they're defined in.
+This means they obey <em>lexical scope</em>.</p>
+<p>Consider this proc, which accepts a block, and runs it:</p>
+<pre><code>proc do-it (; ; ; block) {
+  call io-&gt;eval(block)
+}
+</code></pre>
+<p>When the block arg is passed, the enclosing stack frame is captured.  This
+means that code inside the block can use variables in the captured frame:</p>
+<pre><code>var x = 42
+do-it {         
+  echo &quot;x = $x&quot;  <span class="sh-comment"># outer x is visible LATER, when the block is run    </span>
+}
+</code></pre>
+<ul>
+<li><a href="ref/feature-index.html#Closures">Feature Index: Closures</a></li>
+</ul>
+<a name="builtin-commands"></a>
+<h3>Builtin Commands</h3>
+<p><strong>Shell builtins</strong> like <code>cd</code> and <code>read</code> are the &quot;standard library&quot; of the
+command language.  Each one takes various flags:</p>
+<pre><code>cd -L .                      <span class="sh-comment"># follow symlinks</span>
+
+echo foo | read --all        <span class="sh-comment"># read all of stdin</span>
+</code></pre>
+<p>Here are some categories of builtin:</p>
+<ul>
+<li>I/O: <code>echo  write  read</code></li>
+<li>File system: <code>cd  test</code></li>
+<li>Processes: <code>fork  wait  forkwait  exec</code></li>
+<li>Interpreter settings: <code>shopt  shvar</code></li>
+<li>Meta: <code>command  builtin  runproc  type  eval</code></li>
+</ul>
+
+<a name="expression-language-python-like-types"></a>
+<h2>Expression Language: Python-like Types</h2>
+<p>YSH expressions look and behave more like Python or JavaScript than shell.  For
+example, we write <code>if (x &lt; y)</code> instead of <code>if [ $x -lt $y ]</code>.  Expressions are
+usually surrounded by <code>( )</code>.</p>
+<p>At runtime, variables like <code>x</code> and <code>y</code> are bounded to <strong>typed data</strong>, like
+integers, floats, strings, lists, and dicts.</p>
+
+<a name="python-like-func"></a>
+<h3>Python-like <code>func</code></h3>
+<p>At the end of the <em>Command Language</em>, we saw that procs are shell-like units of
+code.  YSH also has Python-like <strong>functions</strong>, which are different than
+<code>procs</code>:</p>
+<ul>
+<li>They're defined with the <code>func</code> keyword.</li>
+<li>They're called in expressions, not in commands.</li>
+<li>They're <strong>pure</strong>, and live in the <strong>interior</strong> of a process.
+<ul>
+<li>In contrast, procs usually perform I/O, and have <strong>exterior</strong> boundaries.</li>
+</ul>
+</li>
+</ul>
+<p>The simplest function is:</p>
+<pre><code>func identity(x) {
+  return (x)  <span class="sh-comment"># parens required for typed return</span>
+}
+</code></pre>
+<p>A more complex pure function:</p>
+<pre><code>func myRepeat(s, n; special=false) {  <span class="sh-comment"># positional; named params</span>
+  var parts = []
+  for i in (0 ..&lt; n) {
+    append $s (parts)
+  }
+  var result = join(parts)
+
+  if (special) {
+    return (&quot;$result !!&quot;)
+  } else {
+    return (result)
+  }
+}
+
+echo $[myRepeat('z', 3)]  <span class="sh-comment"># =&gt; zzz</span>
+
+echo $[myRepeat('z', 3, special=true)]  <span class="sh-comment"># =&gt; zzz !!</span>
+</code></pre>
+<p>A function that mutates its argument:</p>
+<pre><code>func popTwice(mylist) {
+  call mylist-&gt;pop()
+  call mylist-&gt;pop()
+}
+
+var mylist = [3, 4]
+
+<span class="sh-comment"># The call keyword is an &quot;adapter&quot; between commands and expressions,</span>
+<span class="sh-comment"># like the = keyword.</span>
+call popTwice(mylist)
+</code></pre>
+<p>Funcs are named using <code>camelCase</code>, while procs use <code>kebab-case</code>.  See the
+<a href="style-guide.html">Style Guide</a> for more conventions.</p>
+<a name="builtin-functions"></a>
+<h4>Builtin Functions</h4>
+<p>In addition, to builtin commands, YSH has Python-like builtin <strong>functions</strong>.
+These are like the &quot;standard library&quot; for the expression language.  Examples:</p>
+<ul>
+<li>Functions that take multiple types: <code>len()  type()</code></li>
+<li>Conversions: <code>bool()   int()   float()   str()  list()   ...</code></li>
+<li>Explicit word evaluation: <code>split()  join()  glob()  maybe()</code></li>
+</ul>
+
+<a name="data-types-int-str-list-dict-obj"></a>
+<h3>Data Types: <code>Int</code>, <code>Str</code>, <code>List</code>, <code>Dict</code>, <code>Obj</code>, ...</h3>
+<p>YSH has data types, each with an expression syntax and associated methods.</p>
+<a name="methods"></a>
+<h3>Methods</h3>
+<p>Non-mutating methods are looked up with the <code>.</code> operator:</p>
+<pre><code>var line = ' ale bean '
+var caps = line.trim().upper()  <span class="sh-comment"># 'ALE BEAN'</span>
+</code></pre>
+<p>Mutating methods are looked up with a thin arrow <code>-&gt;</code>:</p>
+<pre><code>var foods = ['ale', 'bean']
+var last = foods-&gt;pop()  <span class="sh-comment"># bean</span>
+write @foods  <span class="sh-comment"># =&gt; ale</span>
+</code></pre>
+<p>You can ignore the return value with the <code>call</code> keyword:</p>
+<pre><code>call foods-&gt;pop()
+</code></pre>
+<p>That is, YSH adds mutable data structures to shell, so we have a special syntax
+for mutation.</p>
+<hr />
+<p>You can also chain functions with a fat arrow <code>=&gt;</code>:</p>
+<pre><code>var trimmed = line.trim() =&gt; upper()  <span class="sh-comment"># 'ALE BEAN'</span>
+</code></pre>
+<p>The <code>=&gt;</code> operator allows functions to appear in a natural left-to-right order,
+like methods.</p>
+<pre><code><span class="sh-comment"># list() is a free function taking one arg</span>
+<span class="sh-comment"># join() is a free function taking two args</span>
+var x = {k1: 42, k2: 43} =&gt; list() =&gt; join('/')  <span class="sh-comment"># 'K1/K2'</span>
+</code></pre>
+<hr />
+<p>Now let's go through the data types in YSH.  We'll show the syntax for
+literals, and what <strong>methods</strong> they have.</p>
+<a name="null-and-bool"></a>
+<h4>Null and Bool</h4>
+<p>YSH uses JavaScript-like spellings these three &quot;atoms&quot;:</p>
+<pre><code>var x = null
+
+var b1, b2 = true, false
+
+if (b1) {
+  echo 'yes'
+}  <span class="sh-comment"># =&gt; yes</span>
+</code></pre>
+<a name="int"></a>
+<h4>Int</h4>
+<p>There are many ways to write integers:</p>
+<pre><code>var small, big = 42, 65_536
+echo &quot;$small $big&quot;                  <span class="sh-comment"># =&gt; 42 65536</span>
+
+var hex, octal, binary = 0x0001_0000, 0o755, 0b0001_0101
+echo &quot;$hex $octal $binary&quot;           <span class="sh-comment"># =&gt; 65536 493 21</span>
+</code></pre>
+
+<a name="float"></a>
+<h4>Float</h4>
+<p>Floats are written with a decimal point:</p>
+<pre><code>var big = 3.14
+</code></pre>
+<p>You can use scientific notation, as in Python:</p>
+<pre><code>var small = 1.5e-10
+</code></pre>
+<a name="str"></a>
+<h4>Str</h4>
+<p>See the section above on <em>Three Kinds of String Literals</em>.  It described
+<code>'single quoted'</code>, <code>&quot;double ${quoted}&quot;</code>, and <code>u'J8-style\n'</code> strings; as well
+as their multiline variants.</p>
+<p>Strings are UTF-8 encoded in memory, like strings in the <a href="https://golang.org">Go
+language</a>.  There isn't a separate string and unicode type,
+as in Python.</p>
+<p>Strings are <strong>immutable</strong>, as in Python and JavaScript.  This means they only
+have <strong>transforming</strong> methods:</p>
+<pre><code>var x = s.trim()
+</code></pre>
+<p>Other methods:</p>
+<ul>
+<li><code>trimLeft()   trimRight()</code></li>
+<li><code>trimPrefix()   trimSuffix()</code></li>
+<li><code>upper()   lower()</code></li>
+<li><code>search()  leftMatch()</code> - pattern matching</li>
+<li><code>replace()   split()</code></li>
+</ul>
+<a name="list-and-arrays"></a>
+<h4>List (and Arrays)</h4>
+<p>All lists can be expressed with Python-like literals:</p>
+<pre><code>var foods = ['ale', 'bean', 'corn']
+var recursive = [1, [2, 3]]
+</code></pre>
+<p>As a special case, list of strings are called <strong>arrays</strong>.  It's often more
+convenient to write them with shell-like literals:</p>
+<pre><code><span class="sh-comment"># No quotes or commas</span>
+var foods = :| ale bean corn |
+
+<span class="sh-comment"># You can use the word language here</span>
+var other = :| foo $s *.py {alice,bob}@example.com |
+</code></pre>
+<p>Lists are <strong>mutable</strong>, as in Python and JavaScript.  So they mainly have
+mutating methods:</p>
+<pre><code>call foods-&gt;reverse()
+write -- @foods
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># corn</span>
+<span class="sh-comment"># bean</span>
+<span class="sh-comment"># ale</span>
+</code></pre>
+<a name="dict"></a>
+<h4>Dict</h4>
+<p>Dicts use syntax that's like JavaScript.  Here's a dict literal:</p>
+<pre><code>var d = {
+  name: 'bob',  <span class="sh-comment"># unquoted keys are allowed</span>
+  age: 42,
+  'key with spaces': 'val'
+}
+</code></pre>
+<p>You can use either <code>[]</code> or <code>.</code> to retrieve a value, given a key:</p>
+<pre><code>var v1 = d['name']
+var v2 = d.name                <span class="sh-comment"># shorthand for the above</span>
+var v3 = d['key with spaces']  <span class="sh-comment"># no shorthand for this</span>
+</code></pre>
+<p>(If the key doesn't exist, an error is raised.)</p>
+<p>You can change Dict values with the same 2 syntaxes:</p>
+<pre><code>set d['name'] = 'other'
+set d.name = 'fun'
+</code></pre>
+<hr />
+<p>If you want to compute a key name, use an expression inside <code>[]</code>:</p>
+<pre><code>var key = 'alice'
+var d2 = {[key ++ '_z']: 'ZZZ'}  <span class="sh-comment"># Computed key name</span>
+echo $[d2.alice_z]   <span class="sh-comment"># =&gt; ZZZ</span>
+</code></pre>
+<p>If you omit the value, its taken from a variable of the same name:</p>
+<pre><code>var d3 = {key}             <span class="sh-comment"># like {key: key}</span>
+echo &quot;name is $[d3.key]&quot;   <span class="sh-comment"># =&gt; name is alice</span>
+</code></pre>
+<p>More examples:</p>
+<pre><code>var empty = {}
+echo $[len(empty)]  <span class="sh-comment"># =&gt; 0</span>
+</code></pre>
+<p>The <code>keys()</code> and <code>values()</code> methods return new <code>List</code> objects:</p>
+<pre><code>var keys = keys(d2)      <span class="sh-comment"># =&gt; alice_z</span>
+var vals = values(d3)    <span class="sh-comment"># =&gt; alice</span>
+</code></pre>
+<a name="obj"></a>
+<h4>Obj</h4>
+<p>YSH has an <code>Obj</code> type that bundles <strong>code</strong> and <strong>data</strong>.  (In contrast, JSON
+messages are pure data, not objects.)</p>
+<p>The main purpose of objects is <strong>polymorphism</strong>:</p>
+<pre><code>var obj = makeMyObject(42)  <span class="sh-comment"># I don't know what it looks like inside</span>
+
+echo $[obj.myMethod()]      <span class="sh-comment"># But I can perform abstract operations</span>
+
+call obj-&gt;mutatingMethod()  <span class="sh-comment"># Mutation is considered special, with -&gt;</span>
+</code></pre>
+<p>YSH objects are similar to Lua and JavaScript objects.  They can be thought of
+as a linked list of <code>Dict</code> instances.</p>
+<p>Or you can say they have a <code>Dict</code> of properties, and a recursive &quot;prototype
+chain&quot; that is also an <code>Obj</code>.</p>
+<ul>
+<li><a href="ref/feature-index.html#Objects">Feature Index: Objects</a></li>
+</ul>
+<a name="place-type-out-params"></a>
+<h3><code>Place</code> type / &quot;out params&quot;</h3>
+<p>The <code>read</code> builtin can set an implicit variable <code>_reply</code>:</p>
+<pre><code>whoami | read --all  <span class="sh-comment"># sets _reply</span>
+</code></pre>
+<p>Or you can pass a <code>value.Place</code>, created with <code>&amp;</code></p>
+<pre><code>var x                      <span class="sh-comment"># implicitly initialized to null</span>
+whoami | read --all (&amp;x)   <span class="sh-comment"># mutate this &quot;place&quot;</span>
+echo who=$x  <span class="sh-comment"># =&gt; who=andy</span>
+</code></pre>
+
+<a name="operators"></a>
+<h3>Operators</h3>
+<p>YSH operators are generally the same as in Python:</p>
+<pre><code>if (10 &lt;= num_beans and num_beans &lt; 20) {
+  echo 'enough'
+}  <span class="sh-comment"># =&gt; enough</span>
+</code></pre>
+<p>YSH has a few operators that aren't in Python.  Equality can be approximate or
+exact:</p>
+<pre><code>var n = ' 42 '
+if (n ~== 42) {
+  echo 'equal after stripping whitespace and type conversion'
+}  <span class="sh-comment"># =&gt; equal after stripping whitespace type conversion</span>
+
+if (n === 42) {
+  echo &quot;not reached because strings and ints aren't equal&quot;
+}
+</code></pre>
+
+<p>Pattern matching can be done with globs (<code>~~</code> and <code>!~~</code>)</p>
+<pre><code>const filename = 'foo.py'
+if (filename ~~ '*.py') {
+  echo 'Python'
+}  <span class="sh-comment"># =&gt; Python</span>
+
+if (filename !~~ '*.sh') {
+  echo 'not shell'
+}  <span class="sh-comment"># =&gt; not shell</span>
+</code></pre>
+<p>or regular expressions (<code>~</code> and <code>!~</code>).  See the Eggex section below for an
+example of the latter.</p>
+<p>Concatenation is <code>++</code> rather than <code>+</code> because it avoids confusion in the
+presence of type conversion:</p>
+<pre><code>var n = 42 + 1    <span class="sh-comment"># string plus int does implicit conversion</span>
+echo $n           <span class="sh-comment"># =&gt; 43</span>
+
+var y = 'ale ' ++ &quot;bean $n&quot;  <span class="sh-comment"># concatenation</span>
+echo $y  <span class="sh-comment"># =&gt; ale bean 43</span>
+</code></pre>
+
+
+<a name="egg-expressions-ysh-regexes"></a>
+<h3>Egg Expressions (YSH Regexes)</h3>
+<p>An <em>Eggex</em> is a YSH expression that denotes a regular expression.  Eggexes
+translate to POSIX ERE syntax, for use with tools like <code>egrep</code>, <code>awk</code>, and <code>sed --regexp-extended</code> (GNU only).</p>
+<p>They're designed to be readable and composable.  Example:</p>
+<pre><code>var D = / digit{1,3} /
+var ip_pattern = / D '.' D '.' D '.' D'.' /
+
+var z = '192.168.0.1'
+if (z ~ ip_pattern) {           <span class="sh-comment"># Use the ~ operator to match</span>
+  echo &quot;$z looks like an IP address&quot;
+}  <span class="sh-comment"># =&gt; 192.168.0.1 looks like an IP address</span>
+
+if (z !~ / '.255' %end /) {
+  echo &quot;doesn't end with .255&quot;
+}  <span class="sh-comment"># =&gt; doesn't end with .255&quot;</span>
+</code></pre>
+<p>See the <a href="eggex.html">Egg Expressions doc</a> for details.</p>
+<a name="interlude"></a>
+<h2>Interlude</h2>
+<p>Before moving onto other YSH features, let's review what we've seen.</p>
+<a name="three-interleaved-languages"></a>
+<h3>Three Interleaved Languages</h3>
+<p>Here are the languages we saw in the last 3 sections:</p>
+<ol>
+<li><strong>Words</strong> evaluate to a string, or list of strings.  This includes:
+<ul>
+<li>literals like <code>'mystr'</code></li>
+<li>substitutions like <code>${x}</code> and <code>$(hostname)</code></li>
+<li>globs like <code>*.sh</code></li>
+</ul>
+</li>
+<li><strong>Commands</strong> are used for
+<ul>
+<li>I/O: pipelines, builtins like <code>read</code></li>
+<li>control flow: <code>if</code>, <code>for</code></li>
+<li>abstraction: <code>proc</code></li>
+</ul>
+</li>
+<li><strong>Expressions</strong> on typed data are borrowed from Python, with influence from
+JavaScript:
+<ul>
+<li>Lists: <code>['ale', 'bean']</code> or <code>:| ale bean |</code></li>
+<li>Dicts: <code>{name: 'bob', age: 42}</code></li>
+<li>Functions: <code>split('ale bean')</code> and <code>join(['pea', 'nut'])</code></li>
+</ul>
+</li>
+</ol>
+<a name="how-do-they-work-together"></a>
+<h3>How Do They Work Together?</h3>
+<p>Here are two examples:</p>
+<p>(1) In this this <em>command</em>, there are <strong>four</strong> <em>words</em>.  The fourth word is an
+<em>expression sub</em> <code>$[]</code>.</p>
+<pre><code>write hello $name $[d['age'] + 1]
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># hello</span>
+<span class="sh-comment"># world</span>
+<span class="sh-comment"># 43</span>
+</code></pre>
+<p>(2) In this assignment, the <em>expression</em> on the right hand side of <code>=</code>
+concatenates two strings.  The first string is a literal, and the second is a
+<em>command sub</em>.</p>
+<pre><code>var food = 'ale ' ++ $(echo bean | tr a-z A-Z)
+write $food  <span class="sh-comment"># =&gt; ale BEAN</span>
+</code></pre>
+<p>So words, commands, and expressions are <strong>mutually recursive</strong>.  If you're a
+conceptual person, skimming <a href="syntactic-concepts.html">Syntactic Concepts</a> may
+help you understand this on a deeper level.</p>
+
+<hr />
+<p>Let's move on from talking about <strong>code</strong>, and talk about <strong>data</strong>.</p>
+<a name="data-notation-interchange-formats"></a>
+<h2>Data Notation / Interchange Formats</h2>
+<p>In YSH, you can read and write data languages based on <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>.  This is
+a primary way to exchange messages between Unix processes.</p>
+<p>Instead of being <strong>executed</strong>, like our command/word/expression languages,
+these languages <strong>parsed</strong> as data structures.</p>
+
+<a name="utf-8"></a>
+<h3>UTF-8</h3>
+<p>UTF-8 is the foundation of our data notation.  It's the most common Unicode
+encoding, and the most consistent:</p>
+<pre><code>var x = u'hello \u{1f642}'  <span class="sh-comment"># store a UTF-8 string in memory</span>
+echo $x                     <span class="sh-comment"># send UTF-8 to stdout</span>
+</code></pre>
+<p>hello 🙂</p>
+
+<a name="json"></a>
+<h3>JSON</h3>
+<p>JSON messages are UTF-8 text.  You can encode and decode JSON with functions
+(<code>func</code> style):</p>
+<pre><code>var message = toJson({x: 42})       <span class="sh-comment"># =&gt; (Str)   '{&quot;x&quot;: 42}'</span>
+var mydict = fromJson('{&quot;x&quot;: 42}')  <span class="sh-comment"># =&gt; (Dict)  {x: 42}</span>
+</code></pre>
+<p>Or with commands (<code>proc</code> style):</p>
+<pre><code>json write ({x: 42}) &gt; foo.json     <span class="sh-comment"># writes '{&quot;x&quot;: 42}'</span>
+
+json read (&amp;mydict) &lt; foo.json      <span class="sh-comment"># create var</span>
+= mydict                            <span class="sh-comment"># =&gt; (Dict)  {x: 42}</span>
+</code></pre>
+<a name="j8-notation"></a>
+<h3>J8 Notation</h3>
+<p>But JSON isn't quite enough for a principled shell.</p>
+<ul>
+<li>Traditional Unix tools like <code>grep</code> and <code>awk</code> operate on streams of <strong>lines</strong>.
+In YSH, to avoid data-dependent bugs, we want a reliable way of <strong>quoting</strong>
+lines.</li>
+<li>In YSH, we also want to represent <strong>binary</strong> data, not just text.  When you
+read a Unix file, it may or may not be text.</li>
+</ul>
+<p>So we borrow JSON-style strings, and create <a href="/cross-ref.html?tag=j8-notation#j8-notation">J8 Notation</a>.  Slogans:</p>
+<ul>
+<li><em>Deconstructing and Augmenting JSON</em></li>
+<li><em>Fixing the JSON-Unix Mismatch</em></li>
+</ul>
+<a name="j8-lines"></a>
+<h4>J8 Lines</h4>
+<p><em>J8 Lines</em> are a building block of J8 Notation.  If you have a file
+<code>lines.txt</code>:</p>
+<pre>
+  doc/hello.md
+ "doc/with spaces.md"
+b'doc/with byte \yff.md'
+</pre>
+<p>Then you can decode it with <em>split command sub</em> (mentioned above):</p>
+<pre><code>var decoded = @(cat lines.txt)
+</code></pre>
+<p>This file has:</p>
+<ol>
+<li>An unquoted string</li>
+<li>A JSON string with <code>&quot;double quotes&quot;</code></li>
+<li>A J8-style string: <code>u'unicode'</code> or <code>b'bytes'</code></li>
+</ol>
+
+<a name="json8-is-tree-shaped"></a>
+<h4>JSON8 is Tree-Shaped</h4>
+<p>JSON8 is just like JSON, but it allows J8-style strings:</p>
+<pre>
+{ "foo":  "hi \uD83D\uDE42"}  # valid JSON, and valid JSON8
+{u'foo': u'hi \u{1F642}'   }  # valid JSON8, with J8-style strings
+</pre>
+
+<a name="tsv8-is-table-shaped"></a>
+<h4>TSV8 is Table-Shaped</h4>
+<p>(TODO: not yet implemented.)</p>
+<p>YSH supports data notation for tables:</p>
+<ol>
+<li>Plain TSV files, which are untyped.  Every column has string data.
+<ul>
+<li>Cells with tabs, newlines, and binary data are a problem.</li>
+</ul>
+</li>
+<li>Our extension <a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a>, which supports typed data.
+<ul>
+<li>It uses JSON notation for booleans, integers, and floats.</li>
+<li>It uses J8 strings, which can represent any string.</li>
+</ul>
+</li>
+</ol>
+
+<a name="ysh-modules-are-files"></a>
+<h2>YSH Modules are Files</h2>
+<p>A module is a <strong>file</strong> of source code, like <code>lib/myargs.ysh</code>.  The <code>use</code>
+builtin turns it into an <code>Obj</code> that can be invoked and inspected:</p>
+<pre><code>use myargs.ysh
+
+myargs proc1 --flag val   <span class="sh-comment"># module name becomes a prefix, via __invoke__</span>
+var alias = myargs.proc1  <span class="sh-comment"># module has attributes</span>
+</code></pre>
+<p>You can import specific names with the <code>--pick</code> flag:</p>
+<pre><code>use myargs.ysh --pick p2 p3
+
+p2
+p3
+</code></pre>
+<ul>
+<li><a href="ref/feature-index.html#Modules">Feature Index: Modules</a></li>
+</ul>
+<a name="the-runtime-shared-by-osh-and-ysh"></a>
+<h2>The Runtime Shared by OSH and YSH</h2>
+<p>Although we describe OSH and YSH as different languages, they use the <strong>same</strong>
+interpreter under the hood.</p>
+<p>This interpreter has many <code>shopt</code> booleans to control behavior, like <code>shopt --set parse_paren</code>.  The group <code>shopt --set ysh:all</code> flips all booleans to make
+<code>bin/osh</code> behave like <code>bin/ysh</code>.</p>
+<p>Understanding this common runtime, and its interface to the Unix kernel, will
+help you understand <strong>both</strong> languages!</p>
+<a name="interpreter-data-model"></a>
+<h3>Interpreter Data Model</h3>
+<p>The <a href="interpreter-state.html">Interpreter State</a> doc is under construction.  It
+will cover:</p>
+<ul>
+<li>The <strong>call stack</strong> for OSH and YSH
+<ul>
+<li>Each <em>stack frame</em> is a <code>{name -&gt; cell}</code> mapping.</li>
+</ul>
+</li>
+<li>Each cell has a <strong>value</strong>, with boolean flags
+<ul>
+<li>OSH has types <code>Str BashArray BashAssoc</code>, and flags <code>readonly export nameref</code>.</li>
+<li>YSH has types <code>Bool Int Float Str List Dict Obj ...</code>, and the <code>readonly</code>
+flag.</li>
+</ul>
+</li>
+<li>YSH <strong>namespaces</strong>
+<ul>
+<li>Modules with <code>use</code></li>
+<li>Builtin functions and commands</li>
+<li>ENV</li>
+</ul>
+</li>
+<li>Shell <strong>options</strong>
+<ul>
+<li>Boolean options with <code>shopt</code>: <code>parse_paren</code>, <code>simple_word_eval</code>, etc.</li>
+<li>String options with <code>shvar</code>: <code>IFS</code>, <code>PATH</code></li>
+</ul>
+</li>
+<li><strong>Registers</strong> that store interpreter state
+<ul>
+<li><code>$?</code> and <code>_error</code></li>
+<li><code>$!</code> for the last PID</li>
+<li><code>_this_dir</code></li>
+<li><code>_reply</code></li>
+</ul>
+</li>
+</ul>
+<a name="process-model-the-kernel"></a>
+<h3>Process Model (the kernel)</h3>
+<p>The <a href="process-model.html">Process Model</a> doc is <strong>under construction</strong>.  It will cover:</p>
+<ul>
+<li>Simple Commands, <code>exec</code></li>
+<li>Pipelines.  #<a href="#blog-tag">shell-the-good-parts</a></li>
+<li><code>fork</code>, <code>forkwait</code></li>
+<li>Command and process substitution</li>
+<li>Related:
+<ul>
+<li><a href="xtrace.html">Tracing execution in Oils</a> (xtrace), which divides
+process-based concurrency into <strong>synchronous</strong> and <strong>async</strong> constructs.</li>
+<li><a href="http://www.oilshell.org/blog/2020/04/comics.html">Three Comics For Understanding Unix
+Shell</a> (blog)</li>
+</ul>
+</li>
+</ul>
+
+<a name="advanced-reflecting-on-the-interpreter"></a>
+<h3>Advanced: Reflecting on the Interpreter</h3>
+<p>You can reflect on the interpreter with APIs like <code>io-&gt;eval()</code> and
+<code>vm.getFrame()</code>.</p>
+<ul>
+<li><a href="ref/feature-index.html#Reflection">Feature Index: Reflection</a></li>
+</ul>
+<p>This allows YSH to be a language for creating other languages.  (Ruby, Tcl, and
+Racket also have this flavor.)</p>
+
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>What have we described in this tour?</p>
+<p>YSH is a programming language that evolved from Unix shell.  But you can
+&quot;forget&quot; the bad parts of shell like <code>[ $x -lt $y ]</code>.</p>
+
+<p>Instead, focus on these central concepts:</p>
+<ol>
+<li>Interleaved <em>word</em>, <em>command</em>, and <em>expression</em> languages.</li>
+<li>A standard library of <em>builtin commands</em>, as well as <em>builtin functions</em></li>
+<li>Languages for <em>data</em>: J8 Notation, including JSON8 and TSV8</li>
+<li>A <em>runtime</em> shared by OSH and YSH</li>
+</ol>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="related-docs"></a>
+<h3>Related Docs</h3>
+<ul>
+<li><a href="idioms.html">YSH vs. Shell Idioms</a> - YSH side-by-side with shell.</li>
+<li><a href="language-influences.html">YSH Language Influences</a> - In addition to shell,
+Python, and JavaScript, YSH is influenced by Ruby, Perl, Awk, PHP, and more.</li>
+<li><a href="syntax-feelings.html">A Feel For YSH Syntax</a> - Some thoughts that may help
+you remember the syntax.</li>
+<li><a href="warts.html">YSH Language Warts</a> documents syntax that may be surprising.</li>
+</ul>
+<a name="ysh-script-template"></a>
+<h3>YSH Script Template</h3>
+<p>YSH can be used to write simple &quot;shell scripts&quot; or longer programs.  It has
+<em>procs</em> and <em>modules</em> to help with the latter.</p>
+<p>A module is just a file, like this:</p>
+<pre><code><span class="sh-comment">#!/usr/bin/env ysh</span>
+<span class="sh-comment">### Deploy script</span>
+
+use $_this_dir/lib/util.ysh --pick log
+
+const DEST = '/tmp/ysh-tour'
+
+proc my-sync(...files) {
+  <span class="sh-comment">### Sync files and show which ones</span>
+
+  cp --verbose @files $DEST
+}
+
+proc main {
+  mkdir -p $DEST
+
+  touch {foo,bar}.py {build,test}.sh
+
+  log &quot;Copying source files&quot;
+  my-sync *.py *.sh
+
+  if test --dir /tmp/logs {
+    cd /tmp/logs
+
+    log &quot;Copying logs&quot;
+    my-sync *.log
+  }
+}
+
+if is-main {                    <span class="sh-comment"># The only top-level statement</span>
+  main @ARGV
+}
+</code></pre>
+
+<p>You wouldn't bother with the boilerplate for something this small.  But this
+example illustrates the basic idea: the top level often contains these words:
+<code>use</code>, <code>const</code>, <code>proc</code>, and <code>func</code>.</p>
+
+<a name="ysh-features-not-shown"></a>
+<h3>YSH Features Not Shown</h3>
+<a name="advanced"></a>
+<h4>Advanced</h4>
+<p>These shell features are part of YSH, but aren't shown above:</p>
+<ul>
+<li>The <code>fork</code> and <code>forkwait</code> builtins, for concurrent execution and subshells.</li>
+<li>Process Substitution: <code>diff &lt;(sort left.txt) &lt;(sort right.txt)</code></li>
+</ul>
+<a name="deprecated-shell-constructs"></a>
+<h4>Deprecated Shell Constructs</h4>
+<p>The shared interpreter supports many shell constructs that are deprecated:</p>
+<ul>
+<li>YSH code uses shell's <code>||</code> and <code>&amp;&amp;</code> in limited circumstances, since <code>errexit</code>
+is on by default.</li>
+<li>Assignment builtins like <code>local</code> and <code>declare</code>.  Use YSH keywords.</li>
+<li>Boolean expressions like <code>[[ x =~ $pat ]]</code>.  Use YSH expressions.</li>
+<li>Shell arithmetic like <code>$(( x + 1 ))</code> and <code>(( y = x ))</code>.  Use YSH expressions.</li>
+<li>The <code>until</code> loop can always be replaced with a <code>while</code> loop</li>
+<li>Most of what's in <code>${}</code> can be written in other ways.  For example
+<code>${s#/tmp}</code> could be <code>s =&gt; removePrefix('/tmp')</code> (TODO).</li>
+</ul>
+<a name="not-yet-implemented"></a>
+<h4>Not Yet Implemented</h4>
+<p>This document mentions a few constructs that aren't yet implemented.  Here's a
+summary:</p>
+<pre><code class="language-none"># Unimplemented syntax:
+
+echo ${x|html}               # formatters
+
+echo ${x %.2f}               # statically-parsed printf
+
+var x = &quot;&lt;p&gt;$x&lt;/p&gt;&quot;html      
+echo &quot;&lt;p&gt;$x&lt;/p&gt;&quot;html         # tagged string
+
+var x = 15 Mi                # units suffix
+</code></pre>
+
+    <div id="build-timestamp">
+      <i>Generated on Fri, 02 May 2025 00:17:40 -0400</i>
+    </div>
+  </body>
+</html>

@@ -451,6 +451,18 @@ them as &quot;procedures&quot; or &quot;processes&quot;.</p>
 <li>Unlike shell functions, they have named parameters and lack <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic
 scope</a>.</li>
 </ul>
+<p><a name=0-dispatch>#0-dispatch</a><br/>
+<a href="//www.oilshell.org/blog/2021/08/xargs.html">$0 Dispatch Pattern</a> —
+A shell programming pattern for wrapping a shell function (or YSH proc) in an <strong>OS process</strong>.</p>
+<p>It's useful for tools like <code>xargs</code>, <code>sudo</code>, etc. to &quot;call back&quot; into shell.</p>
+<p>When using this idiom, the dispatch line may be:</p>
+<ul>
+<li><code>&quot;$@&quot;</code> in plain shell,</li>
+<li><code>task-five &quot;$@&quot;</code> when using the OSH stdlib</li>
+<li><code>runproc @ARGV</code> when using YSH.</li>
+</ul>
+<p>To invoke a process wrapped in a function, use <code>$0 myproc</code>.</p>
+<p>See the example at <a href="https://github.com/oils-for-unix/blog-code/blob/master/xargs/demo.sh">https://github.com/oils-for-unix/blog-code/blob/master/xargs/demo.sh</a>.</p>
 <a name="shell-implementations"></a>
 <h3>Shell Implementations</h3>
 <p><a name=thompson-shell>#thompson-shell</a><br/>

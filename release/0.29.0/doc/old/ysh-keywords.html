@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oil Keywords</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/ysh-keywords.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.29.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Oil Keywords</h1>
+<p>Related:</p>
+<ul>
+<li><a href="proc-block-func.html">Procs and Blocks</a></li>
+<li><a href="variables.html">Variables</a></li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#two-styles-of-variable-declaration-and-assignment">Two Styles of Variable Declaration and Assignment</a></div>
+  <div class="toclevel2"><a href="#legacy-style-readonly-local-nameval">Legacy Style: <code>readonly</code>, <code>local</code>, <code>name=val</code></a></div>
+  <div class="toclevel2"><a href="#oils-style-const-var-setvar-setglobal-and-setref">Oil's Style: <code>const</code>, <code>var</code>, <code>setvar</code>, <code>setglobal</code>, and <code>setref</code></a></div>
+  <div class="toclevel1"><a href="#expressions-go-on-the-right">Expressions Go on the Right</a></div>
+  <div class="toclevel2"><a href="#pretty-prints-an-expression"><code>=</code> Pretty Prints an Expression</a></div>
+  <div class="toclevel2"><a href="#_-ignores-an-expression"><code>_</code> Ignores an Expression</a></div>
+  <div class="toclevel1"><a href="#other-kinds-of-assignment">Other Kinds of Assignment</a></div>
+  <div class="toclevel2"><a href="#auto-for-autovivification-future-not-implemented"><code>auto</code> for Autovivification (future, not implemented)</a></div>
+  <div class="toclevel1"><a href="#notes-and-examples">Notes and Examples</a></div>
+  <div class="toclevel2"><a href="#mutating-arrays">Mutating Arrays</a></div>
+  <div class="toclevel2"><a href="#mutating-associative-arrays">Mutating Associative Arrays</a></div>
+  <div class="toclevel1"><a href="#proc-disables-dynamic-scope"><code>proc</code> Disables Dynamic Scope</a></div>
+</div>
+<a name="two-styles-of-variable-declaration-and-assignment"></a>
+<h2>Two Styles of Variable Declaration and Assignment</h2>
+<a name="legacy-style-readonly-local-nameval"></a>
+<h3>Legacy Style: <code>readonly</code>, <code>local</code>, <code>name=val</code></h3>
+<p>They don't allow expressions on the right.</p>
+<a name="oils-style-const-var-setvar-setglobal-and-setref"></a>
+<h3>Oil's Style: <code>const</code>, <code>var</code>, <code>setvar</code>, <code>setglobal</code>, and <code>setref</code></h3>
+<p>See the doc on <a href="variables.html">variables</a> for details.</p>
+<a name="expressions-go-on-the-right"></a>
+<h2>Expressions Go on the Right</h2>
+<p>Just like with assignments.</p>
+<a name="pretty-prints-an-expression"></a>
+<h3><code>=</code> Pretty Prints an Expression</h3>
+<p>Useful interactively.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= 'foo'</span>
+(Str)   'foo'
+
+<span class="sh-prompt">$</span> <span class="sh-command">= :| one two |</span>
+(StrArray)   ['one', 'two']
+</code></pre>
+<a name="_-ignores-an-expression"></a>
+<h3><code>_</code> Ignores an Expression</h3>
+<p>Think of this:</p>
+<pre><code>_ f(x)
+</code></pre>
+<p>as a shortcut for:</p>
+<pre><code>_ = f(x)  <span class="sh-comment"># assign to &quot;meh&quot; variable</span>
+</code></pre>
+<a name="other-kinds-of-assignment"></a>
+<h2>Other Kinds of Assignment</h2>
+<a name="auto-for-autovivification-future-not-implemented"></a>
+<h3><code>auto</code> for Autovivification (future, not implemented)</h3>
+<pre><code>auto count += 1
+
+auto hist['key'] += 1
+
+auto total += 3.5
+auto hist['key'] += 4.6
+</code></pre>
+<a name="notes-and-examples"></a>
+<h2>Notes and Examples</h2>
+<a name="mutating-arrays"></a>
+<h3>Mutating Arrays</h3>
+<p>Use <code>setvar</code>:</p>
+<p>Shell:</p>
+<pre><code>a=(one two three)
+a[0]=zz
+</code></pre>
+<p>Oil:</p>
+<pre><code>var a = :| one two three |
+setvar a[0] = 'zz'  <span class="sh-comment"># also acceptable</span>
+</code></pre>
+<a name="mutating-associative-arrays"></a>
+<h3>Mutating Associative Arrays</h3>
+<p>Shell:</p>
+<pre><code>declare -A A=(['name']=foo ['type']='dir')
+A['type']=file
+</code></pre>
+<p>Oil:</p>
+<pre><code>var A = {name: 'foo', type: 'dir'}
+setvar A['type'] = 'file'  <span class="sh-comment"># also acceptable</span>
+</code></pre>
+<a name="proc-disables-dynamic-scope"></a>
+<h2><code>proc</code> Disables Dynamic Scope</h2>
+<p>Recall that <a href="proc-block-func.html">procs</a> are the way to declare shell-like
+functions in Oil.</p>
+<pre><code>proc p {
+  echo one
+  echo two
+}
+
+p &gt; file.txt
+</code></pre>
+<p>They mostly look like and work like shell functions, but they change scoping rules.</p>
+
+    <div id="build-timestamp">
+      <i>Generated on Fri, 02 May 2025 00:17:40 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Error Catalog, With Hints</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/error-catalog.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.29.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils Error Catalog, With Hints</h1>
+<p>This doc lists errors from Oils (both <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>), with
+hints to help you fix them.</p>
+<p>Each error is associated with a code like <code>OILS-ERR-42</code>, a string that search
+engines should find.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#how-to-contribute">How to Contribute</a></div>
+  <div class="toclevel2"><a href="#to-preview-this-doc">To Preview this Doc</a></div>
+  <div class="toclevel1"><a href="#parse-errors-rejected-input">Parse Errors - Rejected Input</a></div>
+  <div class="toclevel2"><a href="#oils-err-10">OILS-ERR-10</a></div>
+  <div class="toclevel2"><a href="#oils-err-11">OILS-ERR-11</a></div>
+  <div class="toclevel2"><a href="#oils-err-12">OILS-ERR-12</a></div>
+  <div class="toclevel2"><a href="#oils-err-13">OILS-ERR-13</a></div>
+  <div class="toclevel2"><a href="#oils-err-14">OILS-ERR-14</a></div>
+  <div class="toclevel2"><a href="#oils-err-15">OILS-ERR-15</a></div>
+  <div class="toclevel2"><a href="#oils-err-16">OILS-ERR-16</a></div>
+  <div class="toclevel1"><a href="#runtime-errors-traditional-shell">Runtime Errors - Traditional Shell</a></div>
+  <div class="toclevel2"><a href="#oils-err-100">OILS-ERR-100</a></div>
+  <div class="toclevel2"><a href="#oils-err-101">OILS-ERR-101</a></div>
+  <div class="toclevel2"><a href="#oils-err-102">OILS-ERR-102</a></div>
+  <div class="toclevel1"><a href="#runtime-errors-oils-and-ysh">Runtime Errors - Oils and YSH</a></div>
+  <div class="toclevel2"><a href="#oils-err-200">OILS-ERR-200</a></div>
+  <div class="toclevel2"><a href="#oils-err-201">OILS-ERR-201</a></div>
+  <div class="toclevel2"><a href="#oils-err-202">OILS-ERR-202</a></div>
+  <div class="toclevel2"><a href="#oils-err-203">OILS-ERR-203</a></div>
+  <div class="toclevel2"><a href="#oils-err-204">OILS-ERR-204</a></div>
+  <div class="toclevel1"><a href="#runtime-errors-strictall">Runtime Errors: <code>strict:all</code></a></div>
+  <div class="toclevel2"><a href="#oils-err-300">OILS-ERR-300</a></div>
+  <div class="toclevel2"><a href="#oils-err-301">OILS-ERR-301</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#kinds-of-errors-from-oils">Kinds of Errors from Oils</a></div>
+  <div class="toclevel2"><a href="#contributors">Contributors</a></div>
+</div>
+<a name="how-to-contribute"></a>
+<h2>How to Contribute</h2>
+<p>If you see an error that you don't understand:</p>
+<ol>
+<li>Ask a question on <code>#oil-help</code> on <a href="/cross-ref.html?tag=zulip#zulip">Zulip</a>.  What's the problem,
+and what's the solution?</li>
+<li>Then <code>grep</code> the source code for the confusing error message.  Tag it with a
+string like <code>OILS-ERR-43</code>, picking a new number according to the conventions
+below.</li>
+<li>Add a tagged section below, with hints and explanations.
+<ul>
+<li>Quote the error message.  You may want copy and paste from the output of
+<code>doc/error-catalog.sh</code>, or
+<code>test/{parse,runtime,ysh-parse,ysh-runtime}-errors.sh</code>.  Add an HTML
+comment <code>&lt;!-- --&gt;</code> about that.</li>
+<li>Link to relevant sections in the <a href="ref/index.html"><strong>Oils Reference</strong></a>.</li>
+</ul>
+</li>
+<li>Optionally, add your name to the acknowledgements list at the end of this
+doc.</li>
+</ol>
+<p>Note that error messages are <strong>hard</strong> to write, because a single error could
+result from many different user <strong>intentions</strong>!</p>
+<a name="to-preview-this-doc"></a>
+<h3>To Preview this Doc</h3>
+<p>Right now I use this command:</p>
+<pre><code>build/doc.sh split-and-render doc/error-catalog.md
+</code></pre>
+<p>Then paste this into your browser:</p>
+<pre><code>file:///home/andy/git/oilshell/oil/_release/VERSION/doc/error-catalog.html
+</code></pre>
+<p>(Replace with your home dir)</p>
+<a name="parse-errors-rejected-input"></a>
+<h2>Parse Errors - Rejected Input</h2>
+<p>Roughly speaking, a parse error means that text input was <strong>rejected</strong>, so the
+shell didn't try to do anything.</p>
+<p>Examples:</p>
+<pre><code>echo )   <span class="sh-comment"># Shell syntax error</span>
+
+type -z  <span class="sh-comment"># -z flag not accepted</span>
+</code></pre>
+<p>These error codes start at <code>10</code>.</p>
+<a name="oils-err-10"></a>
+<h3>OILS-ERR-10</h3>
+
+<pre><code>      setvar x = true
+             ^
+[ -c flag ]:3: setvar couldn't find matching 'var x' (OILS-ERR-10)
+</code></pre>
+<ul>
+<li>Did you forget to declare the name with the <a href="ref/chap-ysh-cmd.html#var">var</a>
+keyword?</li>
+<li>Did you mean to use the <a href="ref/chap-ysh-cmd.html#setglobal">setglobal</a>
+keyword?</li>
+</ul>
+<p>Related help topics:</p>
+<ul>
+<li><a href="ref/chap-ysh-cmd.html#setvar">setvar</a></li>
+</ul>
+<a name="oils-err-11"></a>
+<h3>OILS-ERR-11</h3>
+
+<pre><code>  echo $'\z'
+         ^
+[ -c flag ]:1: Invalid char escape in C-style string literal (OILS-ERR-11)
+</code></pre>
+<ul>
+<li>Did you mean <code>$'\\z'</code>?  Backslashes must be escaped in <code>$''</code> and <code>u''</code> and
+<code>b''</code> strings.</li>
+<li>Did you mean something like <code>$'\n'</code>?  Only valid escapes are accepted in YSH.</li>
+</ul>
+<p>Related help topics:</p>
+<ul>
+<li><a href="ref/chap-word-lang.html#osh-string">osh-string</a> (word language)</li>
+<li><a href="ref/chap-expr-lang.html#ysh-string">ysh-string</a> (expression language)</li>
+</ul>
+<a name="oils-err-12"></a>
+<h3>OILS-ERR-12</h3>
+
+<pre><code>  echo &quot;\z&quot;
+        ^
+[ -c flag ]:1: Invalid char escape in double quoted string (OILS-ERR-12)
+</code></pre>
+<ul>
+<li>Did you mean <code>&quot;\\z&quot;</code>?  Backslashes must be escaped in double-quoted strings.</li>
+<li>Did you mean something like <code>&quot;\$&quot;</code>?  Only valid escapes are accepted in YSH.</li>
+<li>Did you to use single quotes, like <code>u'\n'</code> rather than <code>u&quot;\n&quot;</code>?</li>
+</ul>
+<p>Related help topics:</p>
+<ul>
+<li><a href="ref/chap-word-lang.html#osh-string">osh-string</a> (word language)</li>
+<li><a href="ref/chap-expr-lang.html#ysh-string">ysh-string</a> (expression language)</li>
+</ul>
+<a name="oils-err-13"></a>
+<h3>OILS-ERR-13</h3>
+
+<pre><code>  echo \z
+       ^~
+[ -c flag ]:1: Invalid char escape in unquoted word (OILS-ERR-13)
+</code></pre>
+<ul>
+<li>Did you mean <code>\\z</code>?  Backslashes must be escaped in unquoted words.</li>
+<li>Did you mean something like <code>\$</code>?  Only valid escapes are accepted in YSH.</li>
+</ul>
+<a name="oils-err-14"></a>
+<h3>OILS-ERR-14</h3>
+
+<pre><code>  if ((1 &gt; 0 &amp;&amp; 43 &gt; 42)); then echo yes; fi
+     ^~
+[ -c flag ]:1: Bash (( not allowed in YSH (parse_dparen, see OILS-ERR-14 for wart)
+</code></pre>
+<p>Two likely causes:</p>
+<ul>
+<li>Do you need to rewrite bash arithmetic as YSH arithmetic (which is
+Python-like)?</li>
+<li>Do you need to work around an <a href="warts.html#two-left-parens-should-be-separated-by-space">unfortunate wart</a> in YSH?</li>
+</ul>
+<p>Examples:</p>
+<pre><code>if (1 &gt; 0 and 43 &gt; 42) {  <span class="sh-comment"># YSH-style</span>
+  echo yes
+}
+
+if ( (x + 1) &lt; n) {  <span class="sh-comment"># space between ( ( avoids ((</span>
+  echo yes
+}
+</code></pre>
+<a name="oils-err-15"></a>
+<h3>OILS-ERR-15</h3>
+<pre><code>      if (a || b &amp;&amp; c) {
+            ^~
+[ -c flag ]:2: Use 'or' in expression mode (OILS-ERR-15)
+</code></pre>
+<p>Expression mode uses <code>not or and</code>, rather than <code>! || &amp;&amp;</code>.  See <a href="command-vs-expression-mode.html">Command vs.
+Expression Mode</a> for details.</p>
+<p>No:</p>
+<pre><code>if (!a || b &amp;&amp; c) {
+  echo no
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code>if (not a or b and c) {
+  echo yes
+}
+</code></pre>
+<p>Command mode is the opposite; it uses <code>! || &amp;&amp;</code>, rather than <code>not or and</code>:</p>
+<p>No:</p>
+<pre><code><span class="sh-comment"># Command mode</span>
+if not test --dir a or test --dir b and test --dir c {
+  echo no
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code><span class="sh-comment"># Command mode</span>
+if ! test --dir a || test --dir b &amp;&amp; test --dir c {
+  echo yes
+}
+</code></pre>
+<a name="oils-err-16"></a>
+<h3>OILS-ERR-16</h3>
+<pre><code>  for x in (1 .. 5) {
+              ^~
+[ -c flag ]:1: Use ..&lt; for half-open range, or ..= for closed range (OILS-ERR-16)
+</code></pre>
+
+<p>There are two ways to construct a <a href="ref/chap-expr-lang#range">Range</a>. The <code>..&lt;</code>
+operator is for half-open ranges and the <code>..=</code> operator is for closed ranges:</p>
+<pre><code>for i in (0 ..&lt; 3) {
+  echo $i
+}
+=&gt; 0
+=&gt; 1
+=&gt; 2
+
+for i in (0 ..= 3) {
+  echo $i
+}
+=&gt; 0
+=&gt; 1
+=&gt; 2
+=&gt; 3
+</code></pre>
+<a name="runtime-errors-traditional-shell"></a>
+<h2>Runtime Errors - Traditional Shell</h2>
+<p>These errors may occur in shells like <a href="/cross-ref.html?tag=bash#bash">bash</a> and <a href="/cross-ref.html?tag=zsh#zsh">zsh</a>.</p>
+<p>They're numbered starting from <code>100</code>.  (If we have more than 90 parse errors,
+we can start a new section, like <code>300</code>.)</p>
+<a name="oils-err-100"></a>
+<h3>OILS-ERR-100</h3>
+
+<pre><code>  findz
+  ^~~~~
+[ -c flag ]:1: Command 'findz' not found (OILS-ERR-100)
+</code></pre>
+<p>The shell tried to execute an external command, but couldn't.</p>
+<ul>
+<li>Did you misspell a command name?</li>
+<li>Did you misspell a shell function or a YSH <code>proc</code>?</li>
+<li>Is the file in your <code>$PATH</code>?  The <code>PATH</code> variable is a colon-separated list
+of directories, where executable files may live.</li>
+<li>Is <code>findz</code> file executable bit set?  (<code>chmod +x</code>)</li>
+</ul>
+<a name="oils-err-101"></a>
+<h3>OILS-ERR-101</h3>
+
+<p>Let's look at <strong>three</strong> instances of this error.</p>
+<pre><code>  declare -A assoc; assoc[x]=1
+                    ^~~~~~
+[ -c flag ]:1: fatal: Assoc array keys must be strings: $x 'x' &quot;$x&quot; etc. (OILS-ERR-101)
+</code></pre>
+<ul>
+<li>Is <code>x</code> a string?  Then add quotes: <code>assoc['x']=1</code></li>
+<li>Is <code>x</code> a variable?  Then write: <code>assoc[$x]=1</code></li>
+</ul>
+<hr />
+<p>Same idea here:</p>
+<pre><code>  declare -A assoc; echo ${assoc[x]}
+                                 ^
+[ -c flag ]:1: fatal: Assoc array keys must be strings: $x 'x' &quot;$x&quot; etc. (OILS-ERR-101)
+</code></pre>
+<ul>
+<li>Is <code>x</code> a string?  Then add quotes: <code>${assoc['x']}</code></li>
+<li>Is <code>x</code> a variable?  Then write: <code>${assoc[$x]}</code></li>
+</ul>
+<hr />
+<p>The third example is <strong>tricky</strong> because <code>unset</code> takes a <strong>string</strong>.  There's an
+extra level of parsing, which:</p>
+<ul>
+<li>Implies an extra level of quoting</li>
+<li>Causes OSH to display the following <strong>nested</strong> error message</li>
+</ul>
+<pre><code>  assoc[k]
+       ^
+[ dynamic LHS word at line 1 of [ -c flag ] ]:1
+
+  declare -A assoc; key=k; unset &quot;assoc[$key]&quot;
+                                 ^
+[ -c flag ]:1: fatal: Assoc array keys must be strings: $x 'x' &quot;$x&quot; etc. (OILS-ERR-101)
+</code></pre>
+<p>To fix it, consider using <strong>single quotes</strong>:</p>
+<pre><code>unset 'assoc[$key]'
+</code></pre>
+<hr />
+<ul>
+<li>This is the error in <a href="https://www.oilshell.org/blog/2016/10/20.html">Parsing Bash is
+Undecidable</a> (2016)</li>
+<li>Also mentioned in <a href="known-differences.html">Known Differences</a></li>
+</ul>
+<a name="oils-err-102"></a>
+<h3>OILS-ERR-102</h3>
+<pre><code>  var cmd = ^(seq 3)
+              ^~~
+[ stdin ]:1: Command 'seq' not found in pure mode (OILS-ERR-102)
+</code></pre>
+<p>The shell tried to execute a command in pure mode, but couldn't.</p>
+<p>In pure mode, only user-defined procs and a few builtin commands can be the &quot;first word&quot;.</p>
+<ul>
+<li>Did you misspell a proc name?</li>
+<li>Are you trying to run an external command?  Such commands aren't allowed in
+pure mode.</li>
+</ul>
+<a name="runtime-errors-oils-and-ysh"></a>
+<h2>Runtime Errors - Oils and YSH</h2>
+<p>These errors don't occur in shells like <a href="/cross-ref.html?tag=bash#bash">bash</a> and <a href="/cross-ref.html?tag=zsh#zsh">zsh</a>.</p>
+<p>They may involve Python-like <strong>expressions</strong> and <strong>typed data</strong>.</p>
+<p>They're numbered starting from <code>200</code>.</p>
+<a name="oils-err-200"></a>
+<h3>OILS-ERR-200</h3>
+
+<pre><code>  cat (&quot;myfile&quot;)
+      ^
+[ -c flag ]:1: fatal: 'cat' appears to be external. External commands don't accept typed args (OILS-ERR-200)
+</code></pre>
+<ul>
+<li>Builtin commands and user-defined procs may accept <a href="ref/chap-cmd-lang.html#typed-arg">typed
+args</a>, but external commands never do.</li>
+<li>Did you misspell a <a href="ref/chap-cmd-lang.html#proc-def">YSH proc</a>? If a name is
+not found, YSH assumes it's an external command.</li>
+<li>Did you forget to source a file that contains the proc or shell function you
+wanted to run?</li>
+</ul>
+<a name="oils-err-201"></a>
+<h3>OILS-ERR-201</h3>
+
+<pre><code>  = &quot;age: &quot; + &quot;100&quot;
+            ^
+[ -c flag ]:1: fatal: Binary operator expected numbers, got Str and Str (OILS-ERR-201)
+
+  = 100 + myvar
+        ^
+[ -c flag ]:2: fatal: Binary operator expected numbers, got Int and Str (OILS-ERR-201)
+</code></pre>
+<ul>
+<li>Did you mean to use <code>++</code> to concatenate strings/lists?</li>
+<li>The arithmetic operators <a href="ref/chap-expr-lang.html#ysh-arith">can coerce string operands to
+numbers</a>. However, if you are operating on
+user provided input, it may be a better idea to first parse that input with
+<a href="ref/chap-builtin-func.html#int"><code>int()</code></a> or
+<a href="ref/chap-builtin-func.html#float"><code>float()</code></a>.</li>
+</ul>
+<a name="oils-err-202"></a>
+<h3>OILS-ERR-202</h3>
+
+<pre><code>  pp (42.0 === x)
+                ^~~
+[ -c flag ]:3: fatal: Equality isn't defined on Float values (OILS-ERR-202)
+</code></pre>
+<p>Floating point numbers shouldn't be tested for equality.  Alternatives:</p>
+<pre><code>= abs(42.0 - x) &lt; 0.1
+= floatEquals(42.0, x) 
+</code></pre>
+<a name="oils-err-203"></a>
+<h3>OILS-ERR-203</h3>
+
+<pre><code>  var mylist = [1,2,3]; write $[mylist]
+                              ^~
+[ -c flag ]:1: fatal: Expr sub got a List, which can't be stringified (OILS-ERR-203)
+</code></pre>
+<ul>
+<li>Did you mean to use <code>@mylist</code> instead of <code>$mylist</code>?</li>
+<li>Did you mean to use <code>@[myfunc()]</code> instead of <code>$[myfunc()]</code>?</li>
+<li>Did you mean <code>$[join(mylist)]</code>?</li>
+</ul>
+<p>Or:</p>
+<ul>
+<li>Do you have an element that can't be stringified in a list, like <code>['good', {bad: true}]</code>?</li>
+</ul>
+<a name="oils-err-204"></a>
+<h3>OILS-ERR-204</h3>
+
+<pre><code>  x=$(date)
+    ^~
+impure.sh:1: fatal: Command subs aren't allowed in pure mode (OILS-ERR-204)
+</code></pre>
+<p>In <strong>pure mode</strong>, the shell can't do I/O.  It's intended for config file
+evaluation and pure functions.</p>
+<ul>
+<li>Did you mean to use <code>--eval</code> instead of <code>--eval-pure</code>?</li>
+<li>Did you mean to use a <code>proc</code>, rather than a <code>func</code>?</li>
+</ul>
+
+<a name="runtime-errors-strictall"></a>
+<h2>Runtime Errors: <code>strict:all</code></h2>
+<a name="oils-err-300"></a>
+<h3>OILS-ERR-300</h3>
+<pre><code>  if ! ls | wc -l; then echo failed; fi
+          ^
+[ -c flag ]:1: fatal: Command conditionals should only have one status, not Pipeline (strict_errexit, OILS-ERR-300)
+</code></pre>
+<p>Compound commands can't be used as conditionals because it's ambiguous.</p>
+<p>It confuses true/false with pass/fail.  What if part of the pipeline fails?
+What if <code>ls</code> doesn't exist?</p>
+<p>This YSH idiom is more explicit:</p>
+<pre><code>try {
+  ls | wc -l
+}
+if failed {
+  echo failed
+}
+</code></pre>
+<a name="oils-err-301"></a>
+<h3>OILS-ERR-301</h3>
+
+<pre><code>    if shell-func; then
+       ^~~~~~~~~~
+foo.sh:9: fatal: Can't run functions or procs while errexit is disabled (OILS-ERR-301)
+</code></pre>
+<p>This error prevents you from hitting a <strong>pitfall</strong> with <code>set -e</code> aka <code>errexit</code>,
+as it's defined in POSIX shell.</p>
+<p>Here are some shell-compatible solutions:</p>
+<ul>
+<li>Rewrite your code to avoid the function call within <code>if</code>, <code>||</code>, etc.</li>
+<li>Wrap the function in another process, like <code>if $0 shell-func</code>
+<ul>
+<li>This is what we call the <a href="https://www.oilshell.org/blog/2021/08/xargs.html">$0 Dispatch Pattern</a></li>
+</ul>
+</li>
+</ul>
+<p>In YSH, use the <a href="ref/chap-builtin-cmd.html#try">try</a> builtin instead of <code>if</code>.</p>
+<ul>
+<li><a href="ysh-error.html">Guide to YSH Error Handling</a></li>
+<li>Technical details: <a href="error-handling.html">YSH Fixes Shell's Error Handling (<code>errexit</code>)</a></li>
+</ul>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="kinds-of-errors-from-oils"></a>
+<h3>Kinds of Errors from Oils</h3>
+<ul>
+<li>Runtime errors (status 1) - the shell tried to do something, but failed.
+<ul>
+<li>Example: <code>echo hi &gt; /does/not/exist</code></li>
+</ul>
+</li>
+<li>Parse errors and builtin usage errors (status 2) - input rejected, so the
+shell didn't try to do anything.</li>
+<li>Uncaught I/O errors (status 2)</li>
+<li>Expression errors (status 3)</li>
+<li>User errors from the <code>error</code> builtin (status 10 is default)</li>
+</ul>
+<a name="contributors"></a>
+<h3>Contributors</h3>
+<p>(If you updated this doc, feel free to add your name to the end of this list.)</p>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 02 May 2025 00:17:40 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JSON / J8 Notation (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-j8.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.29.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>JSON / J8 Notation</strong></p>
+</div>
+<p>This chapter describes <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>, and its <strong>J8 Notation</strong> superset.</p>
+<p>See the <a href="../j8-notation.html">J8 Notation doc</a> for more background.  This doc
+is a quick reference, not the official spec.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#J8-Strings">J8 Strings</a> <br/>
+  <a class="dense-toc-h3" href="#json-string">json-string <code>"hi"</code></a> <br/>
+  <a class="dense-toc-h3" href="#json-escape">json-escape <code>\" \n \u1234</code></a> <br/>
+  <a class="dense-toc-h3" href="#surrogate-pair">surrogate-pair <code>\ud83e\udd26</code></a> <br/>
+  <a class="dense-toc-h3" href="#u-prefix">u-prefix <code>u'hi'</code></a> <br/>
+  <a class="dense-toc-h3" href="#b-prefix">b-prefix <code>b'hi'</code></a> <br/>
+  <a class="dense-toc-h3" href="#j8-escape">j8-escape<code>\u{1f926} \yff</code></a> <br/>
+  <a class="dense-toc-h3" href="#no-prefix">no-prefix <code>'hi'</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#J8-Lines">J8 Lines</a> <br/>
+  <a class="dense-toc-h3" href="#unquoted-line">unquoted-line</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#JSON8">JSON8</a> <br/>
+  <a class="dense-toc-h3" href="#json8-num">json8-num</a> <br/>
+  <a class="dense-toc-h3" href="#json8-str">json8-str</a> <br/>
+  <a class="dense-toc-h3" href="#json8-list">json8-list</a> <br/>
+  <a class="dense-toc-h3" href="#json8-dict">json8-dict</a> <br/>
+  <a class="dense-toc-h3" href="#json8-comment">json8-comment</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#TSV8">TSV8</a> <br/>
+  <a class="dense-toc-h3" href="#column-attrs">column-attrs</a> <br/>
+  <a class="dense-toc-h3" href="#column-types">column-types</a> <br/>
+</div>
+</div>
+</div>
+<a name="J8-Strings"></a>
+<h2>J8 Strings</h2>
+<p>J8 strings are an upgrade of JSON strings that solve the <em>JSON-Unix Mismatch</em>.</p>
+<p>That is, Unix deals with byte strings, but JSON can't represent byte strings.</p>
+<a name="json-string-hi"></a>
+<h3 id="json-string">json-string <code>"hi"</code></h3>
+<p>All JSON strings are valid J8 strings!</p>
+<p>This is important for compatibility.  Encoders may prefer to emit JSON-style
+<code>&quot;&quot;</code> strings rather than <code>u''</code> or <code>b''</code> strings.</p>
+<p>Example:</p>
+<pre><code>&quot;hi μ \n&quot;
+</code></pre>
+<p>To be explicit, you can prefix JSON strings with <code>j</code>:</p>
+<pre><code>j&quot;hi μ \n&quot;  <span class="sh-comment"># same as above</span>
+</code></pre>
+<p>Of course, the <code>j&quot;&quot;</code> prefix is accepted by our <code>json8</code> builtin, but not the
+<code>json</code> builtin.</p>
+<a name="json-escape-n-u1234"></a>
+<h3 id="json-escape">json-escape <code>\" \n \u1234</code></h3>
+<p>As a reminder, the backslash escapes valid in <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> strings are:</p>
+<pre><code>\&quot; \\
+\b \f \n \r \t
+\u1234
+</code></pre>
+<p>Additional J8 escapes are valid in <code>u''</code> and <code>b''</code> strings, described below.</p>
+<a name="surrogate-pair-ud83eudd26"></a>
+<h3 id="surrogate-pair">surrogate-pair <code>\ud83e\udd26</code></h3>
+<p>JSON's <code>\u1234</code> escapes can't represent code points above <code>U+10000</code> or
+2<sup>16</sup>, so JSON also has a &quot;surrogate pair hack&quot;.</p>
+<p>That is, there are special code points in the &quot;surrogate range&quot; that can be
+paired to represent larger numbers.</p>
+<p>See the <a href="https://www.oilshell.org/blog/2023/06/surrogate-pair.html">Surrogate Pair Blog
+Post</a> for an
+example:</p>
+<pre><code>&quot;\ud83e\udd26&quot;
+</code></pre>
+<p>Because JSON strings are valid J8 strings, surrogate pairs are also part of J8
+notation.  Decoders must accept them, but encoders should avoid them.</p>
+<p>You can emit <code>u'\u{1f926}'</code> or <code>b'\u{1f926}'</code> instead of <code>&quot;\ud83\udd26&quot;</code>.</p>
+<a name="u-prefix-uhi"></a>
+<h3 id="u-prefix">u-prefix <code>u'hi'</code></h3>
+<p>A type of J8 string.</p>
+<pre><code>u'hi μ \n'
+</code></pre>
+<p>It's never necessary to <strong>emit</strong>, but it can be used to express that a string
+is <strong>valid Unicode</strong>.  JSON strings can represent strings that aren't Unicode
+because they may contain surrogate halves.</p>
+<p>In contrast, <code>u''</code> strings can only have escapes like <code>\u{1f926}</code>, with no
+surrogate pairs or halves.</p>
+<ul>
+<li>The <strong>encoded</strong> bytes must be valid UTF-8, like JSON strings.</li>
+<li>The <strong>decoded</strong> bytes must be valid UTF-8, <strong>unlike</strong> JSON strings.</li>
+</ul>
+<p>Escaping:</p>
+<ul>
+<li><code>u''</code> strings may <strong>not</strong> contain <code>\u1234</code> escapes.  They must be <code>\u{1234}</code>,
+<code>\u{1f926}</code></li>
+<li>They may not contain <code>\yff</code> escapes, because those would represent a string
+that's not UTF-8 or Unicode.</li>
+<li>Surrogate pairs are never necessary in <code>u''</code> or <code>b''</code> strings.  Use the
+longer form <code>\u{1f926}</code>.</li>
+<li>You can always emit literal UTF-8, so <code>\u{1f926}</code> escapes aren't strictly
+necessary.  Decoders must accept these escapes.</li>
+<li>A literal single quote is escaped with <code>\'</code>
+<ul>
+<li>Decoders still accept <code>\&quot;</code>, but encoders don't emit it.</li>
+</ul>
+</li>
+</ul>
+<a name="b-prefix-bhi"></a>
+<h3 id="b-prefix">b-prefix <code>b'hi'</code></h3>
+<p>Another J8 string.  These <code>b''</code> strings are identical to <code>u''</code> strings, but
+they can also <code>\yff</code> escapes.</p>
+<p>Examples:</p>
+<pre><code>b'hi μ \n'
+b'this isn\'t a valid unicode string \yff\fe \u{3bc}'
+</code></pre>
+<a name="j8-escapeu1f926-yff"></a>
+<h3 id="j8-escape">j8-escape<code>\u{1f926} \yff</code></h3>
+<p>To summarize, the valid J8 escapes are:</p>
+<pre><code>\'
+\yff   <span class="sh-comment"># only valid in b'' strings</span>
+\u{3bc} \u{1f926} etc.
+</code></pre>
+<a name="no-prefix-hi"></a>
+<h3 id="no-prefix">no-prefix <code>'hi'</code></h3>
+<p>Single-quoted strings without a <code>u</code> or <code>b</code> prefix are implicitly <code>u''</code>.</p>
+<pre><code>u'hi μ \n'  
+ 'hi μ \n'  <span class="sh-comment"># same as above, no \yff escapes accepted</span>
+</code></pre>
+<p>They should be avoided in contexts where <code>&quot;&quot;</code> strings may also appear, because
+it's easy to confuse single quotes and double quotes.</p>
+<a name="J8-Lines"></a>
+<h2>J8 Lines</h2>
+<p>&quot;J8 Lines&quot; is a format built on top of J8 strings.  Each line is either:</p>
+<ol>
+<li>An unquoted string, which must be valid UTF-8.  Whitespace is allowed, but
+not other ASCII control chars.</li>
+<li>A quoted J8 string (JSON style <code>&quot;&quot;</code> or J8-style <code>b'' u'' ''</code>)</li>
+<li>An <strong>ignored</strong> empty line</li>
+</ol>
+<p>In all cases, leading and trailing whitespace is ignored.</p>
+<a name="unquoted-line"></a>
+<h3>unquoted-line</h3>
+<p>Any line that doesn't begin with <code>&quot;</code> or <code>b'</code> or <code>u'</code> is an unquoted line.
+Examples:</p>
+<pre><code>foo bar
+C:\Program Files\
+internal &quot;quotes&quot; aren't special
+</code></pre>
+<p>In contrast, these are quoted lines, and must be valid J8 strings:</p>
+<pre><code>&quot;json-style J8 string&quot;
+b'this is b style'
+u'this is u style'
+</code></pre>
+<a name="JSON8"></a>
+<h2>JSON8</h2>
+<p>JSON8 is JSON with 4 more things allowed:</p>
+<ol>
+<li>J8 strings in addition to JSON strings</li>
+<li>Comments</li>
+<li>Unquoted keys (TODO)</li>
+<li>Trailing commas (TODO)</li>
+</ol>
+<a name="json8-num"></a>
+<h3>json8-num</h3>
+<p>JSON8 numbers are identical to JSON numbers.</p>
+<p>Here is a decoding detail, specific to Oils:</p>
+<p>If there's a decimal point or <code>e-10</code> suffix, then it's decoded into a YSH
+<code>Float</code>.  Otherwise it's a YSH <code>Int</code>.</p>
+<pre><code>42       <span class="sh-comment"># decoded to Int</span>
+42.0     <span class="sh-comment"># decoded to Float</span>
+42e1     <span class="sh-comment"># decoded to Float</span>
+42.0e1   <span class="sh-comment"># decoded to Float</span>
+</code></pre>
+<a name="json8-str"></a>
+<h3>json8-str</h3>
+<p>JSON8 strings are J8 strings:</p>
+<pre>
+"hi &#x1f926; \u03bc"
+u'hi &#x1f926; \u{3bc}'
+b'hi &#x1f926; \u{3bc} \yff'
+</pre>
+<a name="json8-list"></a>
+<h3>json8-list</h3>
+<p>TODO:</p>
+<p>Like JSON lists, but can have trailing comma.  Examples:</p>
+<pre><code>[42, 43]
+[42, 43,]   <span class="sh-comment"># same as above</span>
+</code></pre>
+<a name="json8-dict"></a>
+<h3>json8-dict</h3>
+<p>TODO:</p>
+<p>Like JSON &quot;objects&quot;, but:</p>
+<ul>
+<li>Can have trailing comma.</li>
+<li>Can have unquoted keys, as long as they're an identifier.</li>
+</ul>
+<p>Examples:</p>
+<pre><code>{&quot;json8&quot;: &quot;message&quot;}
+{json8: &quot;message&quot;}     <span class="sh-comment"># same as above</span>
+{json8: &quot;message&quot;,}    <span class="sh-comment"># same as above</span>
+</code></pre>
+<a name="json8-comment"></a>
+<h3>json8-comment</h3>
+<p>End-of-line comments in the same style as shell:</p>
+<pre><code>{&quot;json8&quot;: &quot;message&quot;}   <span class="sh-comment"># comment</span>
+</code></pre>
+<a name="TSV8"></a>
+<h2>TSV8</h2>
+<p>These are the J8 Primitives (Bool, Int, Float, Str), separated by tabs.</p>
+<a name="column-attrs"></a>
+<h3>column-attrs</h3>
+
+<pre><code>!tsv8    name    age
+!type    Str     Int
+!other   x       y
+         Alice   42
+         Bob     25
+</code></pre>
+<a name="column-types"></a>
+<h3>column-types</h3>
+<p>The primitives:</p>
+<ul>
+<li>Bool</li>
+<li>Int</li>
+<li>Float</li>
+<li>Str</li>
+</ul>
+<p>Note: Can <code>null</code> be in all cells?  Maybe except <code>Bool</code>?</p>
+<p>It can stand in for <code>NA</code>?</p>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 02 May 2025 00:17:40 -0400</i>
+    </div>
+  </body>
+</html>

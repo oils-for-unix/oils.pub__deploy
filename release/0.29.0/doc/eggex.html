@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Egg Expressions (YSH Regexes)</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/eggex.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.29.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Egg Expressions (YSH Regexes)</h1>
+<p>YSH has a new syntax for patterns, which appears between the <code>/ /</code> delimiters:</p>
+<pre><code>if (mystr ~ /d+ '.' d+/) {   
+  echo 'mystr looks like a number N.M'
+}
+</code></pre>
+<p>These patterns are intended to be familiar, but they differ from POSIX or Perl
+expressions in important ways.  So we call them <em>eggexes</em> rather than
+<em>regexes</em>!</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#why-invent-a-new-language">Why Invent a New Language?</a></div>
+  <div class="toclevel2"><a href="#example-of-pattern-reuse">Example of Pattern Reuse</a></div>
+  <div class="toclevel2"><a href="#design-philosophy">Design Philosophy</a></div>
+  <div class="toclevel2"><a href="#the-expression-language-is-consistent">The Expression Language Is Consistent</a></div>
+  <div class="toclevel1"><a href="#expression-primitives">Expression Primitives</a></div>
+  <div class="toclevel2"><a href="#is-now-dot"><code>.</code> Is Now <code>dot</code></a></div>
+  <div class="toclevel2"><a href="#classes-are-unadorned-word-w-alnum">Classes Are Unadorned: <code>word</code>, <code>w</code>, <code>alnum</code></a></div>
+  <div class="toclevel2"><a href="#zero-width-assertions-look-like-this">Zero-width Assertions Look Like <code>%this</code></a></div>
+  <div class="toclevel2"><a href="#single-quoted-strings">Single-Quoted Strings</a></div>
+  <div class="toclevel1"><a href="#compound-expressions">Compound Expressions</a></div>
+  <div class="toclevel2"><a href="#sequence-and-alternation-are-unchanged">Sequence and Alternation Are Unchanged</a></div>
+  <div class="toclevel2"><a href="#repetition-is-unchanged-in-common-cases-and-better-in-rare-cases">Repetition Is Unchanged In Common Cases, and Better in Rare Cases</a></div>
+  <div class="toclevel2"><a href="#negation-consistently-uses">Negation Consistently Uses !</a></div>
+  <div class="toclevel2"><a href="#splice-other-patterns-var_name-or-uppercasevarname">Splice Other Patterns <code>@var_name</code> or <code>UpperCaseVarName</code></a></div>
+  <div class="toclevel2"><a href="#group-with">Group With <code>()</code></a></div>
+  <div class="toclevel2"><a href="#capture-with-capture">Capture with <code>&lt;capture ...&gt;</code></a></div>
+  <div class="toclevel2"><a href="#character-class-literals-use">Character Class Literals Use <code>[]</code></a></div>
+  <div class="toclevel2"><a href="#backtracking-constructs-use-discouraged">Backtracking Constructs Use <code>!!</code> (Discouraged)</a></div>
+  <div class="toclevel1"><a href="#outside-the-expression-language">Outside the Expression language</a></div>
+  <div class="toclevel2"><a href="#flags-and-translation-preferences">Flags and Translation Preferences (<code>;</code>)</a></div>
+  <div class="toclevel2"><a href="#multiline-syntax">Multiline Syntax</a></div>
+  <div class="toclevel2"><a href="#the-ysh-api">The YSH API</a></div>
+  <div class="toclevel2"><a href="#language-reference">Language Reference</a></div>
+  <div class="toclevel1"><a href="#usage-notes">Usage Notes</a></div>
+  <div class="toclevel2"><a href="#use-character-literals-rather-than-c-escaped-strings">Use character literals rather than C-Escaped strings</a></div>
+  <div class="toclevel1"><a href="#posix-ere-limitations">POSIX ERE Limitations</a></div>
+  <div class="toclevel2"><a href="#repetition-of-strings-requires-grouping">Repetition of Strings Requires Grouping</a></div>
+  <div class="toclevel2"><a href="#unicode-char-literals-are-limited-in-range">Unicode char literals are limited in range</a></div>
+  <div class="toclevel2"><a href="#dont-put-non-ascii-bytes-in-string-sets-in-char-classes">Don't put non-ASCII bytes in string sets in char classes</a></div>
+  <div class="toclevel2"><a href="#char-class-literals">Char class literals: <code>^ - ] \</code></a></div>
+  <div class="toclevel1"><a href="#critiques">Critiques</a></div>
+  <div class="toclevel2"><a href="#regexes-are-hard-to-read">Regexes Are Hard To Read</a></div>
+  <div class="toclevel2"><a href="#ysh-is-shorter-than-bash">YSH is Shorter Than Bash</a></div>
+  <div class="toclevel2"><a href="#and-perl">... and Perl</a></div>
+  <div class="toclevel1"><a href="#design-notes">Design Notes</a></div>
+  <div class="toclevel2"><a href="#eggexes-in-other-languages">Eggexes In Other Languages</a></div>
+  <div class="toclevel2"><a href="#backward-compatibility">Backward Compatibility</a></div>
+  <div class="toclevel1"><a href="#faq">FAQ</a></div>
+  <div class="toclevel2"><a href="#the-name-sounds-funny">The Name Sounds Funny.</a></div>
+  <div class="toclevel2"><a href="#how-do-eggexes-compare-with-raku-regexes-and-the-rosie-pattern-language">How Do Eggexes Compare with Raku Regexes and the Rosie Pattern Language?</a></div>
+  <div class="toclevel2"><a href="#what-about-eggex-versus-parsing-expression-grammars-pegs">What About Eggex versus Parsing Expression Grammars?  (PEGs)</a></div>
+  <div class="toclevel2"><a href="#why-dont-dot-start-and-end-have-more-precise-names">Why Don't <code>dot</code>, <code>%start</code>, and <code>%end</code> Have More Precise Names?</a></div>
+  <div class="toclevel2"><a href="#where-do-i-send-feedback">Where Do I Send Feedback?</a></div>
+</div>
+<a name="why-invent-a-new-language"></a>
+<h2>Why Invent a New Language?</h2>
+<ul>
+<li>Eggexes let you name <strong>subpatterns</strong> and compose them, which makes them more
+readable and testable.</li>
+<li>Their <strong>syntax</strong> is vastly simpler because literal characters are <strong>quoted</strong>,
+and operators are not.  For example, <code>^</code> no longer means three totally
+different things.  See the critique at the end of this doc.</li>
+<li>bash and awk use the limited and verbose POSIX ERE syntax, while eggexes are
+more expressive and (in some cases) Perl-like.</li>
+<li>They're designed to be <strong>translated to any regex dialect</strong>.  Right now, the
+YSH shell translates them to ERE so you can use them with common Unix tools:
+<ul>
+<li><code>egrep</code> (<code>grep -E</code>)</li>
+<li><code>awk</code></li>
+<li>GNU <code>sed --regexp-extended</code></li>
+<li>PCRE syntax is the second most important target.</li>
+</ul>
+</li>
+<li>They're <strong>statically parsed</strong> in YSH, so:
+<ul>
+<li>You can get <strong>syntax errors</strong> at parse time.  In contrast, if you embed a
+regex in a string, you don't get syntax errors until runtime.</li>
+<li>The eggex is part of the <a href="http://www.oilshell.org/blog/2017/02/11.html">lossless syntax tree</a>, which means you can do
+linting, formatting, and refactoring on eggexes, just like any other type
+of code.</li>
+</ul>
+</li>
+<li>Eggexes support <strong>regular languages</strong> in the mathematical sense, whereas
+regexes are <strong>confused</strong> about the issue.  All nonregular eggex extensions
+are prefixed with <code>!!</code>, so you can visually audit them for <a href="https://blog.codinghorror.com/regex-performance/">catastrophic
+backtracking</a>.  (Russ Cox, author of the RE2 engine, <a href="https://swtch.com/%7Ersc/regexp/">has
+written extensively</a> on this issue.)</li>
+<li>Eggexes are more fun than regexes!</li>
+</ul>
+<a name="example-of-pattern-reuse"></a>
+<h3>Example of Pattern Reuse</h3>
+<p>Here's a longer example:</p>
+<pre><code><span class="sh-comment"># Define a subpattern.  'digit' and 'd' are the same.</span>
+<span class="sh-prompt">$</span> <span class="sh-command">var D = / digit{1,3} /</span>
+
+<span class="sh-comment"># Use the subpattern</span>
+<span class="sh-prompt">$</span> <span class="sh-command">var ip_pat = / D '.' D '.' D '.' D /</span>
+
+<span class="sh-comment"># This eggex compiles to an ERE</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $ip_pat</span>
+[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}\.[[:digit:]]{1,3}
+</code></pre>
+<p>This means you can use it in a very simple way:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">egrep $ip_pat foo.txt</span>
+</code></pre>
+<p>TODO: You should also be able to inline patterns like this:</p>
+<pre><code>egrep $/d+/ foo.txt
+</code></pre>
+<a name="design-philosophy"></a>
+<h3>Design Philosophy</h3>
+<ul>
+<li>Eggexes can express a <strong>superset</strong> of POSIX and Perl syntax.</li>
+<li>The language is designed for &quot;dumb&quot;, one-to-one, <strong>syntactic</strong> translations.
+That is, translation doesn't rely on understanding the <strong>semantics</strong> of
+regexes.  This is because regex implementations have many corner cases and
+incompatibilities, with regard to Unicode, <code>NUL</code> bytes, etc.</li>
+</ul>
+<a name="the-expression-language-is-consistent"></a>
+<h3>The Expression Language Is Consistent</h3>
+<p>Eggexes have a consistent syntax:</p>
+<ul>
+<li>Single characters are unadorned, in lowercase: <code>dot</code>, <code>space</code>, or <code>s</code></li>
+<li>A sequence of multiple characters looks like <code>'lit'</code>, <code>$var</code>, etc.</li>
+<li>Constructs that match <strong>zero</strong> characters look like <code>%start</code>, <code>%word_end</code>, etc.</li>
+<li>Entire subpatterns (which may contain alternation, repetition, etc.) are in
+uppercase like <code>HexDigit</code>.  Important: these are <strong>spliced</strong> as syntax trees,
+not strings, so you <strong>don't</strong> need to think about quoting.</li>
+</ul>
+<p>For example, it's easy to see that these patterns all match <strong>three</strong> characters:</p>
+<pre><code>/ d d d /
+/ digit digit digit /
+/ dot dot dot /
+/ word space word /
+/ 'ab' space /
+/ 'abc' /
+</code></pre>
+<p>And that these patterns match <strong>two</strong>:</p>
+<pre><code>/ %start w w /
+/ %start 'if' /
+/ d d %end /
+</code></pre>
+<p>And that you have to look up the definition of <code>HexDigit</code> to know how many
+characters this matches:</p>
+<pre><code>/ %start HexDigit %end /
+</code></pre>
+<p>Constructs like <code>. ^ $ \&lt; \&gt;</code> are deprecated because they break these rules.</p>
+<a name="expression-primitives"></a>
+<h2>Expression Primitives</h2>
+<a name="is-now-dot"></a>
+<h3><code>.</code> Is Now <code>dot</code></h3>
+<p>But <code>.</code> is still accepted.  It usually matches any character except a newline,
+although this changes based on flags (e.g. <code>dotall</code>, <code>unicode</code>).</p>
+<a name="classes-are-unadorned-word-w-alnum"></a>
+<h3>Classes Are Unadorned: <code>word</code>, <code>w</code>, <code>alnum</code></h3>
+<p>We accept both Perl and POSIX classes.</p>
+<ul>
+<li>Perl:
+<ul>
+<li><code>d</code> or <code>digit</code></li>
+<li><code>s</code> or <code>space</code></li>
+<li><code>w</code> or <code>word</code></li>
+</ul>
+</li>
+<li>POSIX
+<ul>
+<li><code>alpha</code>, <code>alnum</code>, ...</li>
+</ul>
+</li>
+</ul>
+<a name="zero-width-assertions-look-like-this"></a>
+<h3>Zero-width Assertions Look Like <code>%this</code></h3>
+<ul>
+<li>POSIX
+<ul>
+<li><code>%start</code> is <code>^</code></li>
+<li><code>%end</code> is <code>$</code></li>
+</ul>
+</li>
+<li>PCRE:
+<ul>
+<li><code>%input_start</code> is <code>\A</code></li>
+<li><code>%input_end</code> is <code>\z</code></li>
+<li><code>%last_line_end</code> is <code>\Z</code></li>
+</ul>
+</li>
+<li>GNU ERE extensions:
+<ul>
+<li><code>%word_start</code> is <code>\&lt;</code></li>
+<li><code>%word_end</code> is <code>\&gt;</code></li>
+</ul>
+</li>
+</ul>
+<a name="single-quoted-strings"></a>
+<h3>Single-Quoted Strings</h3>
+<ul>
+<li><code>'hello *world*'</code>  becomes a regex-escaped string</li>
+</ul>
+<p>Note: instead of using double-quoted strings like <code>&quot;xyz $var&quot;</code>, you can splice
+a strings into an eggex:</p>
+<pre><code>/ 'xyz ' @var /
+</code></pre>
+<a name="compound-expressions"></a>
+<h2>Compound Expressions</h2>
+<a name="sequence-and-alternation-are-unchanged"></a>
+<h3>Sequence and Alternation Are Unchanged</h3>
+<ul>
+<li><code>x y</code> matches <code>x</code> and <code>y</code> in sequence</li>
+<li><code>x | y</code> matches <code>x</code> or <code>y</code></li>
+</ul>
+<p>You can also write a more Pythonic alternative: <code>x or y</code>.</p>
+<a name="repetition-is-unchanged-in-common-cases-and-better-in-rare-cases"></a>
+<h3>Repetition Is Unchanged In Common Cases, and Better in Rare Cases</h3>
+<p>Repetition is just like POSIX ERE or Perl:</p>
+<ul>
+<li><code>x?</code>, <code>x+</code>, <code>x*</code></li>
+<li><code>x{3}</code>, <code>x{1,3}</code></li>
+</ul>
+<p>We've reserved syntactic space for PCRE and Python variants:</p>
+<ul>
+<li>lazy/non-greedy: <code>x{L +}</code>, <code>x{L 3,4}</code></li>
+<li>possessive: <code>x{P +}</code>, <code>x{P 3,4}</code></li>
+</ul>
+<a name="negation-consistently-uses"></a>
+<h3>Negation Consistently Uses !</h3>
+<p>You can negate named char classes:</p>
+<pre><code>/ !digit /
+</code></pre>
+<p>and char class literals:</p>
+<pre><code>/ ![ a-z A-Z ] /
+</code></pre>
+<p>Sometimes you can do both:</p>
+<pre><code>/ ![ !digit ] /  <span class="sh-comment"># translates to /[^\D]/ in PCRE</span>
+                 <span class="sh-comment"># error in ERE because it can't be expressed</span>
+</code></pre>
+<p>You can also negate &quot;regex modifiers&quot; / compilation flags:</p>
+<pre><code>/ word ; ignorecase /   <span class="sh-comment"># flag on</span>
+/ word ; !ignorecase /  <span class="sh-comment"># flag off</span>
+/ word ; !i /           <span class="sh-comment"># abbreviated</span>
+</code></pre>
+<p>In contrast, regexes have many confusing syntaxes for negation:</p>
+<pre><code>[^abc] vs. [abc]
+[[^:digit:]] vs. [[:digit:]]
+
+\D vs. \d
+
+/\w/-i vs /\w/i
+</code></pre>
+<a name="splice-other-patterns-var_name-or-uppercasevarname"></a>
+<h3>Splice Other Patterns <code>@var_name</code> or <code>UpperCaseVarName</code></h3>
+<p>This allows you to reuse patterns.  Using uppercase variables:</p>
+<pre><code>var D = / digit{3} /
+
+var ip_addr = / D '.' D '.' D '.' D /
+</code></pre>
+<p>Using normal variables:</p>
+<pre><code>var part = / digit{3} /
+
+var ip_addr = / @part '.' @part '.' @part '.' @part /
+</code></pre>
+<p>This is similar to how <code>lex</code> and <code>re2c</code> work.</p>
+<a name="group-with"></a>
+<h3>Group With <code>()</code></h3>
+<p>Parentheses are used for precdence:</p>
+<pre><code>('foo' | 'bar')+
+</code></pre>
+<p>See note below: When translating to POSIX ERE, grouping becomes a capturing
+group.  POSIX ERE has no non-capturing groups.</p>
+<a name="capture-with-capture"></a>
+<h3>Capture with <code>&lt;capture ...&gt;</code></h3>
+<p>Here's a positional capture:</p>
+<pre><code>&lt;capture d+&gt;           <span class="sh-comment"># Becomes _group(1)</span>
+</code></pre>
+<p>Add a variable after <code>as</code> for named capture:</p>
+<pre><code>&lt;capture d+ as month&gt;  <span class="sh-comment"># Becomes _group('month')</span>
+</code></pre>
+<p>You can also add type conversion functions:</p>
+<pre><code>&lt;capture d+ : int&gt;           <span class="sh-comment"># _group(1) returns an Int, not Str</span>
+&lt;capture d+ as month: int&gt;   <span class="sh-comment"># _group('month') returns an Int, not Str</span>
+</code></pre>
+<a name="character-class-literals-use"></a>
+<h3>Character Class Literals Use <code>[]</code></h3>
+<p>Example:</p>
+<pre><code>[ a-f 'A'-'F' \xFF \u{03bc} \n \\ \' \&quot; \0 ]
+</code></pre>
+<p>Terms:</p>
+<ul>
+<li>Ranges: <code>a-f</code> or <code>'A' - 'F'</code></li>
+<li>Literals: <code>\n</code>, <code>\x01</code>, <code>\u{3bc}</code>, etc.</li>
+<li>Sets specified as strings: <code>'abc'</code></li>
+</ul>
+<p>Only letters, numbers, and the underscore may be unquoted:</p>
+<pre><code>/['a'-'f' 'A'-'F' '0'-'9']/
+/[a-f A-F 0-9]/              <span class="sh-comment"># Equivalent to the above</span>
+
+/['!' - ')']/                <span class="sh-comment"># Correct range</span>
+/[!-)]/                      <span class="sh-comment"># Syntax Error</span>
+</code></pre>
+<p>Ranges must be separated by spaces:</p>
+<p>No:</p>
+<pre><code>/[a-fA-F0-9]/
+</code></pre>
+<p>Yes:</p>
+<pre><code>/[a-f A-f 0-9]/
+</code></pre>
+<a name="backtracking-constructs-use-discouraged"></a>
+<h3>Backtracking Constructs Use <code>!!</code> (Discouraged)</h3>
+<p>If you want to translate to PCRE, you can use these.</p>
+<pre><code>!!REF 1
+!!REF name
+
+!!AHEAD( d+ )
+!!NOT_AHEAD( d+ )
+!!BEHIND( d+ )
+!!NOT_BEHIND( d+ )
+
+!!ATOMIC( d+ )
+</code></pre>
+<p>Since they all begin with <code>!!</code>, You can visually audit your code for potential
+performance problems.</p>
+<a name="outside-the-expression-language"></a>
+<h2>Outside the Expression language</h2>
+<a name="flags-and-translation-preferences"></a>
+<h3>Flags and Translation Preferences (<code>;</code>)</h3>
+<p>Flags or &quot;regex modifiers&quot; appear after a semicolon:</p>
+<pre><code>/ digit+ ; i /  <span class="sh-comment"># ignore case</span>
+</code></pre>
+<p>A translation preference is specified after a second semi-colon:</p>
+<pre><code>/ digit+ ; ; ERE /                <span class="sh-comment"># translates to [[:digit:]]+</span>
+/ digit+ ; ; python /             <span class="sh-comment"># could translate to \d+</span>
+</code></pre>
+<p>Flags and translation preferences together:</p>
+<pre><code>/ digit+ ; ignorecase ; python /  <span class="sh-comment"># could translate to (?i)\d+</span>
+</code></pre>
+<p>In Oils, the following flags are currently supported:</p>
+<a name="reg_icase-i-ignore-case"></a>
+<h4><code>reg_icase</code> / <code>i</code> (Ignore Case)</h4>
+<p>Use this flag to ignore case when matching. For example, <code>/'foo'; i/</code> matches
+'FOO', but <code>/'foo'/</code> doesn't.</p>
+<a name="reg_newline-multiline"></a>
+<h4><code>reg_newline</code> (Multiline)</h4>
+<p>With this flag, <code>%end</code> will match before a newline and <code>%start</code> will match
+after a newline.</p>
+<pre><code>= u'abc123\n' ~ / digit %end ; reg_newline /    <span class="sh-comment"># true</span>
+= u'abc\n123' ~ / %start digit ; reg_newline /  <span class="sh-comment"># true</span>
+</code></pre>
+<p>Without the flag, <code>%start</code> and <code>%end</code> only match from the start or end of the
+string, respectively.</p>
+<pre><code>= u'abc123\n' ~ / digit %end /                  <span class="sh-comment"># false</span>
+= u'abc\n123' ~ / %start digit /                <span class="sh-comment"># false</span>
+</code></pre>
+<p>Newlines are also ignored in <code>dot</code> and <code>![abc]</code> patterns.</p>
+<pre><code>= u'\n' ~ / . /                                 <span class="sh-comment"># true</span>
+= u'\n' ~ / !digit /                            <span class="sh-comment"># true</span>
+</code></pre>
+<p>Without this flag, the newline <code>\n</code> is treated as an ordinary character.</p>
+<pre><code>= u'\n' ~ / . ; reg_newline /                   <span class="sh-comment"># false</span>
+= u'\n' ~ / !digit ; reg_newline /              <span class="sh-comment"># false</span>
+</code></pre>
+<a name="multiline-syntax"></a>
+<h3>Multiline Syntax</h3>
+<p>You can spread regexes over multiple lines and add comments:</p>
+<pre><code>var x = ///
+  digit{4}   <span class="sh-comment"># year e.g. 2001</span>
+  '-'
+  digit{2}   <span class="sh-comment"># month e.g. 06</span>
+  '-'
+  digit{2}   <span class="sh-comment"># day e.g. 31</span>
+///
+</code></pre>
+<p>(Not yet implemented in YSH.)</p>
+<a name="the-ysh-api"></a>
+<h3>The YSH API</h3>
+<p>See the <a href="ysh-regex-api.html">YSH regex API</a> for details.</p>
+<p>In summary, YSH has Perl-like conveniences with an <code>~</code> operator:</p>
+<pre><code>var s = 'on 04-01, 10-31'
+var pat = /&lt;capture d+ as month&gt; '-' &lt;capture d+ as day&gt;/
+
+if (s ~ pat) {       <span class="sh-comment"># search for the pattern</span>
+  echo $[_group('month')]  <span class="sh-comment"># =&gt; 04</span>
+}
+</code></pre>
+<p>It also has an explicit and powerful Python-like API with the <code>search()</code> and
+leftMatch()` methods on strings.</p>
+<pre><code>var m = s =&gt; search(pat, pos=8)  <span class="sh-comment"># start searching at a position</span>
+if (m) {
+  echo $[m =&gt; group('month')]  <span class="sh-comment"># =&gt; 10</span>
+}
+</code></pre>
+<a name="language-reference"></a>
+<h3>Language Reference</h3>
+<ul>
+<li>See bottom of the <a href="https://github.com/oils-for-unix/oils/blob/master/ysh/grammar.pgen2">YSH Expression Grammar</a> for
+the concrete syntax.</li>
+<li>See the bottom of <a href="https://github.com/oils-for-unix/oils/blob/master/frontend/syntax.asdl">frontend/syntax.asdl</a> for
+the abstract syntax.</li>
+</ul>
+<a name="usage-notes"></a>
+<h2>Usage Notes</h2>
+<a name="use-character-literals-rather-than-c-escaped-strings"></a>
+<h3>Use character literals rather than C-Escaped strings</h3>
+<p>No:</p>
+<pre><code>/ $'foo\tbar' /   <span class="sh-comment"># Match 7 characters including a tab, but it's hard to read</span>
+/ r'foo\tbar' /   <span class="sh-comment"># The string must contain 8 chars including '\' and 't'</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code><span class="sh-comment"># Instead, Take advantage of char literals and implicit regex concatenation</span>
+/ 'foo' \t 'bar' /
+/ 'foo' \\ 'tbar' /
+</code></pre>
+<a name="posix-ere-limitations"></a>
+<h2>POSIX ERE Limitations</h2>
+<a name="repetition-of-strings-requires-grouping"></a>
+<h3>Repetition of Strings Requires Grouping</h3>
+<p>Repetitions like <code>* + ?</code> apply only to the last character, so literal strings
+need extra grouping:</p>
+<p>No:</p>
+<pre><code>'foo'+ 
+</code></pre>
+<p>Yes:</p>
+<pre><code>&lt;capture 'foo'&gt;+
+</code></pre>
+<p>Also OK:</p>
+<pre><code>('foo')+  <span class="sh-comment"># this is a CAPTURING group in ERE</span>
+</code></pre>
+<p>This is necessary because ERE doesn't have non-capturing groups like Perl's
+<code>(?:...)</code>, and Eggex only does &quot;dumb&quot; translations.  It doesn't silently insert
+constructs that change the meaning of the pattern.</p>
+<a name="unicode-char-literals-are-limited-in-range"></a>
+<h3>Unicode char literals are limited in range</h3>
+<p>ERE can't represent this set of 1 character reliably:</p>
+<pre><code>/ [ \u{0100} ] /      <span class="sh-comment"># This char is 2 bytes encoded in UTF-8</span>
+</code></pre>
+<p>These sets are accepted:</p>
+<pre><code>/ [ \u{1} \u{2} ] /   <span class="sh-comment"># set of 2 chars</span>
+/ [ \x01 \x02 ] ] /   <span class="sh-comment"># set of 2 bytes</span>
+</code></pre>
+<p>They happen to be identical when translated to ERE, but may not be when
+translated to PCRE.</p>
+<a name="dont-put-non-ascii-bytes-in-string-sets-in-char-classes"></a>
+<h3>Don't put non-ASCII bytes in string sets in char classes</h3>
+<p>This is a sequence of characters:</p>
+<pre><code>/ $'\xfe\xff' /
+</code></pre>
+<p>This is a <strong>set</strong> of characters that is illegal:</p>
+<pre><code>/ [ $'\xfe\xff' ] /  <span class="sh-comment"># set or sequence?  It's confusing</span>
+</code></pre>
+<p>This is a better way to write it:</p>
+<pre><code>/ [ \xfe \xff ] /  <span class="sh-comment"># set of 2 chars</span>
+</code></pre>
+<a name="char-class-literals"></a>
+<h3>Char class literals: <code>^ - ] \</code></h3>
+<p>The literal characters <code>^ - ] \</code> are problematic because they can be confused
+with operators.</p>
+<ul>
+<li><code>^</code> means negation</li>
+<li><code>-</code> means range</li>
+<li><code>]</code> closes the character class</li>
+<li><code>\</code> is usually literal, but GNU gawk has an extension to make it an escaping
+operator</li>
+</ul>
+<p>The Eggex-to-ERE translator is smart enough to handle cases like this:</p>
+<pre><code>var pat = / ['^' 'x'] / 
+<span class="sh-comment"># translated to [x^], not [^x] for correctness</span>
+</code></pre>
+<p>However, cases like this are a fatal runtime error:</p>
+<pre><code>var pat1 = / ['a'-'^'] /
+var pat2 = / ['a'-'-'] /
+</code></pre>
+<a name="critiques"></a>
+<h2>Critiques</h2>
+<a name="regexes-are-hard-to-read"></a>
+<h3>Regexes Are Hard To Read</h3>
+<p>... because the <strong>same symbol can mean many things</strong>.</p>
+<p><code>^</code> could mean:</p>
+<ul>
+<li>Start of the string/line</li>
+<li>Negated character class like <code>[^abc]</code></li>
+<li>Literal character <code>^</code> like <code>[abc^]</code></li>
+</ul>
+<p><code>\</code> is used in:</p>
+<ul>
+<li>Character classes like <code>\w</code> or <code>\d</code></li>
+<li>Zero-width assertions like <code>\b</code></li>
+<li>Escaped characters like <code>\n</code></li>
+<li>Quoted characters like <code>\+</code></li>
+</ul>
+<p><code>?</code> could mean:</p>
+<ul>
+<li>optional: <code>a?</code></li>
+<li>lazy match: <code>a+?</code></li>
+<li>some other kind of grouping:
+<ul>
+<li><code>(?P&lt;named&gt;\d+)</code></li>
+<li><code>(?:noncapturing)</code></li>
+</ul>
+</li>
+</ul>
+<p>With egg expressions, each construct has a <strong>distinct syntax</strong>.</p>
+<a name="ysh-is-shorter-than-bash"></a>
+<h3>YSH is Shorter Than Bash</h3>
+<p>Bash:</p>
+<pre><code>if [[ $x =~ '[[:digit:]]+' ]]; then
+  echo 'x looks like a number
+fi
+</code></pre>
+<p>Compare with YSH:</p>
+<pre><code>if (x ~ /digit+/) {
+  echo 'x looks like a number'
+}
+</code></pre>
+<a name="and-perl"></a>
+<h3>... and Perl</h3>
+<p>Perl:</p>
+<pre><code>$x =~ /\d+/
+</code></pre>
+<p>YSH:</p>
+<pre><code>x ~ /d+/
+</code></pre>
+<p>The Perl expression has three more punctuation characters:</p>
+<ul>
+<li>YSH doesn't require sigils in expression mode</li>
+<li>The match operator is <code>~</code>, not <code>=~</code></li>
+<li>Named character classes are unadorned like <code>d</code>.  If that's too short, you can
+also write <code>digit</code>.</li>
+</ul>
+<a name="design-notes"></a>
+<h2>Design Notes</h2>
+<a name="eggexes-in-other-languages"></a>
+<h3>Eggexes In Other Languages</h3>
+<p>The eggex syntax can be incorporated into other tools and shells.  It's
+designed to be separate from YSH -- hence the separate name.</p>
+<p>Notes:</p>
+<ul>
+<li>Single quoted string literals should <strong>disallow</strong> internal backslashes, and
+treat all other characters literally..  Instead, users can write <code>/ 'foo' \t 'sq' \' bar \n /</code> — i.e. implicit concatenation of strings and
+characters, described above.</li>
+<li>To make eggexes portable between languages, Don't use the host language's
+syntax for string literals (at least for single-quoted strings).</li>
+</ul>
+<a name="backward-compatibility"></a>
+<h3>Backward Compatibility</h3>
+<p>Eggexes aren't backward compatible in general, but they retain some legacy
+operators like <code>^ . $</code> to ease the transition.  These expressions are valid
+eggexes <strong>and</strong> valid POSIX EREs:</p>
+<pre><code>.*
+^[0-9]+$
+^.{1,3}|[0-9][0-9]?$
+</code></pre>
+<a name="faq"></a>
+<h2>FAQ</h2>
+<a name="the-name-sounds-funny"></a>
+<h3>The Name Sounds Funny.</h3>
+<p>If &quot;eggex&quot; sounds too much like &quot;regex&quot; to you, simply say &quot;egg expression&quot;.
+It won't be confused with &quot;regular expression&quot; or &quot;regex&quot;.</p>
+<a name="how-do-eggexes-compare-with-raku-regexes-and-the-rosie-pattern-language"></a>
+<h3>How Do Eggexes Compare with <a href="https://docs.raku.org/language/regexes">Raku Regexes</a> and the <a href="https://rosie-lang.org/">Rosie Pattern Language</a>?</h3>
+<p>All three languages support pattern composition and have quoted literals.  And
+they have the goal of improving upon Perl 5 regex syntax, which has made its
+way into every major programming language (Python, Java, C++, etc.)</p>
+<p>The main difference is that Eggexes are meant to be used with <strong>existing</strong>
+regex engines.  For example, you translate them to a POSIX ERE, which is
+executed by <code>egrep</code> or <code>awk</code>.  Or you translate them to a Perl-like syntax and
+use them in Python, JavaScript, Java, or C++ programs.</p>
+<p>Perl 6 and Rosie have their <strong>own engines</strong> that are more powerful than PCRE,
+Python, etc.  That means they <strong>cannot</strong> be used this way.</p>
+<a name="what-about-eggex-versus-parsing-expression-grammars-pegs"></a>
+<h3>What About Eggex versus Parsing Expression Grammars?  (PEGs)</h3>
+<p>The short answer is that they can be complementary: PEGs are closer to
+<strong>parsing</strong>, while eggex and <a href="/cross-ref.html?tag=regular-language#regular-language">regular languages</a> are
+closer to <strong>lexing</strong>.  Related:</p>
+<ul>
+<li><a href="https://www.oilshell.org/blog/2017/12/17.html">When Are Lexer Modes Useful?</a></li>
+<li><a href="https://github.com/oilshell/oil/wiki/Why-Lexing-and-Parsing-Should-Be-Separate">Why Lexing and Parsing Should Be
+Separate</a> (wiki)</li>
+</ul>
+<p>The PEG model is more resource intensive, but it can recognize more languages,
+and it can recognize recursive structure (trees).</p>
+<a name="why-dont-dot-start-and-end-have-more-precise-names"></a>
+<h3>Why Don't <code>dot</code>, <code>%start</code>, and <code>%end</code> Have More Precise Names?</h3>
+<p>Because the meanings of <code>.</code> <code>^</code> and <code>$</code> are usually affected by regex engine
+flags, like <code>dotall</code>, <code>multiline</code>, and <code>unicode</code>.</p>
+<p>As a result, the names mean nothing more than &quot;however your regex engine
+interprets <code>.</code> <code>^</code> and <code>$</code>&quot;.</p>
+<p>As mentioned in the &quot;Philosophy&quot; section above, eggex only does a superficial,
+one-to-one translation.  It doesn't understand the details of which characters
+will be matched under which engine.</p>
+<a name="where-do-i-send-feedback"></a>
+<h3>Where Do I Send Feedback?</h3>
+<p>Eggexes are implemented in YSH, but not yet set in stone.</p>
+<p>Please try them, as described in <a href="http://www.oilshell.org/blog/2019/08/22.html">this
+post</a> and the
+<a href="https://github.com/oils-for-unix/oils/blob/master/README.md">README</a>, and send us feedback!</p>
+<p>You can create a new post on <a href="https://www.reddit.com/r/oilshell/">/r/oilshell</a>
+or a new message on <code>#oil-discuss</code> on <a href="https://oilshell.zulipchat.com/">https://oilshell.zulipchat.com/</a> (log in
+with Github, etc.)</p>
+    <div id="build-timestamp">
+      <i>Generated on Fri, 02 May 2025 00:17:40 -0400</i>
+    </div>
+  </body>
+</html>

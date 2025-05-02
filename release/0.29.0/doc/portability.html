@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Portability</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/portability.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.29.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Portability</h1>
+<p>What does your platform need to run Oils?</p>
+<p>These are some notes that supplement <a href="INSTALL.html">INSTALL</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#issues-in-the-core-of-oils">Issues in the core of Oils</a></div>
+  <div class="toclevel2"><a href="#libc-fnm_extmatch-is-not-in-posix">libc - <code>FNM_EXTMATCH</code> is not in POSIX</a></div>
+  <div class="toclevel2"><a href="#libc-glob_period-is-not-in-posix">libc - <code>GLOB_PERIOD</code> is not in POSIX</a></div>
+  <div class="toclevel2"><a href="#atomic-assignments">Atomic Assignments</a></div>
+  <div class="toclevel1"><a href="#extra-features">Extra Features</a></div>
+  <div class="toclevel2"><a href="#usdt-userland-statically-defined-tracing">USDT - Userland Statically-Defined Tracing</a></div>
+  <div class="toclevel1"><a href="#enums-that-are-often-extended">&quot;Enums&quot; that are often extended</a></div>
+  <div class="toclevel1"><a href="#unicode">Unicode</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="issues-in-the-core-of-oils"></a>
+<h2>Issues in the core of Oils</h2>
+<a name="libc-fnm_extmatch-is-not-in-posix"></a>
+<h3>libc - <code>FNM_EXTMATCH</code> is not in POSIX</h3>
+<p>To match extended globs like <code>@(*.cc|*.h)</code>, OSH relies on <code>FNM_EXTMATCH</code> from
+GNU libc.</p>
+<p>This is unlike bash, which has its own extended glob library.</p>
+<p>TODO: when using other libc, using this syntax should be an error.</p>
+<a name="libc-glob_period-is-not-in-posix"></a>
+<h3>libc - <code>GLOB_PERIOD</code> is not in POSIX</h3>
+<p>To implement the bash feature <code>shopt -s dotglob</code>, OSH relies on <code>GLOB_PERIOD</code>,
+which some libc's implement.</p>
+<p>This is unlike bash, which has its own glob library.</p>
+<a name="atomic-assignments"></a>
+<h3>Atomic Assignments</h3>
+<p>The signal handler assumes that int and pointer assignments are atomic.  This
+is a common and widespread assumption.</p>
+<ul>
+<li>Related: <a href="https://preshing.com/20130618/atomic-vs-non-atomic-operations/">Atomic vs. Non-Atomic
+Operations</a>
+by Jeff Preshing</li>
+</ul>
+
+<a name="extra-features"></a>
+<h2>Extra Features</h2>
+<a name="usdt-userland-statically-defined-tracing"></a>
+<h3>USDT - Userland Statically-Defined Tracing</h3>
+<p>Our C++ code has <code>DTRACE_PROBE()</code> macros, which means we can use tools like
+<code>bpftrace</code> on Linux to make low-overhead queries of runtime behavior.</p>
+<p>The probe names and locations aren't stable across releases.</p>
+<a name="enums-that-are-often-extended"></a>
+<h2>&quot;Enums&quot; that are often extended</h2>
+<p>Different Unix implementations often extend:</p>
+<ul>
+<li>the list of signals</li>
+<li>the list of <a href="ref/chap-builtin-cmd.html#ulimit">ulimit</a> resources, which correspond to flags</li>
+</ul>
+<a name="unicode"></a>
+<h2>Unicode</h2>
+<p>Strings in Oils are byte strings, which are often UTF-8 encoded.</p>
+<p>We use <code>libc</code> functions that may depend on the global locale setting, like
+<code>glob()</code>.  We currently assume your libc is configured to use UTF-8.</p>
+<p>See the <a href="unicode.html">Unicode doc</a> for details on Unicode-aware operations.</p>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="INSTALL.html">INSTALL</a></li>
+<li><a href="help-mirror.html">Oils Help Mirror</a></li>
+</ul>
+
+    <div id="build-timestamp">
+      <i>Generated on Fri, 02 May 2025 00:17:40 -0400</i>
+    </div>
+  </body>
+</html>
