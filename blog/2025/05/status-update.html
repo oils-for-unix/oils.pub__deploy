@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What's Happened Since December?</title>
+  <meta name="twitter:title" content="What's Happened Since December?">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v6.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">What's Happened Since December?</h1>
+<div class="date">
+  2025-05-04
+</div>
+<p>I've let the blog fall behind!  The last release announcement was in January:</p>
+<ul>
+<li><a href="https://www.oilshell.org/blog/2025/01/release-0.24.0.html">Oils 0.24.0 - Closures, Objects, and Namespaces</a></li>
+</ul>
+<p>and the last post was in February:</p>
+<ul>
+<li><a href="../02/shared-hosting.html">Comments on Shared Unix Hosting vs. the Cloud</a> (related to the <code>oils.pub</code> migration)</li>
+</ul>
+<p>This post will be a <strong>quick sketch</strong> of what's happened in the last 6 months, in a narrative style.</p>
+<p>I won't explain everything in detail, because that will take too long!  But I welcome <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/What&#x27;s.20Happened.20Since.20December.3F/with/516036856">comments and questions</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#releases">Releases</a></div>
+  <div class="toclevel1"><a href="#blog-drafts">Blog Drafts</a></div>
+  <div class="toclevel1"><a href="#recap-regular-languages-and-doc-languages">Recap: Regular Languages and Doc Languages</a></div>
+  <div class="toclevel2"><a href="#htm8-rhtml">HTM8 / RHTML</a></div>
+  <div class="toclevel2"><a href="#ul-table-markdown-tables-without-new-syntax">ul-table: Markdown Tables Without New Syntax</a></div>
+  <div class="toclevel1"><a href="#under-the-hood">Under the Hood</a></div>
+  <div class="toclevel2"><a href="#zephyr-asdl">Zephyr ASDL</a></div>
+  <div class="toclevel2"><a href="#mycpp">mycpp</a></div>
+  <div class="toclevel2"><a href="#pretty-printing">Pretty Printing</a></div>
+  <div class="toclevel1"><a href="#research-claude-ai">Research / Claude AI</a></div>
+  <div class="toclevel2"><a href="#confetti-catbrain">Confetti / catbrain</a></div>
+  <div class="toclevel2"><a href="#async-await-and-event-loops"><code>async await</code> and Event Loops</a></div>
+  <div class="toclevel2"><a href="#server-side-ideas">Server Side Ideas</a></div>
+  <div class="toclevel2"><a href="#headless-shell-gui-ideas">Headless Shell / GUI Ideas</a></div>
+  <div class="toclevel1"><a href="#blog-ideas">Blog Ideas</a></div>
+  <div class="toclevel1"><a href="#new-landing-pages-and-project-scope">New Landing Pages and Project Scope</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+</div> 
+<a name="releases"></a>
+<h2>Releases</h2>
+<p>I've made many releases:</p>
+<ul>
+<li><a href="https://oils.pub/release/0.25.0/">https://oils.pub/release/0.25.0/</a> - December</li>
+<li><a href="https://oils.pub/release/0.26.0/">https://oils.pub/release/0.26.0/</a> - January</li>
+<li><a href="https://oils.pub/release/0.27.0/">https://oils.pub/release/0.27.0/</a> - February</li>
+<li><a href="https://oils.pub/release/0.28.0/">https://oils.pub/release/0.28.0/</a> - March</li>
+<li><a href="https://oils.pub/release/0.29.0/">https://oils.pub/release/0.29.0/</a> - May - <strong>last night</strong>!</li>
+</ul>
+<p>I want to highlight the excellent work by Koichi Murase on <a href="/cross-ref.html?tag=bash#bash">bash</a> arrays in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.</p>
+<p>We migrated to a new <code>SparseArray</code> representation, which means that arrays with <strong>holes</strong> are efficient.  This data structure performs better than <a href="/cross-ref.html?tag=bash#bash">bash</a> in all cases!</p>
+<p>As a result, I want to &quot;declare victory&quot; on the Oils data model  (<code>value_t</code>).  It's able to unify <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.  Notes:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/The.20Unix.20Shell.20Now.20Has.20Data.20Types.2C.20like.20Python.20or.20JavaScript/with/502920864">#blog-ideas &gt; The Unix Shell Now Has Data Types, like Python or JavaScript</a></li>
+</ul>
+
+<hr />
+<p>We also made great progress on <a href="/cross-ref.html?tag=hay#hay">Hay</a> and purity, though we need to use it ourselves more.</p>
+<a name="blog-drafts"></a>
+<h2>Blog Drafts</h2>
+<p>Looking at my draft folder, here's what I haven't found time to publish:</p>
+<ul>
+<li>2025-02 - <em>Dev Log - Regular Languages</em></li>
+<li>2025-02 - <em>Oils 0.27.0 - Bash Compatibility, Interactive Shell, Under the Hood</em></li>
+<li>2025-02 - <em>Under the Hood: ASDL, mycpp, Pretty Printing</em></li>
+<li>2025-03 - <em>Oils 0.28.0 - Reflection, Purity, Bash Compatibility</em></li>
+<li>2025-05 - The announcement for <em>Oils 0.29.0</em> could emphasize <em>Parallel Processes</em>.</li>
+</ul>
+<hr />
+<p>So I've been jumping around a lot.  The project continues to be big.</p>
+<p>Let me explain these draft titles with a rough sequence of events.</p>
+<a name="recap-regular-languages-and-doc-languages"></a>
+<h2>Recap: Regular Languages and Doc Languages</h2>
+<ol>
+<li>I finished setting up the new <code>oils.pub</code> domain.  Thanks to everyone who pointed out broken links and oversights.
+<ul>
+<li>This involved a lot of <strong>faffing</strong> with HTML, of course.</li>
+</ul>
+</li>
+<li>So I started working on an HTML5 subset called <strong>HTM8</strong>.
+<ul>
+<li>The idea is to express HTML declaratively, with <a href="/cross-ref.html?tag=regular-language#regular-language">regular languages</a>.</li>
+</ul>
+</li>
+</ol>
+<p>(I named it &quot;HTM8&quot; because I consider it part of <a href="/cross-ref.html?tag=j8-notation#j8-notation">J8 Notation</a>.  But as I write this, I'm considering <em>Regular HTML</em> / RHTML, because it doesn't use the J8 string syntax, as <a href="/cross-ref.html?tag=JSON8#JSON8">JSON8</a> and <a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a> do.)</p>
+<p>For context, here's a post that Claude AI found, showing how hard it is to write correct HTML processors: <a href="https://blog.cloudflare.com/html-parsing-1/">A History of HTML Parsing at Cloudflare: Part 1</a> (2019)</p>
+<p>And I just noticed that they omitted the infamous <a href="https://en.wikipedia.org/wiki/Cloudbleed">CloudBleed vulnerability</a>:</p>
+<div class="link-box">
+<p><a href="https://news.ycombinator.com/https://bugs.chromium.org/p/project-zero/issues/detail?id=1139">Cloudflare Reverse Proxies Are Dumping Uninitialized Memory</a> (<code>chromium.org</code> via Hacker News) <br/>    3238 points, <a href="https://news.ycombinator.com/item?id=13718752">1014 comments</a> - on Feb 23, 2017</p>
+</div>
+<p>Parsing is still hard, and centralized architectures are fragile.</p>
+<a name="htm8-rhtml"></a>
+<h3>HTM8 / RHTML</h3>
+<p>I went through 3 iterations of the HTM8 design, aimed at simplicity and compatibility.  One issue I remember getting tripped up on was:</p>
+<pre><code>&lt;a href=foo/&gt;
+</code></pre>
+<ul>
+<li>Is that a self-closing tag with <code>href=foo</code>, ending with <code>/&gt;</code>?</li>
+<li>Or is it an opening tag with <code>href=foo/</code> ?</li>
+</ul>
+<p>It's the latter, because HTML5 doesn't have self-closing tags.  But this example has implications for expressing the syntax with regular languages.  It should be a single pass of parsing, not the &quot;progressive&quot; strategy inherited from our <code>doctools/</code> library.</p>
+
+<p>HTM8 isn't done, but it's close.</p>
+<p>The last thing I did was write a <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> script to retrieve test data from <a href="https://commoncrawl.org/">https://commoncrawl.org/</a>.  I liked using <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> — it reduces shell/awk/Python cacophony — but there are also gaps.  The next year will be about filling these gaps!</p>
+<p>Zulip links:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/436652-doc-languages/topic/HTM8.20Design.20Notes/with/493116119">#doc-languages &gt; HTM8 Design Notes</a></li>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/436652-doc-languages/topic/TODO.20on.20HTM8/with/491300210">#doc-languages &gt; TODO on HTM8</a></li>
+</ul>
+<a name="ul-table-markdown-tables-without-new-syntax"></a>
+<h3>ul-table: Markdown Tables Without New Syntax</h3>
+<p>On the other hand, I did finish a related &quot;doc languages&quot; project.  It even has documentation, which has been buried at the end of <a href="https://oils.pub/release/0.29.0/doc/published.html">published docs</a>:</p>
+<ul>
+<li><a href="https://oils.pub/release/0.29.0/doc/ul-table.html">ul-table: Markdown Tables Without New Syntax</a></li>
+</ul>
+<p>We use Markdown everywhere, but it doesn't have tables.  So we <strong>abuse</strong> unordered lists, in a way that ends up looking similar to <a href="https://sublime-and-sphinx-guide.readthedocs.io/en/latest/tables.html">tables in reStructuredText</a>:</p>
+<pre><code>&lt;table&gt;
+
+- thead
+  - Shell
+  - Version
+- tr
+  - [bash](https://www.gnu.org/software/bash/)
+  - 5.2
+- tr
+  - [OSH](https://oils.pub/)
+  - 0.29.0
+
+&lt;/table&gt;
+</code></pre>
+<p><code>ul-table</code> detects the HTML corresponding to this structure, and transforms it into a table.  The syntax above is valid Markdown, which means it &quot;degrades&quot; gracefully on sites like Github.  You'll see bulleted lists, instead of a table.</p>
+<p>I should write a real blog post about this.  It was a success, in that I started using it <strong>immediately</strong>, all over our docs, and all over the blog.</p>
+<p>For example, I ported a table-heavy post to <code>ul-table</code>: <a href="https://www.oilshell.org/blog/2024/09/project-overview.html">What Oils Looks Like in 2024</a>.  It looks the same, but the source is easier to write and maintain.</p>
+<a name="under-the-hood"></a>
+<h2>Under the Hood</h2>
+<p>OK, so regular languages and #<a href="https://oilshell.zulipchat.com/#narrow/channel/436652-doc-languages/topic/HTM8.20Design.20Notes/with/515747521">doc-languages</a> were one area of work.</p>
+<p>Another area was &quot;under the hood&quot; cleanup, involving our <a href="/cross-ref.html?tag=metalanguage#metalanguage">metalanguages</a>.  I like cleaning up code after implementing features.</p>
+<a name="zephyr-asdl"></a>
+<h3>Zephyr ASDL</h3>
+<p><a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">Zephyr ASDL</a> is our DSL for algebraic data types, borrowed from <a href="/cross-ref.html?tag=cpython#cpython">CPython</a>.  I did an experiment toward &quot;boxless&quot; optimization, to eliminate <strong>GC objects</strong>:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/208950-zephyr-asdl/topic/Subtypes.3A.20CompoundWord.20.3C.20List.5Bword_part.5D">#zephyr-asdl &gt; Subtypes: CompoundWord &lt; List[word_part]</a></li>
+</ul>
+<p>So <code>.asdl</code> schema files support a new syntax for <strong>subtypes</strong>, and the toolchain generates typed Python and C++ code.</p>
+<p>I used this feature in one place.  It makes the code cleaner, but I'm not sure if it's a big win overall, so I didn't start using it everywhere.  I think I used it one more time in the last few months.</p>
+<a name="mycpp"></a>
+<h3>mycpp</h3>
+<p><a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a> is our Python to C++ translator.  It's always been the messiest part of the codebase, since it reaches into the internals of <a href="https://mypy-lang.org">MyPy</a>.  I spent several days on a big cleanup:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/410142-yaks/topic/Big.20cleanup.3A.20mycpp.20has.205.20separate.20passes/with/487084741">#yaks &gt; Big cleanup: mycpp has 5 separate passes</a></li>
+</ul>
+<p>So it's now a pretty clean program, structured like a compiler.  I still dislike the visitor pattern, but not as much.  <a href="https://lobste.rs/s/jdgjjt/visitor_pattern_considered_pointless#c_jksgge">I can see its utility</a>.</p>
+<p>This involved refactoring the GC rooting optimizations that Melvin did last year, which use <a href="https://souffle-lang.github.io/">Souffle datalog</a>.  This feature makes a lot of sense, and I feel more confident about it now that the <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a> has been cleaned up,</p>
+<p>On the other hand, we still have the anomaly shown by <code>benchmarks/osh-runtime</code>.  For example, on CPython's configure, OSH makes around 5% <strong>fewer</strong> syscalls than <a href="/cross-ref.html?tag=bash#bash">bash</a>, which is great.  But it can still be around 5% slower, not faster.  This bugs me, but we may have to let it be for now.</p>
+<p>I'm also wondering if we can use Souffle datalog for other optimizations.  In my limited understanding, it strength is that you can take a <strong>global</strong> view of the program, as opposed to a function-by-function view.</p>
+<a name="pretty-printing"></a>
+<h3>Pretty Printing</h3>
+<p>I think Wadler-style pretty-printing counts as a new <a href="/cross-ref.html?tag=metalanguage#metalanguage">metalanguage</a>!  You use it by generating a <code>doc_t</code> intermediate representation.  Thank you to Justin Pombrio for implementing it.</p>
+<p>We enabled pretty printing with the <code>=</code> operator <a href="https://www.oilshell.org/blog/2024/06/release-0.22.0.html">in June 2024</a>.</p>
+<p>It's been working well, so I retired a different, crappy pretty printer I wrote many years ago for the <code>osh -n</code> debugging feature.</p>
+<p>Instead, we generate the new Wadler-style IR.  This fixed several bugs, which makes me happy.  It uses more memory than I'd like, but I think it's OK because it's for debugging.</p>
+<p>Much like Souffle datalog, I feel like I should sit down and understand this area more thoroughly.  But there are so many other things to do!</p>
+
+<a name="research-claude-ai"></a>
+<h2>Research / Claude AI</h2>
+<p>What else has happened?  I did <strong>a lot</strong> of research on language and systems ideas over the last few months, with help from Claude AI.</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/121539-oil-dev/topic/List.20of.20subprojects.20.2F.20side.20projects/with/500070599">#oil-dev &gt; List of subprojects / side projects</a></li>
+</ul>
+<p>I still catch Claude hallucinating pretty often.  But one thing that gave it credibility is helping me with code I wrote back in <strong>2012</strong>, related to:</p>
+<ul>
+<li>Async parsing: <a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/blog.3A.20push.20vs.2E.20pull/with/192210062">#blog-ideas &gt; blog: push vs. pull</a></li>
+<li><a href="//oils.pub/release/latest/doc/framing.html">The Framing Problem</a></li>
+</ul>
+<p>It was weird but rewarding to revisit ideas from old <code>hg</code> repos.  I hope to incorporate some of them into <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, though I actually want to become fluent in <a href="https://peps.python.org/pep-3156/">Python asyncio</a> first.</p>
+<p>I've come around to the idea that <strong>coroutines</strong> and <code>asyncio</code> are complementary to parallel <strong>processes</strong>.  In contrast, threads and processes don't mix.  (This is one reason that the <a href="https://news.ycombinator.com/item?id=42535217">fish shell moved to Rust</a> — to get help with threads from the compiler)</p>
+
+<a name="confetti-catbrain"></a>
+<h3>Confetti / catbrain</h3>
+<p>A new project called Confetti inspired thoughts about the design of Oils:</p>
+<ul>
+<li><a href="https://old.reddit.com/r/ProgrammingLanguages/comments/1jo6qy9/confetti_an_experiment_in_configuration_languages/">Confetti: an experiment in configuration languages</a> (reddit)</li>
+</ul>
+<p>Confetti is a bit like <a href="https://kdl.dev">KDL</a>:</p>
+<blockquote>
+<p>...  a small, pleasant document language ... that looks like you're invoking a bunch of CLI commands!</p>
+</blockquote>
+<p>And it's also like like <a href="/cross-ref.html?tag=hay#hay">Hay</a>.  (Related wiki: <a href="https://github.com/oilshell/oil/wiki/Survey-of-Config-Languages">Survey of Config Languages</a>)</p>
+<p>I tested out Confetti, gave feedback, and <a href="https://github.com/hgs3/confetti/issues/4">caused a minor change</a>!</p>
+<a name="async-await-and-event-loops"></a>
+<h3><code>async await</code> and Event Loops</h3>
+<p>Confetti reminded me of <code>catbrain</code>, which I briefly mentioned in the <a href="https://www.oilshell.org/blog/2024/09/retrospective.html">Oils retrospective</a>.  It's a <strong>design</strong> exercise, for everything <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> doesn't have, but could have:</p>
+<ul>
+<li>It might be about <strong>intra-process</strong> glue
+<ul>
+<li>e.g. with <code>select()</code> loops and C APIs</li>
+</ul>
+</li>
+<li>which is complementary to the <strong>inter-process</strong> glue of shell.</li>
+</ul>
+<p>It also might work on <strong>Windows</strong>.  I've come around to the idea that Windows is a problem that should be solved:</p>
+<div class="link-box">
+<p><a href="https://learn.microsoft.com/en-us/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way" rel="ugc noreferrer" class="u-url">Everyone quotes command line arguments the wrong way (on Windows)</a> (<code>learn.microsoft.com</code> via lobste.rs) <br/>    16 points, <a role="heading" aria-level="2" href="https://lobste.rs/s/qjzd9y/everyone_quotes_command_line_arguments">              14              comments            </a> on 2025-03-24</p>
+</div>
+<p>I don't have any concrete results now, but here's a list of <strong>research</strong> topics:</p>
+<ul>
+<li>Coroutines and <code>async await</code>
+<ul>
+<li>I asked Claude to generate Python and JavaScript code, for comparison</li>
+<li>And Lua code. Lua has has <strong>symmetric</strong> coroutines, in contrast to the asymmetric <code>async await</code>.  (&quot;Call&quot; and &quot;return&quot; are considered asymmetric.)</li>
+<li>And Tcl code.  <a href="https://news.ycombinator.com/item?id=4949788">Tcl got coroutines in 2012</a>.  This is the same year I was playing with the <a href="https://www.tornadoweb.org/en/stable/">Tornado</a> async framework, and the same year that Guido started <a href="https://python-tulip.narkive.com/">Tulip</a>, the prototype for Python asyncio.</li>
+</ul>
+</li>
+<li><strong>Event Loops</strong> are complementary to coroutines
+<ul>
+<li>For networking</li>
+<li>And GUIs, on Windows / OS X / Linux</li>
+<li>Event loops are under-appreciated <strong>glue</strong>!</li>
+</ul>
+</li>
+<li>Windows system calls (I abandoned Windows programming in 2007 or so.)
+<ul>
+<li>For starting processes and pipelines</li>
+<li>As of 2018, Windows has Unix-style pseudo-<strong>terminals</strong> (PTYs)!  A trillion dollars and a near monopoly can't overcome the <strong>inertia</strong> of the <a href="/cross-ref.html?tag=narrow-waist#narrow-waist">narrow waist</a>.</li>
+<li>Can <a href="/cross-ref.html?tag=FANOS#FANOS">FANOS</a> work on Windows?  We need something like Unix sockets and file descriptor passing.</li>
+</ul>
+</li>
+</ul>
+<a name="server-side-ideas"></a>
+<h3>Server Side Ideas</h3>
+<p>My research meandered onto the #<a href="https://oilshell.zulipchat.com/#narrow/channel/398896-server-side/topic/OpalStack.20503.20errors/with/514427878">server-side</a>.  This relates to turning <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> into a distributed shell — a language for CI systems.</p>
+<p>I came up with a good project name, which makes me think we should actually do the project:</p>
+<ul>
+<li><strong>PCHU</strong>
+<ul>
+<li><em>Protocols for Cloud Hosting on Unix</em></li>
+<li><em>Provenance-Carrying Heterogeneous Universe</em></li>
+<li><em>Plants Can Help yoU</em></li>
+</ul>
+</li>
+</ul>
+<p>It might be under the <em>Provenance-Carrying Source License</em>, something I made up.</p>
+
+<a name="headless-shell-gui-ideas"></a>
+<h3>Headless Shell / GUI Ideas</h3>
+<p>My mind also wandered into GUIs.  I generated some example code with Claude AI, which actually worked and ran:</p>
+<ul>
+<li>A GTK GUI in Python, with an embedded VTE Terminal</li>
+<li>A Tcl GUI, combining UI events and process completion events</li>
+</ul>
+<p>But since then, I've come around to the idea that the <strong>web</strong> still has advantages:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/436652-doc-languages/topic/Threads.20on.20sharing.3A.20task.20files.2C.20notebooks.2Frunbooks.2C.20history/with/514214883">#doc-languages &gt; Threads on sharing: task files, notebooks/runbooks, history</a></li>
+</ul>
+<a name="blog-ideas"></a>
+<h2>Blog Ideas</h2>
+<p>What else have I been thinking about in the last 6 months?  Here are some blog ideas:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/Three.20kinds.20of.20language.20runtime.3A.20sync.2C.20async.2C.20and.20shell/with/471576279">#blog-ideas &gt; Three kinds of language runtime: sync, async, and shell</a>
+<ul>
+<li>This should be a good post, related to the research above.</li>
+</ul>
+</li>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/How.20to.20run.20processes.20in.20parallel.2C.20and.20check.20for.20errors/with/514486770">#blog-ideas &gt; How to run processes in parallel, and check for errors</a>
+<ul>
+<li>This is surprisingly hard in shell!</li>
+<li>I fixed it in in <a href="/release/0.29.0/">Oils 0.29.0</a> with <code>wait --all --verbose</code>.  My research eventually turns into code.</li>
+<li>We still need a replacement for <code>xargs -P</code>.  I <a href="https://www.oilshell.org/blog/2021/08/xargs.html">neglected to mention</a> that it also doesn't have good error handling.</li>
+</ul>
+</li>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/Do.20we.20need.207.20kinds.20of.20language.20to.20make.20distributed.20systems.3F/with/506197643">#blog-ideas &gt; Do we need 7 kinds of language to make distributed systems?</a>
+<ul>
+<li>A post based on <a href="https://news.ycombinator.com/item?id=43390774">this comment</a>.  YSH is designed to unify levels 4, 5, 6, and 7 - Python, Shell, YAML, JSON.  This framing made it onto the new <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> landing page.</li>
+</ul>
+</li>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/Is.20YSH.20just.20another.20scripting.20language.3F/with/514149807">#blog-ideas &gt; Is YSH just another scripting language?</a>
+<ul>
+<li>People use shell and YAML for CI problems, more than Python.  <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> fits in this niche.</li>
+</ul>
+</li>
+</ul>
+<a name="new-landing-pages-and-project-scope"></a>
+<h2>New Landing Pages and Project Scope</h2>
+<p>So it was fun to let my imagination run wild on those research topics: language concurrency, OS APIs, servers, and GUIs.</p>
+
+<hr />
+<p>Last week, I returned to more immediate work, and published these landing pages:</p>
+<ul>
+<li><a href="/osh.html">Nine Reasons to Use OSH</a>
+<ul>
+<li>Great comments and questions <a href="https://lobste.rs/s/q5vfvv/nine_reasons_use_osh">on lobste.rs</a></li>
+</ul>
+</li>
+<li><a href="/osh.html">What is YSH?</a></li>
+</ul>
+<p>It took several days, but it was worth it.  Thank you to Samuel for paying attention to the perception of the project!</p>
+<p>The landing pages helped me think about the project's scope, which has always been large:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/121540-oil-discuss/topic/Holes.20revealed.20by.20OSH.2FYSH.20on.20home.20page/with/514213135">#oil-discuss &gt; Holes revealed by OSH/YSH on home page</a> - what's left?
+<ul>
+<li>For example, <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> has basic libraries for task files and testing.  But they need to be improved and validated, and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> needs the same features.</li>
+</ul>
+</li>
+<li>Another thread about project scope: <a href="https://oilshell.zulipchat.com/#narrow/channel/121539-oil-dev/topic/Project.20Review.20-.20Spring.202025/with/508654394">#oil-dev &gt; Project Review - Spring 2025</a></li>
+</ul>
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>That was a whirlwind tour of what's happened in the last six months:</p>
+<ul>
+<li>Progress on <strong>doc languages</strong>: an HTML5 subset, and a nice way to create and maintain tables.</li>
+<li>I revisited and improved 3 pieces of <strong>infrastructure</strong>: Zephyr ASDL, mycpp, and pretty printing.</li>
+<li>A ton of <strong>research</strong>, on disparate topics
+<ul>
+<li>In particular, I want to use <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> for future server-side projects.</li>
+<li>I want to become fluent in <a href="https://peps.python.org/pep-3156/">Python asyncio</a>.  That's required <em>before</em> trying to implement coroutines myself, whether in catbrain or <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.</li>
+</ul>
+</li>
+</ul>
+<p>We also have five new <strong>releases</strong>, with new features and fixes in both <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.  I've continued to update the corresponding Zulip threads, and the <a href="/release/0.29.0/doc/ref/">Oils Reference</a>.</p>
+<p>For the sake of time, I may have to declare blog bankruptcy, and write <strong>abridged</strong> posts like:</p>
+<ul>
+<li><em>Oils 0.25.0 - Contributors and Issues</em></li>
+<li>...</li>
+<li><em>Oils 0.29.0 - Contributors and Issues</em></li>
+</ul>
+<p>The bare minimum is to credit contributors, who I appreciate!  We've had a few new contributors.</p>
+<p>I also want to publish release <strong>metrics</strong>, which help me keep track of the project.</p>
+<hr />
+<p>That's it!  I'm glad I wrote this post, because it helped me organize my thoughts, and make sense of what's happened.  Feel free to <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/What&#x27;s.20Happened.20Since.20December.3F/with/516036856">ask questions</a>!</p>
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/What's.20Happened.20Since.20December.3F/with/516036856">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=zulip-links#zulip-links">zulip-links</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=project-updates#project-updates">project-updates</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=zephyr-asdl#zephyr-asdl">zephyr-asdl</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=mycpp#mycpp">mycpp</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=doc-languages#doc-languages">doc-languages</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>

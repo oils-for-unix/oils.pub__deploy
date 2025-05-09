@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metrics for the 0.29.0 Release</title>
+  <meta name="twitter:title" content="Metrics for the 0.29.0 Release">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Metrics for the 0.29.0 Release</h1>
+<div class="date">
+  2025-05-08
+</div>
+<p>I'm writing <strong>abridged</strong> release notes, as explained in the last post:</p>
+<ul>
+<li><a href="status-update.html">What's Happened Since December?</a></li>
+</ul>
+<p>This post isn't very interesting, so I'm going to publish it without circulating it widely.</p>
+<p>I'm just keeping track of <strong>metrics</strong> for last week's release:</p>
+<div class="attention">
+<p><a href="/release/0.29.0/">Oils version 0.29.0</a> - Source tarballs and documentation.</p>
+</div>
+<p>Summary: everything looks good.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#docs">Docs</a></div>
+  <div class="toclevel1"><a href="#spec-tests">Spec Tests</a></div>
+  <div class="toclevel2"><a href="#osh">OSH</a></div>
+  <div class="toclevel2"><a href="#ysh">YSH</a></div>
+  <div class="toclevel1"><a href="#benchmarks">Benchmarks</a></div>
+  <div class="toclevel2"><a href="#parser">Parser</a></div>
+  <div class="toclevel2"><a href="#runtime">Runtime</a></div>
+  <div class="toclevel1"><a href="#code-size">Code Size</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+</div>
+<p> </p>
+<p>Let's compare this release with <a href="//www.oilshell.org/release/0.24.0/">Oils 0.24.0</a> from November, which is the <a href="//www.oilshell.org/blog/2025/01/release-0.24.0.html">last one I announced</a>.</p>
+<a name="docs"></a>
+<h2>Docs</h2>
+<p>We continue to keep the <a href="/release/0.29.0/doc/ref/">Oils Reference</a> up to date:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/doc/metrics.txt">Doc Metrics for 0.24.0</a> - <strong>399</strong> topics with first pass, <strong>437</strong> marked implemented, <strong>469</strong> unique</li>
+<li><a href="//oils.pub/release/0.29.0/doc/metrics.txt">Doc Metrics for 0.29.0</a> - <strong>428</strong> topics with first pass, <strong>455</strong> marked implemented, <strong>496</strong> unique</li>
+</ul>
+<a name="spec-tests"></a>
+<h2>Spec Tests</h2>
+<a name="osh"></a>
+<h3>OSH</h3>
+<p><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> made great progress, with <strong>178</strong> new tests passing.  Many of them were due to Koichi's work on <a href="/cross-ref.html?tag=bash#bash">bash</a> arrays, mentioned in the last post.</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/test/spec.wwz/osh-py/index.html">OSH spec tests for 0.24.0</a>: <strong>2322</strong> tests, <strong>2070</strong> passing, <strong>102</strong> failing</li>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/osh-py/index.html">OSH spec tests for 0.29.0</a>: <strong>2517</strong> tests, <strong>2248</strong> passing, <strong>134</strong> failing</li>
+</ul>
+<p>TODO: we should <strong>audit</strong> the 134 spec test failures, and try to get that number down.  I think many of them are related to the missing <code>GLOBIGNORE</code> feature.</p>
+<p>Let's look at our C++ translation:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/test/spec.wwz/osh-cpp/compare.html">C++ spec tests for 0.24.0</a> - <strong>2075</strong> of <strong>2075</strong> passing - delta <strong>zero</strong></li>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/osh-cpp/compare.html">C++ spec tests for 0.29.0</a> - <strong>2240</strong> of <strong>2248</strong> passing - delta <strong>8</strong>
+<ul>
+<li>The delta is because we're working on the <code>bind</code> builtin in Python first.  It still needs to be translated to C++.</li>
+</ul>
+</li>
+</ul>
+<a name="ysh"></a>
+<h3>YSH</h3>
+<p><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> has <strong>74</strong> more tests passing:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/test/spec.wwz/ysh-py/index.html">YSH spec tests for 0.24.0</a>: <strong>1000</strong> tests, <strong>948</strong> passing, <strong>52</strong> failing</li>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/ysh-py/index.html">YSH spec tests for 0.29.0</a>: <strong>1090</strong> tests, <strong>1022</strong> passing, <strong>68</strong> failing</li>
+</ul>
+<p>The C++ translation:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/test/spec.wwz/ysh-cpp/compare.html">YSH C++ spec tests for 0.24.0</a>: <strong>948</strong> of <strong>948</strong> passing, delta <strong>zero</strong></li>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/ysh-cpp/compare.html">YSH C++ spec tests for 0.29.0</a>: <strong>1020</strong> of <strong>1022</strong> passing, delta <strong>2</strong>
+<ul>
+<li>The delta is due to a <code>Dict</code> ordering issue in <a href="/cross-ref.html?tag=Hay#Hay">Hay</a>.  The dict in the <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a> runtime has a simpler algorithm for deletions, which means that the key order after deletion doesn't match CPython.  In this case, the &quot;spec&quot; is still up for debate.</li>
+</ul>
+</li>
+</ul>
+<a name="benchmarks"></a>
+<h2>Benchmarks</h2>
+<a name="parser"></a>
+<h3>Parser</h3>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/benchmarks.wwz/osh-parser/">Parser Performance for 0.24.0</a>: <strong>11.9</strong>
+thousand irefs per line</li>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/osh-parser/">Parser Performance for 0.29.0</a>: <strong>12.9</strong> thousand irefs per line</li>
+</ul>
+<p>This speedup is probably not significant.  <a href="//www.oilshell.org/release/0.23.0/benchmarks.wwz/osh-parser/">Oils 0.23.0 Parser Performance</a> was similar.</p>
+<hr />
+<p>No change in parser memory usage:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/benchmarks.wwz/gc/">benchmarks/gc for 0.24.0</a>: <code>parse.configure-coreutils</code> <strong>1.65 M</strong> objects comprising <strong>41.8 MB</strong>, max RSS <strong>47.5 MB</strong></li>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/gc/">benchmarks/gc for 0.29.0</a>: <code>parse.configure-coreutils</code> <strong>1.65 M</strong> objects comprising <strong>41.0 MB</strong>, max RSS <strong>46.6 MB</strong> - no change</li>
+</ul>
+<a name="runtime"></a>
+<h3>Runtime</h3>
+<p>A compute-bound workload:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/benchmarks.wwz/gc-cachegrind/">benchmarks/gc-cachegrind for 0.24.0</a> - <code>fib</code> takes <strong>25.8</strong> million irefs, mut+alloc+free+gc</li>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/gc-cachegrind/">benchmarks/gc-cachegrind for 0.29.0</a> - <code>fib</code> takes <strong>25.4</strong> million irefs, mut+alloc+free+gc</li>
+</ul>
+<p>This measurement is noisy, and is limited to one physical machine, because we used a different second machine:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/benchmarks.wwz/osh-runtime/">Runtime Performance for 0.24.0</a>: <strong>12.5</strong> seconds running CPython's <code>configure</code> (hoover)
+<ul>
+<li><a href="/cross-ref.html?tag=bash#bash">bash</a>: <strong>13.5</strong> seconds running CPython's <code>configure</code> (hoover)</li>
+</ul>
+</li>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/osh-runtime/">Runtime Performance for 0.29.0</a>:
+<strong>12.8</strong>  seconds running CPython's <code>configure</code> (hoover)</li>
+</ul>
+
+<p><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> to <a href="/cross-ref.html?tag=bash#bash">bash</a> ratios:</p>
+<ul>
+<li>0.96x - 1.05x on <code>configure.cpython</code></li>
+<li>1.04x - 1.10x on <code>configure.util-linux</code></li>
+</ul>
+<a name="code-size"></a>
+<h2>Code Size</h2>
+<p>Our code continues to be short:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/pub/metrics.wwz/line-counts/cloc-report.txt">cloc for 0.24.0</a>:
+<strong>23,501</strong> significant lines in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, <strong>6,208</strong> in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, <strong>1,138</strong> in data languages, <strong>5,990</strong> lines of hand-written C++</li>
+<li><a href="//oils.pub/release/0.29.0/pub/metrics.wwz/line-counts/cloc-report.txt">cloc for 0.29.0</a>:
+<strong>25,185</strong> significant lines in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, <strong>6,380</strong> in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, <strong>1,691</strong> in data languages, <strong>6,112</strong> lines of hand-written C++
+<ul>
+<li>The HTM8/RHTML prototype accounts for the delta in data languages.</li>
+</ul>
+</li>
+</ul>
+<p>The generated C++ is proportional:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/pub/metrics.wwz/line-counts/oils-cpp.txt">oils-cpp for 0.24.0</a> - 180,912 - 55,082 = <strong>125,830</strong> physical lines (accounting for a new Souffle source file)</li>
+<li><a href="//oils.pub/release/0.29.0/pub/metrics.wwz/line-counts/oils-cpp.txt">oils-cpp for 0.29.0</a> - <strong>128,449</strong> physical lines</li>
+</ul>
+<p>And compiled binary size is proportional:</p>
+<ul>
+<li><a href="//www.oilshell.org/release/0.24.0/benchmarks.wwz/ovm-build/">ovm-build for 0.24.0</a>:
+<strong>2.33 MB</strong> of native code (hoover, under GCC, on Debian 12)</li>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/ovm-build/">ovm-build for 0.29.0</a>:
+<strong>2.40 MB</strong> of native code (hoover, under GCC, on Debian 12)</li>
+</ul>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>Everything looks good!  There is still a minor performance mystery in <code>benchmarks/osh-runtime</code>, but it's not blocking us.</p>
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Metrics.20for.20the.200.2E29.2E0.20Release/with/517018152">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=oils-release#oils-release">oils-release</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>
