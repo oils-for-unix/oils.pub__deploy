@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Oils 0.27.0 - Contributors and Issues</title>
+  <meta name="twitter:title" content="Oils 0.27.0 - Contributors and Issues">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Oils 0.27.0 - Contributors and Issues</h1>
+<div class="date">
+  2025-05-09
+</div>
+<p>I'm writing <strong>abridged</strong> release notes, as explained earlier in the week:</p>
+<ul>
+<li><a href="status-update.html">What's Happened Since December?</a></li>
+</ul>
+<p>This post covers 3 releases:</p>
+<ul>
+<li><a href="https://oils.pub/release/0.25.0/">Oils 0.25.0</a> - December</li>
+<li><a href="https://oils.pub/release/0.26.0/">Oils 0.26.0</a> - January</li>
+<li><a href="https://oils.pub/release/0.27.0/">Oils 0.27.0</a> - February</li>
+</ul>
+<p>Here's a complete list of changes:</p>
+<ul>
+<li><a href="https://oils.pub/release/0.25.0/changelog.html">https://oils.pub/release/0.25.0/changelog.html</a></li>
+<li><a href="https://oils.pub/release/0.26.0/changelog.html">https://oils.pub/release/0.26.0/changelog.html</a></li>
+<li><a href="https://oils.pub/release/0.27.0/changelog.html">https://oils.pub/release/0.27.0/changelog.html</a></li>
+</ul>
+<p>This post will credit contributors, mention notable changes, and link to issues fixed.  But it's <strong>not</strong> a complete announcement!</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#new-doc-on-packaging">New Doc on Packaging</a></div>
+  <div class="toclevel1"><a href="#complete-overhaul-of-bash-arrays-koichi-murase">Complete Overhaul of Bash Arrays - Koichi Murase</a></div>
+  <div class="toclevel1"><a href="#contributions">Contributions</a></div>
+  <div class="toclevel1"><a href="#feedback">Feedback</a></div>
+  <div class="toclevel1"><a href="#breaking-changes">Breaking Changes</a></div>
+  <div class="toclevel1"><a href="#notable-changes">Notable Changes</a></div>
+  <div class="toclevel2"><a href="#stack-trace-api-now-available-in-ysh">Stack Trace API now available in YSH</a></div>
+  <div class="toclevel1"><a href="#vim-syntax-highlighter">Vim Syntax Highlighter</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#links">Links</a></div>
+  <div class="toclevel2"><a href="#closed-issues">Closed Issues</a></div>
+</div> 
+<a name="new-doc-on-packaging"></a>
+<h2>New Doc on Packaging</h2>
+<p>I want to highlight this doc, intended to help packagers:</p>
+<ul>
+<li><a href="/release/0.29.0/doc/help-mirror.html">Oils Build Help Mirror</a></li>
+</ul>
+<p>It's a copy of:</p>
+<pre><code>./configure --help
+_build/oils.sh --help
+./install --help
+</code></pre>
+<p>with some notes.  Thanks to Machine Stops, <code>meator</code>, and others for feedback on Zulip and Github.</p>
+<p>Some changes:</p>
+<ul>
+<li><code>./configure</code> now accepts a <code>--cxx</code> flag</li>
+<li><code>_build/oils.sh</code> respects <code>LDFLAGS</code>, consistent with <code>CXXFLAGS</code></li>
+</ul>
+<a name="complete-overhaul-of-bash-arrays-koichi-murase"></a>
+<h2>Complete Overhaul of Bash Arrays - Koichi Murase</h2>
+<p>Koichi migrated <a href="/cross-ref.html?tag=bash#bash">bash</a>-compatible arrays in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> to a new <code>SparseArray</code> data structure.</p>
+<p>Why do this?  The answer could be a blog post by itself, but briefly, the sparse data structure is more like <a href="/cross-ref.html?tag=bash#bash">bash</a>, which means it fixes performance bugs.</p>
+<p>Koichi's <a href="/cross-ref.html?tag=ble.sh#ble.sh">ble.sh</a> uses arrays, and bash code in distros like <a href="/cross-ref.html?tag=nix#nix">Nix</a> also use arrays.</p>
+<p>This changed turned out very well!  It touched many parts of the code, but our tests kept things under control.  And Koichi added many new tests.</p>
+<hr />
+<p>And Koichi fixed <em>many</em> bugs along the way:</p>
+<ul>
+<li>Fixed crashes due to negative indices, e.g.
+<ul>
+<li><code>a[-1]=1</code></li>
+<li><code>[[ -v a[-1] ]]</code></li>
+<li>array slicing <code>${a[@]:i:j}</code></li>
+<li><code>${a[i]}</code> and <code>$(( a[i] ))</code></li>
+</ul>
+</li>
+<li>Implement BashAssoc <code>assoc+=()</code></li>
+<li>Improve and fix <code>xtrace</code> output with respect to arrays</li>
+<li>Fix <code>${unset@Q}</code> to produce empty string</li>
+<li>Implement <code>${a[@]@Q}</code></li>
+<li>Perform indirect expansion with <code>${!a[@]...}</code></li>
+<li>Use bash behavior for <code>${!undef[@]-}</code></li>
+<li>Make <code>${!ref}</code> with invalid ref non-fatal</li>
+<li>Implemented YSH operations like <code>===</code> on <code>SparseArray</code></li>
+<li>Improve bash compatibility for <code>${a@a}</code> and <code>${a[0]@A}</code></li>
+<li>Implement <code>${a[@]@P}</code> and make <code>${a[@]@a}</code> and <code>${a[@]@Q}</code> consistent with bash</li>
+<li>Fix <code>${a[@]:-}</code>, <code>${a[*]:-}</code>, etc. to depend on string value, not array</li>
+<li>Fix crashes on type mismatch <code>s+=([0]=v)</code>, <code>a+=([0]=v)</code>, <code>assoc+=(0)</code></li>
+<li>More
+<ul>
+<li>Improved error messages</li>
+<li>(devtools) Handle duplicate/conflicting spec test assertions</li>
+<li>(devtools) Add libasan to Fedora dependencies</li>
+<li>(spec/var-op-test) Upgrade from bash 4 to bash 5</li>
+<li>(mycpp) Don't pass template arguments when disabling constructors - C++20</li>
+</ul>
+</li>
+</ul>
+<p>I'm happy that we're fixing the &quot;long tail&quot; of <a href="/cross-ref.html?tag=bash#bash">bash</a> compatibility.  I've never used any of these features myself, but  real shell scripts do!</p>
+<a name="contributions"></a>
+<h2>Contributions</h2>
+<p>Thank you to everyone who contributed code!</p>
+<ul>
+<li>Matthew Davidson implemented a first pass of the <code>bind</code> builtin
+<ul>
+<li>Starting with failing test cases, which aligns with our philosophy</li>
+<li>This work is ongoing, with more progress since February.</li>
+</ul>
+</li>
+<li>Melvin Walls
+<ul>
+<li>Respect <code>OILS_COMP_UI</code> in <code>oshrc/yshrc</code>  (an interactive shell setting)</li>
+<li>Make <code>OILS_COMP_UI=minimal</code> mode the default</li>
+<li>Work around bash 3.32 bug on OS X, caused by <code>time -f</code> check</li>
+</ul>
+</li>
+<li>Aidan Olsen
+<ul>
+<li>Fix for the <code>is-main</code> builtin</li>
+</ul>
+</li>
+<li>Samuel Hierholzer
+<ul>
+<li>(configure) Check for <code>GLOB_PERIOD</code> and <code>FNM_EXTMATCH</code></li>
+</ul>
+</li>
+<li>Brian Leung
+<ul>
+<li>Implemented <code>shopt -s dotglob</code></li>
+<li>Failing spec tests for <code>shopt -s globstar</code></li>
+<li>(devtools) Added basic <code>clangd</code> language server config</li>
+</ul>
+</li>
+<li>Sam W
+<ul>
+<li>Implement <code>List.remove()</code> and <code>List.insert()</code></li>
+</ul>
+</li>
+<li>Simon Leary
+<ul>
+<li>Add failing test cases for all bash prompt characters.  I followed up with a fix.</li>
+<li>Improved our <code>sh_spec.py</code> framework</li>
+</ul>
+</li>
+<li><code>wbob</code> fixed a typo in the Oils reference, relating to <code>io.promptVal()</code>
+<ul>
+<li>We welcome more eyes on the documentation!</li>
+</ul>
+</li>
+</ul>
+<p>This list may be <strong>incomplete</strong> — let me know if I missed your contribution.</p>
+<a name="feedback"></a>
+<h2>Feedback</h2>
+<p>Testing and feedback are equally important:</p>
+<ul>
+<li>Laurent Huberdeau (check out <a href="https://github.com/udem-dlteam/pnut">pnut</a> in the appendix)
+<ul>
+<li>Found a bug in shell arithmetic related to negative numbers, now fixed</li>
+<li>We were missing test coverage!</li>
+</ul>
+</li>
+<li>Machine Stops
+<ul>
+<li>Reported design issue with mutating a container inside a loop, now fixed -<a href="https://github.com/oils-for-unix/oils/issues/2243">issue 2243</a></li>
+</ul>
+</li>
+<li>Will Clardy
+<ul>
+<li>Found a performance bug, where we wouldn't GC often enough, now fixed</li>
+<li>Found a error message location bug, now fixed</li>
+</ul>
+</li>
+<li>Matthew Davidson
+<ul>
+<li>Found a error message location bug, now fixed</li>
+</ul>
+</li>
+<li><code>lincheney</code>
+<ul>
+<li>Found a bug parsing zsh-style var subs, now fixed - <a href="https://github.com/oils-for-unix/oils/issues/2234">issue 2234</a></li>
+</ul>
+</li>
+<li><code>latin-1</code>
+<ul>
+<li>Found bug with <code>time -f</code>, now fixed - <a href="https://github.com/oils-for-unix/oils/issues/2227">issue 2227</a></li>
+</ul>
+</li>
+<li>Samuel Hierholzer
+<ul>
+<li>Found crash in YSH expression, now fixed - <a href="https://github.com/oils-for-unix/oils/issues/2237">issue 2237</a></li>
+</ul>
+</li>
+</ul>
+<a name="breaking-changes"></a>
+<h2>Breaking Changes</h2>
+<ul>
+<li><code>for</code> loops now &quot;close over&quot; the loop variable - <code>shopt --set for_loop_frames</code>
+<ul>
+<li>This also means the loop variable doesn't &quot;leak&quot; past the end of the loop</li>
+<li>This completes our support for <a href="https://www.oilshell.org/blog/2025/01/release-0.24.0.html">closures in YSH</a></li>
+</ul>
+</li>
+<li>The <code>sum()</code> now lives in <code>math.ysh</code>, not <code>list.ysh</code></li>
+</ul>
+<a name="notable-changes"></a>
+<h2>Notable Changes</h2>
+<a name="stack-trace-api-now-available-in-ysh"></a>
+<h3>Stack Trace API now available in YSH</h3>
+<p>Based on Zulip feedback, I added the first pass of a stack trace API.  We will use it ourselves, but script authors may also use it.</p>
+<ul>
+<li><a href="//oils.pub/release/latest/doc/ref/feature-index.html#Introspecting-the-Call-Stack">Feature Index &gt; Introspecting the Call Stack</a> links to
+<ul>
+<li>the <code>DebugFrame</code> type, with a <code>toString()</code> method</li>
+<li>the <code>vm.getDebugStack()</code> function</li>
+</ul>
+</li>
+<li>Spec Tests: <a href="https://oils.pub/release/0.29.0/test/spec.wwz/ysh-py/ysh-introspect.html">https://oils.pub/release/0.29.0/test/spec.wwz/ysh-py/ysh-introspect.html</a></li>
+</ul>
+<hr />
+<p>Here's an example from the help that uses those APIs:</p>
+<pre><code>proc print-stack {
+  for i, frame in (vm.getDebugStack()) {
+    write --end '' -- &quot;  <span class="sh-comment">#$[i+1] $[frame.toString()]&quot;</span>
+  }
+}
+</code></pre>
+<p>When combined with, say:</p>
+<pre><code>trap 'print-stack' ERR
+set -o errtrace
+</code></pre>
+<p>You will get see detailed stack traces on errors:</p>
+<pre><code class="language-none">  #1 [ -c flag ]:1
+    source $[ENV.REPO_ROOT]/spec/testdata/debug-frame-eval.ysh
+    ^~~~~~
+  #2 MYROOT/spec/testdata/debug-frame-eval.ysh:7
+    p3
+    ^~
+  #3 MYROOT/spec/testdata/debug-frame-eval.ysh:4
+      eval 'my-proc x y'
+           ^
+  #4 [ eval arg at line 4 of MYROOT/spec/testdata/debug-frame-eval.ysh ]:1
+    my-proc x y
+    ^~~~~~~
+  #5 MYROOT/spec/testdata/debug-frame-lib.ysh:15
+      print-stack
+      ^~~~~~~~~~~
+</code></pre>
+<p>I expect to refine this functionality over time.</p>
+<a name="vim-syntax-highlighter"></a>
+<h2>Vim Syntax Highlighter</h2>
+<p>I started a syntax highlighter for <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.  It's unfortunately languished behind other work, but I still use it.</p>
+<p>It lives in a separate repo:</p>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils.vim">https://github.com/oils-for-unix/oils.vim</a></li>
+</ul>
+<p>(Install it with <a href="https://github.com/junegunn/vim-plug">vimplug</a>, which I started using myself!)</p>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>I credited contributors, and showed some notable changes.</p>
+<p>Remember that this announcement wasn't complete, but the intro has links to the full change logs.</p>
+<p>Feel free to ask questions <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Oils.200.2E27.2E0.20-.20Contributors.20and.20Issues/with/517214615">in the comments</a>.</p>
+
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="links"></a>
+<h3>Links</h3>
+<p><a href="https://github.com/udem-dlteam/pnut">pnut</a> is a cool project!  Thanks again to Laurent for testing <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.</p>
+<div class="link-box">
+<p><a href="https://dl.acm.org/doi/10.1145/3687997.3695639" rel="ugc noreferrer" class="u-url">The Design of a Self-Compiling C Transpiler Targeting POSIX Shell</a> (<code>dl.acm.org</code> via lobste.rs) <br/>    20 points, <a role="heading" aria-level="2" href="https://lobste.rs/s/lplim1/design_self_compiling_c_transpiler#comments_story_01jsn1tkeff6fshx6j3kqq72ae">              6              comments            </a> on 2024-11-10</p>
+</div>
+<a name="closed-issues"></a>
+<h3>Closed Issues</h3>
+<p>This list is auto-generated.  Most of these issues were mentioned above.</p>
+<table>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2243">#2243</a>
+  </td>
+  <td class="issue-title">
+    Mutation of List inside for loop isn't reflected in YSH
+  </td>
+</tr>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2237">#2237</a>
+  </td>
+  <td class="issue-title">
+    Crash in expression = [...myvar]
+  </td>
+</tr>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2234">#2234</a>
+  </td>
+  <td class="issue-title">
+    crash with double quoted zsh var in osh
+  </td>
+</tr>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2129">#2129</a>
+  </td>
+  <td class="issue-title">
+    Code location from previous command failure is sometimes retained
+  </td>
+</tr>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2123">#2123</a>
+  </td>
+  <td class="issue-title">
+    Loops may not collect garbage, leading to very slow execution
+  </td>
+</tr>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2122">#2122</a>
+  </td>
+  <td class="issue-title">
+    help ysh-command-lang doesn't work
+  </td>
+</tr>
+<tr>
+  <td class="issue-num">
+    <a href="https://github.com/oils-for-unix/oils/issues/2081">#2081</a>
+  </td>
+  <td class="issue-title">
+    Incremental search overlaps long `PS1`
+  </td>
+</tr>
+</table>
+<p> </p>
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Oils.200.2E27.2E0.20-.20Contributors.20and.20Issues/with/517214615">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=oils-release#oils-release">oils-release</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=ysh#ysh">ysh</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>
