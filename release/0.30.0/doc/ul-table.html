@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ul-table: Markdown Tables Without New Syntax</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ul-table.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>ul-table: Markdown Tables Without New Syntax</h1>
+<p><code>ul-table</code> is an HTML processor that lets you write <strong>tables</strong> as bulleted
+<strong>lists</strong>, in Markdown.</p>
+<p>It's a short program I wrote because I got tired of reading and writing <code>&lt;tr&gt;</code>
+and <code>&lt;td&gt;</code> and <code>&lt;/td&gt;</code> and <code>&lt;/tr&gt;</code>.  And I got tired of aligning numbers by
+writing <code>&lt;td class=&quot;num&quot;&gt;</code> for every cell.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#simple-example">Simple Example</a></div>
+  <div class="toclevel1"><a href="#design">Design</a></div>
+  <div class="toclevel2"><a href="#goals">Goals</a></div>
+  <div class="toclevel2"><a href="#comparison">Comparison</a></div>
+  <div class="toclevel1"><a href="#details">Details</a></div>
+  <div class="toclevel2"><a href="#ul-table-grammar">ul-table &quot;Grammar&quot;</a></div>
+  <div class="toclevel2"><a href="#stylesheet">Stylesheet</a></div>
+  <div class="toclevel1"><a href="#adding-html-attributes">Adding HTML Attributes</a></div>
+  <div class="toclevel2"><a href="#cells">Cells</a></div>
+  <div class="toclevel2"><a href="#columns">Columns</a></div>
+  <div class="toclevel2"><a href="#rows">Rows</a></div>
+  <div class="toclevel1"><a href="#more-complex-example">More Complex Example</a></div>
+  <div class="toclevel1"><a href="#markdown-quirks">Markdown Quirks</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel2"><a href="#related-docs">Related Docs</a></div>
+  <div class="toclevel1"><a href="#appendix-implemention">Appendix: Implemention</a></div>
+  <div class="toclevel2"><a href="#notes-on-the-algorithm">Notes on the Algorithm</a></div>
+  <div class="toclevel1"><a href="#appendix-real-examples">Appendix: Real Examples</a></div>
+  <div class="toclevel1"><a href="#html-quirks">HTML Quirks</a></div>
+  <div class="toclevel1"><a href="#ideas-for-features">Ideas for Features</a></div>
+</div>
+<a name="simple-example"></a>
+<h2>Simple Example</h2>
+<p>Let's see how it works.  How do you make this table?</p>
+<style>
+table {
+  margin: 0 auto;
+}
+td {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+</style>
+<table>
+<thead>
+<tr>
+  <th>Shell</th>
+  <th>Version</th>
+</tr>
+</thead>
+<tr>
+  <td><a href="https://www.gnu.org/software/bash/">bash</a></td>
+  <td>5.2</td>
+</tr>
+<tr>
+  <td><a href="https://oils.pub/">OSH</a></td>
+  <td>0.25.0</td>
+</tr>
+</table>
+<p>With <code>ul-table</code>, you create a <strong>two-level</strong> Markdown list, inside <code>&lt;table&gt;</code>
+tags:</p>
+
+<pre><code>&lt;table&gt;
+
+- thead
+  - Shell
+  - Version
+- tr
+  - [bash](https://www.gnu.org/software/bash/)
+  - 5.2
+- tr
+  - [OSH](https://oils.pub/)
+  - 0.25.0
+
+&lt;/table&gt;
+</code></pre>
+<p>The header and data rows are at the top level, and the cells are indented under
+them.</p>
+<hr />
+<p>The conversion takes <strong>2 steps</strong>: it's Markdown → HTML → HTML.</p>
+<p>First, any Markdown processor will produce this list structure, with <code>&lt;ul&gt;</code> and
+<code>&lt;li&gt;</code>:</p>
+<ul>
+<li>thead
+<ul>
+<li>Shell</li>
+<li>Version</li>
+</ul>
+</li>
+<li>tr
+<ul>
+<li><a href="https://www.gnu.org/software/bash/">bash</a></li>
+<li>5.2</li>
+</ul>
+</li>
+<li>tr
+<ul>
+<li><a href="https://oils.pub/">OSH</a></li>
+<li>0.25.0</li>
+</ul>
+</li>
+</ul>
+<p>Second, <strong>our</strong> <code>ul-table</code> plugin parses and transforms that into a table, with
+<code>&lt;tr&gt;</code> and <code>&lt;td&gt;</code>:</p>
+<table>
+<thead>
+<tr>
+  <th>Shell</th>
+  <th>Version</th>
+</tr>
+</thead>
+<tr>
+  <td><a href="https://www.gnu.org/software/bash/">bash</a></td>
+  <td>5.2</td>
+</tr>
+<tr>
+  <td><a href="https://oils.pub/">OSH</a></td>
+  <td>0.25.0</td>
+</tr>
+</table>
+<p>So <code>ul-table</code> is an HTML processor, <strong>not</strong> a Markdown processor.  But it's
+meant to be used with Markdown.</p>
+<a name="design"></a>
+<h2>Design</h2>
+<a name="goals"></a>
+<h3>Goals</h3>
+
+<ul>
+<li>Don't invent any new syntax.
+<ul>
+<li>It reuses your knowledge of Markdown — e.g. hyperlinks.</li>
+<li>It reuses your knowledge of HTML — e.g. attributes on tags.</li>
+</ul>
+</li>
+<li>Large, complex tables should be maintainable.</li>
+<li>The user should have the <strong>full</strong> power of HTML.  We don't hide it under
+another language, like MediaWiki does.</li>
+<li>Degrade gracefully.  Because it's just Markdown, you <strong>won't break</strong> docs by
+adding it.
+<ul>
+<li>The intermediate list form is what sourcehut or Github will show.</li>
+</ul>
+</li>
+</ul>
+<a name="comparison"></a>
+<h3>Comparison</h3>
+<p>Compared to other table markup formats, <code>ul-table</code> is shorter, less noisy, and
+easier to edit:</p>
+<ul>
+<li><a href="ul-table-compare.html">ul-table Comparison: Github, Wikipedia, reStructuredText, AsciiDoc</a></li>
+</ul>
+<a name="details"></a>
+<h2>Details</h2>
+<a name="ul-table-grammar"></a>
+<h3>ul-table &quot;Grammar&quot;</h3>
+<p>Recall that a <code>ul-table</code> is a <strong>two-level Markdown list</strong>, between <code>&lt;table&gt;</code>
+tags.  The top level list contains either:</p>
+<table>
+<tr>
+  <td><code>thead</code></td>
+  <td>zero or one, at the beginning</td>
+</tr>
+<tr>
+  <td><code>tr</code></td>
+  <td>zero or more, after <code>thead</code></td>
+</tr>
+</table>
+<p>The second level contains the contents of cells, but you <strong>don't</strong> write <code>td</code>
+or <code>&lt;td&gt;</code>.</p>
+<a name="stylesheet"></a>
+<h3>Stylesheet</h3>
+<p>To make the table look nice, I add a <code>&lt;style&gt;</code> tag, inside Markdown:</p>
+<pre><code>&lt;style&gt;
+table {
+  margin: 0 auto;
+}
+td {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+&lt;/style&gt;
+</code></pre>
+<a name="adding-html-attributes"></a>
+<h2>Adding HTML Attributes</h2>
+<p>HTML attributes like <code>&lt;tr class=foo&gt;</code> and <code>&lt;td id=bar&gt;</code> let you format and
+style your table.</p>
+<p>You can add attributes to cells, columns, and rows.</p>
+<a name="cells"></a>
+<h3>Cells</h3>
+<style>
+.hi { background-color: thistle }
+</style>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Age</th>
+</tr>
+</thead>
+<tr>
+  <td>Alice</td>
+  <td class="hi">42 </td>
+</tr>
+<tr>
+  <td>Bob</td>
+  <td>9</td>
+</tr>
+</table>
+<p>Add cell attributes with a <code>cell-attrs</code> tag after the cell contents:</p>
+<pre><code>- thead
+  - Name
+  - Age
+- tr
+  - Alice
+  - 42 &lt;cell-attrs class=hi /&gt;
+- tr
+  - Bob
+  - 9
+</code></pre>
+<p>You must use a <strong>self-closing</strong> tag:</p>
+<pre><code>&lt;cell-attrs /&gt;  # Yes
+&lt;cell-attrs&gt;    # No: this is an opening tag
+</code></pre>
+<p>Notice that <code>ul-table</code> takes the attributes from the <code>&lt;cell-attrs /&gt;</code> tag, and
+puts it on the generated <code>&lt;td&gt;</code> tag.</p>
+<a name="columns"></a>
+<h3>Columns</h3>
+<style>
+.num {
+  text-align: right;
+}
+</style>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Age </th>
+</tr>
+</thead>
+<tr>
+  <td>Alice</td>
+  <td class="num">42</td>
+</tr>
+<tr>
+  <td>Bob</td>
+  <td class="num">9</td>
+</tr>
+</table>
+<p>To add attributes to <strong>every cell in a column</strong>, put <code>&lt;cell-attrs /&gt;</code> in the
+<code>thead</code> section:</p>
+<style>
+.num {
+  background-color: bisque;
+  align: right;
+}
+</style>
+<pre><code>- thead
+  - Name
+  - Age &lt;cell-attrs class=num /&gt; 
+- tr
+  - Alice
+  - 42     &lt;!-- this cell gets class=num --&gt;
+- tr
+  - Bob
+  - 9      &lt;!-- this cells gets class=num --&gt;
+</code></pre>
+<p>Then every <code>&lt;td&gt;</code> in the column will &quot;inherit&quot; those attributes.  This is
+useful for aligning numbers to the right:</p>
+<pre><code>&lt;style&gt;
+.num {
+  align: right;
+}
+&lt;/style&gt;
+</code></pre>
+<p>If the same attribute appears in a column in both <code>thead</code> and <code>tr</code>, the values
+are <strong>concatenated</strong>, with a space.  Example:</p>
+<pre><code>&lt;td class=&quot;from-thead from-tr&quot;&gt;
+</code></pre>
+<a name="rows"></a>
+<h3>Rows</h3>
+<style>
+.special-row {
+  background-color: powderblue;
+}
+</style>
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Age</th>
+</tr>
+</thead>
+<tr>
+  <td>Alice</td>
+  <td>42</td>
+</tr>
+<tr class="special-row ">
+  <td>Bob</td>
+  <td>9</td>
+</tr>
+</table>
+<p>To add row attributes, put <code>&lt;row-attrs /&gt;</code> after the <code>- tr</code>:</p>
+<pre><code>- thead
+  - Name
+  - Age
+- tr
+  - Alice
+  - 42
+- tr &lt;row-attrs class=&quot;special-row&quot; /&gt;
+  - Bob
+  - 9
+</code></pre>
+<a name="more-complex-example"></a>
+<h2>More Complex Example</h2>
+<p>This example uses more features, like Markdown and HTML inside cells.  You may
+want to view the source text for this table: <a href="https://github.com/oils-for-unix/oils/blob/master/doc/ul-table.md">doc/ul-table.md</a>.</p>
+<table id="foo">
+<thead>
+<tr>
+  <th>Shell</th>
+  <th>Version</th>
+  <th>Example Code</th>
+</tr>
+</thead>
+<tr>
+  <td><a href="/cross-ref.html?tag=bash#bash">bash</a></td>
+  <td>5.2</td>
+  <td>
+<pre><code>echo sh=$bash
+ls /tmp | wc -l
+echo
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td><a href="/cross-ref.html?tag=dash#dash">dash</a></td>
+  <td>1.5</td>
+  <td><em>Inline HTML</em></td>
+</tr>
+<tr>
+  <td><a href="/cross-ref.html?tag=mksh#mksh">mksh</a></td>
+  <td>4.0</td>
+  <td>
+<table>
+  <tr>
+    <td>HTML table</td>
+    <td>inside</td>
+  </tr>
+  <tr>
+    <td>this table</td>
+    <td>no way to re-enter inline markdown though?</td>
+  </tr>
+</table>
+</td>
+</tr>
+<tr>
+  <td><a href="/cross-ref.html?tag=zsh#zsh">zsh</a></td>
+  <td>3.6</td>
+  <td>Unordered List
+<ul>
+<li>one</li>
+<li>two</li>
+</ul>
+</td>
+</tr>
+<tr>
+  <td><a href="/cross-ref.html?tag=yash#yash">yash</a></td>
+  <td>1.0</td>
+  <td>Ordered List
+<ol>
+<li>one</li>
+<li>two</li>
+</ol>
+</td>
+</tr>
+<tr>
+  <td>
+<p><a href="/cross-ref.html?tag=ksh#ksh">ksh</a></p>
+</td>
+  <td>
+<p>This is
+paragraph one.</p>
+<p>This is
+paragraph two</p>
+</td>
+  <td>
+<p>Another cell with ...</p>
+<p>... multiple paragraphs.</p>
+</td>
+</tr>
+</table>
+<p> </p>
+<p>Another table:</p>
+<style>
+.osh-code { color: darkred }
+.ysh-code { color: darkblue }
+</style>
+<table>
+<thead>
+<tr>
+  <th>OSH</th>
+  <th>YSH</th>
+</tr>
+</thead>
+<tr>
+  <td class="osh-code">
+<pre><code>my-copy() {
+  cp --verbose &quot;$@&quot;
+}
+</code></pre>
+ 
+</td>
+  <td class="ysh-code">
+<pre><code>proc my-copy {
+  cp --verbose @ARGV
+}
+</code></pre>
+
+</td>
+</tr>
+<tr>
+  <td>x</td>
+  <td>y</td>
+</tr>
+</table>
+<a name="markdown-quirks"></a>
+<h2>Markdown Quirks</h2>
+<p>Here are some quirks I ran into when using <code>ul-table</code>.</p>
+<p>(1) CommonMark doesn't allow empty list items:</p>
+<pre><code>- thead
+  -
+  - above is not rendered as a list item
+</code></pre>
+<p>You can work around this by using a comment, or invisible character:</p>
+<pre><code>- tr
+  - &lt;!-- empty --&gt;
+  - above is OK
+- tr
+  - &amp;nbsp;
+  - also OK
+</code></pre>
+<ul>
+<li><a href="https://talk.commonmark.org/t/clarify-following-empty-list-items-in-0-31-2/4599">Related CommonMark thread</a></li>
+</ul>
+<p>(2) Similarly, a cell with a literal hyphen may need a comment or space in
+front of it:</p>
+<pre><code>- tr
+  - &lt;!-- hyphen --&gt; -
+  - &amp;nbsp; -
+</code></pre>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p><code>ul-table</code> is a nice way of writing and maintaining HTML tables.  The appendix
+has links and details.</p>
+<a name="related-docs"></a>
+<h3>Related Docs</h3>
+<ul>
+<li><a href="ul-table-compare.html">ul-table Comparison: Github, Wikipedia, reStructuredText, AsciiDoc</a></li>
+<li><a href="doc-toolchain.html">How We Build Oils Documentation</a></li>
+<li><a href="doc-plugins.html">Examples of HTML Plugins</a></li>
+</ul>
+<a name="appendix-implemention"></a>
+<h2>Appendix: Implemention</h2>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/doctools/ul_table.py">doctools/ul_table.py</a> - about 500 lines</li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/lazylex/html.py">lazylex/html.py</a> - about 500 lines</li>
+</ul>
+<a name="notes-on-the-algorithm"></a>
+<h3>Notes on the Algorithm</h3>
+<ul>
+<li>lazy lexing</li>
+<li>recursive descent parser
+<ul>
+<li>TODO: show grammar</li>
+</ul>
+</li>
+</ul>
+<p>TODO: I would like someone to produce a <strong>DOM</strong>-based implementation!</p>
+<p>Our implementation is pretty low-level.  It's meant to avoid the &quot;big load
+anti-pattern&quot; (allocating too much), so it's a necessarily more verbose.</p>
+<p>A DOM-based implementation should be much less than 1000 lines.</p>
+<a name="appendix-real-examples"></a>
+<h2>Appendix: Real Examples</h2>
+<ul>
+<li>Docs
+<ul>
+<li><a href="proc-func.html">Guide to Procs and Funcs</a> has a big <code>ul-table</code>.
+Source: <a href="https://github.com/oils-for-unix/oils/blob/master/doc/proc-func.md">doc/proc-func.md</a></li>
+</ul>
+</li>
+<li>Oils Reference
+<ul>
+<li><a href="ref/chap-word-lang.html#op-format">Chapter: Word Language</a> has
+tables to document <code>${x@a}</code></li>
+</ul>
+</li>
+<li>Site
+<ul>
+<li><a href="/">oils.pub Home Page</a></li>
+<li><a href="/blog/">Blog Index</a></li>
+</ul>
+</li>
+</ul>
+<p>I converted the tables in these September posts to <code>ul-table</code>:</p>
+<ul>
+<li><a href="https://www.oilshell.org/blog/2024/09/project-overview.html">What Oils Looks Like in 2024</a></li>
+<li><a href="https://www.oilshell.org/blog/2024/09/line-counts.html">After 8 Years, Oils Is Still Small and Flexible</a></li>
+<li><a href="https://www.oilshell.org/blog/2024/09/gc.html">Garbage Collection Makes YSH Different</a></li>
+<li><a href="https://www.oilshell.org/blog/2024/09/retrospective.html">A Retrospective on the Oils Project</a></li>
+<li><a href="https://www.oilshell.org/blog/2024/06/release-0.22.0.html#data-languages">Oils 0.22.0 Announcement</a> - table of multi-line string literals</li>
+</ul>
+<p>The markup was much shorter and simpler after conversion!</p>
+<p>TODO:</p>
+<ul>
+<li>More tables to Make
+<ul>
+<li>Interior/Exterior</li>
+<li>Narrow Waist</li>
+</ul>
+</li>
+<li>Wiki pages could use conversion
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/Alternative-Shells">Alternative Shells</a></li>
+<li><a href="https://github.com/oilshell/oil/wiki/Alternative-Regex-Syntax">Alternative Regex Syntax</a></li>
+<li><a href="https://github.com/oilshell/oil/wiki/Survey-of-Config-Languages">Survey of Config Languages</a></li>
+<li><a href="https://github.com/oilshell/oil/wiki/Polyglot-Language-Understanding">Polyglot Language Understanding</a></li>
+<li><a href="https://github.com/oilshell/oil/wiki/The-Biggest-Shell-Programs-in-the-World">The Biggest Shell Programs in the World</a></li>
+</ul>
+</li>
+</ul>
+<a name="html-quirks"></a>
+<h2>HTML Quirks</h2>
+<ul>
+<li><code>&lt;th&gt;</code> is like <code>&lt;td&gt;</code>, but it belongs in <code>&lt;thead&gt;&lt;tr&gt;</code>.  Browsers make it
+bold and centered.</li>
+<li><code>&lt;colgroup&gt;</code> and <code>&lt;col&gt;</code> often do do what I want.
+<ul>
+<li>As mentioned above, you can't put <code>class=</code> columns and align them to the
+right or left.  You have to put <code>class=</code> on <em>every</em> <code>&lt;td&gt;</code> cell instead.</li>
+</ul>
+</li>
+</ul>
+
+<a name="ideas-for-features"></a>
+<h2>Ideas for Features</h2>
+<ul>
+<li>Support <code>tfoot</code>?</li>
+<li>Emit <code>tbody</code>?</li>
+</ul>
+<hr />
+<p>We could help users edit well-formed tables with enforced column names:</p>
+<pre><code>- thead
+  - &lt;cell-attrs ult-name=name /&gt; Name
+  - &lt;cell-attrs ult-name=age /&gt; Age
+- tr 
+  - &lt;cell-attrs ult-name=name /&gt; Hi
+  - &lt;cell-attrs ult-name=age /&gt; 5
+</code></pre>
+<p>This is a bit verbose, but may be worth it for large tables.</p>
+<p>Less verbose syntax idea:</p>
+<pre><code>- thead
+  - &lt;ult col=NAME /&gt; &lt;cell-attrs class=foo /&gt; Name
+  - &lt;ult col=AGE /&gt; Age
+- tr 
+  - &lt;ult col=NAME /&gt; Hi
+  - &lt;ult col=AGE /&gt; 5
+</code></pre>
+<p>Even less verbose:</p>
+<pre><code>- thead
+  - {NAME} Name
+  - {AGE} Age
+- tr 
+  - {NAME} Hi
+  - {AGE} 5
+</code></pre>
+<p>The obvious problem is that we might want the literal text <code>{NAME}</code> in the
+header.  It's unlikely, but possible.</p>
+
+
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

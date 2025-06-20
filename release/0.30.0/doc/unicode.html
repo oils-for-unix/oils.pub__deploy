@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notes on Unicode in Shell</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/unicode.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Notes on Unicode in Shell</h1>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#philosophy">Philosophy</a></div>
+  <div class="toclevel1"><a href="#a-mental-model">A Mental Model</a></div>
+  <div class="toclevel2"><a href="#program-encoding-osh-vs-ysh">Program Encoding - OSH vs. YSH</a></div>
+  <div class="toclevel2"><a href="#data-encoding">Data Encoding</a></div>
+  <div class="toclevel1"><a href="#list-of-features-that-respect-unicode">List of Features That Respect Unicode</a></div>
+  <div class="toclevel2"><a href="#osh-bash">OSH / bash</a></div>
+  <div class="toclevel2"><a href="#ysh">YSH</a></div>
+  <div class="toclevel2"><a href="#data-languages">Data Languages</a></div>
+  <div class="toclevel1"><a href="#implementation-notes">Implementation Notes</a></div>
+  <div class="toclevel2"><a href="#list-of-low-level-utf-8-operations">List of Low-Level UTF-8 Operations</a></div>
+  <div class="toclevel1"><a href="#tips">Tips</a></div>
+</div>
+<a name="philosophy"></a>
+<h2>Philosophy</h2>
+<p>Oils is UTF-8 centric, unlike <code>bash</code> and other shells.</p>
+<p>That is, its Unicode support is like Go, Rust, Julia, and Swift, and not like
+Python or JavaScript.  The former languages internally represent strings as
+UTF-8, while the latter use arrays of code points or UTF-16 code units.</p>
+<a name="a-mental-model"></a>
+<h2>A Mental Model</h2>
+<a name="program-encoding-osh-vs-ysh"></a>
+<h3>Program Encoding - OSH vs. YSH</h3>
+<ul>
+<li>The source files of OSH programs may have arbitrary bytes, for backward
+compatibility.</li>
+<li>The source files of YSH programs should be should be encoded in UTF-8 (or its
+ASCII subset).  TODO: Enforce this with <code>shopt --set utf8_source</code></li>
+</ul>
+<p>Unicode characters can be encoded directly in the source:</p>
+<pre>
+echo '&#x03bc;'
+</pre>
+<p>or denoted in ASCII with C-escaped strings:</p>
+<pre><code>echo $'\u03bc'   <span class="sh-comment"># bash style</span>
+
+echo u'\u{3bc}'  <span class="sh-comment"># YSH style</span>
+</code></pre>
+<p>(Such strings are preferred over <code>echo -e</code> because they're statically parsed.)</p>
+<a name="data-encoding"></a>
+<h3>Data Encoding</h3>
+<p>Strings in OSH are arbitrary sequences of <strong>bytes</strong>, which may or may not be
+valid UTF-8.  Details:</p>
+<ul>
+<li>When passed to external programs, strings are truncated at the first <code>NUL</code>
+(<code>'\0'</code>) byte.  This is a consequence of how Unix and C work.</li>
+<li>Some operations like length <code>${#s}</code> and slicing <code>${s:1:3}</code> require the string
+to be <strong>valid UTF-8</strong>.  Decoding errors are fatal if <code>shopt -s strict_word_eval</code> is on.</li>
+</ul>
+<a name="list-of-features-that-respect-unicode"></a>
+<h2>List of Features That Respect Unicode</h2>
+<a name="osh-bash"></a>
+<h3>OSH / bash</h3>
+<p>These operations are implemented in Python.</p>
+<p>In <code>osh/string_ops.py</code>:</p>
+<ul>
+<li><code>${#s}</code> -- length in code points (buggy in bash)
+<ul>
+<li>Note: YSH <code>len(s)</code> returns a number of bytes, not code points.</li>
+</ul>
+</li>
+<li><code>${s:1:2}</code> -- index and length are a number of code points</li>
+<li><code>${x#glob?}</code> and <code>${x##glob?}</code> (see below)</li>
+</ul>
+<p>In <code>builtin/</code>:</p>
+<ul>
+<li><code>printf '%d' \'c</code> where <code>c</code> is an arbitrary character.  This is an obscure
+syntax for <code>ord()</code>, i.e. getting an integer from an encoded character.</li>
+</ul>
+<p>More:</p>
+<ul>
+<li><code>$IFS</code> word splitting.  Affects <code>shSplit()</code> builtin
+<ul>
+<li>Doesn't respect unicode in dash, ash, mksh.  But it does in bash, yash, and
+zsh with <code>setopt SH_WORD_SPLIT</code>.</li>
+<li>TODO: Oils should probably respect it</li>
+</ul>
+</li>
+<li><code>${foo,}</code> and <code>${foo^}</code> for lowercase / uppercase
+<ul>
+<li>TODO: doesn't respect unicode</li>
+</ul>
+</li>
+<li><code>[[ a &lt; b ]]</code> and <code>[ a '&lt;' b ]</code> for sorting
+<ul>
+<li>these can use libc <code>strcoll()</code>?</li>
+</ul>
+</li>
+</ul>
+<a name="globs"></a>
+<h4>Globs</h4>
+<p>Globs have character classes <code>[^a]</code> and <code>?</code>.</p>
+<p>This pattern results in a <code>glob()</code> call:</p>
+<pre><code>echo my?glob
+</code></pre>
+<p>These patterns result in <code>fnmatch()</code> calls:</p>
+<pre><code>case $x in ?) echo 'one char' ;; esac
+
+[[ $x == ? ]]
+
+${s#?}  <span class="sh-comment"># remove one character suffix, quadratic loop for globs</span>
+</code></pre>
+<p>This uses our glob to ERE translator for <em>position</em> info:</p>
+<pre><code>echo ${s/?/x}
+</code></pre>
+<a name="regexes-ere"></a>
+<h4>Regexes (ERE)</h4>
+<p>Regexes have character classes <code>[^a]</code> and <code>.</code>:</p>
+<pre><code>pat='.'  <span class="sh-comment"># single &quot;character&quot;</span>
+[[ $x =~ $pat ]]
+</code></pre>
+<a name="locale-aware-operations"></a>
+<h4>Locale-aware operations</h4>
+<ul>
+<li>Prompt string has time, which is locale-specific.</li>
+<li>In bash, <code>printf</code> also has time.</li>
+</ul>
+<p>Other:</p>
+<ul>
+<li>The prompt width is calculated with <code>wcswidth()</code>, which doesn't just count
+code points.  It calculates the <strong>display width</strong> of characters, which is
+different in general.</li>
+</ul>
+<a name="ysh"></a>
+<h3>YSH</h3>
+<ul>
+<li>Eggex matching depends on ERE semantics.
+<ul>
+<li><code>mystr ~ / [ \xff ] /</code></li>
+<li><code>case (x) { / dot / }</code></li>
+</ul>
+</li>
+<li><code>Str.{trim,trimLeft,trimRight}</code> respect unicode space, like JavaScript does</li>
+<li>TODO: <code>Str.{upper,lower}</code> also need unicode case folding</li>
+<li>TODO: <code>s.split()</code> doesn't have a default &quot;split by space&quot;, which should
+probably respect unicode space, like <code>trim()</code> does</li>
+<li>TODO: <code>for offset, rune in (runes(mystr))</code> decodes UTF-8, like Go</li>
+</ul>
+<p>Not unicode aware:</p>
+<ul>
+<li><code>strcmp()</code> does byte-wise and UTF-8 wise comparisons?</li>
+</ul>
+<a name="data-languages"></a>
+<h3>Data Languages</h3>
+<ul>
+<li>Decoding JSON/J8 validates UTF-8</li>
+<li>Encoding JSON/J8 decodes and validates UTF-8
+<ul>
+<li>So we can distinguish valid UTF-8 and invalid bytes like <code>\yff</code></li>
+</ul>
+</li>
+</ul>
+<a name="implementation-notes"></a>
+<h2>Implementation Notes</h2>
+<p>Unlike bash and CPython, Oils doesn't call <code>setlocale()</code>.  (Although GNU
+readline may call it.)</p>
+<p>It's expected that your locale will respect UTF-8.  This is true on most
+distros.  If not, then some string operations will support UTF-8 and some
+won't.</p>
+<p>For example:</p>
+<ul>
+<li>String length like <code>${#s}</code> is implemented in Oils code, not libc, so it will
+always respect UTF-8.</li>
+<li><code>[[ s =~ $pat ]]</code> is implemented with libc, so it is affected by the locale
+settings.  Same with Oils <code>(x ~ pat)</code>.</li>
+</ul>
+<p>TODO: Oils should support <code>LANG=C</code> for some operations, but not <code>LANG=X</code> for
+other <code>X</code>.</p>
+<a name="list-of-low-level-utf-8-operations"></a>
+<h3>List of Low-Level UTF-8 Operations</h3>
+<p>libc:</p>
+<ul>
+<li><code>glob()</code> and <code>fnmatch()</code></li>
+<li><code>regexec()</code></li>
+<li><code>strcoll()</code> respects <code>LC_COLLATE</code>, which bash probably does</li>
+</ul>
+<p>Our own:</p>
+<ul>
+<li>Decode next rune from a position, or previous rune
+<ul>
+<li><code>trimLeft()</code> and <code>${s#prefix}</code> need this</li>
+</ul>
+</li>
+<li>Decode UTF-8
+<ul>
+<li>J8 encoding and decoding need this</li>
+<li><code>for r in (runes(x))</code> needs this</li>
+<li>respecting surrogate half
+<ul>
+<li>JSON needs this</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Encode integer rune to UTF-8 sequence
+<ul>
+<li>J8 needs this, for <code>\u{3bc}</code> (currently in <code>data_lang/j8.py Utf8Encode()</code>)</li>
+</ul>
+</li>
+</ul>
+<p>Not sure:</p>
+<ul>
+<li>Case folding
+<ul>
+<li>both OSH and YSH have uppercase and lowercase</li>
+</ul>
+</li>
+</ul>
+<a name="tips"></a>
+<h2>Tips</h2>
+<ul>
+<li>The GNU <code>iconv</code> program converts text from one encoding to another.</li>
+</ul>
+
+
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

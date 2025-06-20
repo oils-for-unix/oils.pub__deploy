@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OSH Table of Contents</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/ref-index.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/toc-osh.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+<strong>OSH Table of Contents</strong> | <a href="toc-ysh.html">YSH</a> | <a href="toc-data.html">Data Notation</a></p>
+</div>
+<p><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> is a POSIX- and <a href="/cross-ref.html?tag=bash#bash">bash</a>-compatible shell.</p>
+
+<h2 id="type-method">
+  OSH Types <a class="group-link" href="chap-type-method.html">type-method</a>
+</h2>
+<pre><code class="language-chapter-links-type-method">  [<a href="chap-type-method.html#OSH" class="level2">OSH</a>]           <a href="chap-type-method.html#BashArray">BashArray</a>   <a href="chap-type-method.html#BashAssoc">BashAssoc</a>
+</code></pre>
+<h2 id="builtin-cmd">
+  Builtin Commands <a class="group-link" href="chap-builtin-cmd.html">builtin-cmd</a>
+</h2>
+<pre><code class="language-chapter-links-builtin-cmd">  [<a href="chap-builtin-cmd.html#I/O" class="level2">I/O</a>]           <a href="chap-builtin-cmd.html#read">read</a>        <a href="chap-builtin-cmd.html#echo">echo</a>       <a href="chap-builtin-cmd.html#printf">printf</a>
+                  <a href="chap-builtin-cmd.html#readarray">readarray</a>   <a href="chap-builtin-cmd.html#mapfile">mapfile</a>
+  [<a href="chap-builtin-cmd.html#Run-Code" class="level2">Run Code</a>]      <a href="chap-builtin-cmd.html#source">source</a> .    <a href="chap-builtin-cmd.html#cmd/eval">cmd/eval</a>   <a href="chap-builtin-cmd.html#trap">trap</a>
+  [<a href="chap-builtin-cmd.html#Set-Options" class="level2">Set Options</a>]   <a href="chap-builtin-cmd.html#set">set</a>         <a href="chap-builtin-cmd.html#shopt">shopt</a>
+  [<a href="chap-builtin-cmd.html#Working-Dir" class="level2">Working Dir</a>]   <a href="chap-builtin-cmd.html#cd">cd</a>          <a href="chap-builtin-cmd.html#pwd">pwd</a>        <a href="chap-builtin-cmd.html#pushd">pushd</a>     <a href="chap-builtin-cmd.html#popd">popd</a>         <a href="chap-builtin-cmd.html#dirs">dirs</a>
+  [<a href="chap-builtin-cmd.html#Completion" class="level2">Completion</a>]    <a href="chap-builtin-cmd.html#complete">complete</a>    <a href="chap-builtin-cmd.html#compgen">compgen</a>    <a href="chap-builtin-cmd.html#compopt">compopt</a>   <a href="chap-builtin-cmd.html#compadjust">compadjust</a>   <a href="chap-builtin-cmd.html#compexport">compexport</a>
+  [<a href="chap-builtin-cmd.html#Shell-Process" class="level2">Shell Process</a>] <a href="chap-builtin-cmd.html#exec">exec</a>      <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#logout">logout</a> 
+                  <a href="chap-builtin-cmd.html#umask">umask</a>       <a href="chap-builtin-cmd.html#ulimit">ulimit</a>     <a href="chap-builtin-cmd.html#times">times</a>
+  [<a href="chap-builtin-cmd.html#Child-Process" class="level2">Child Process</a>] <a href="chap-builtin-cmd.html#jobs">jobs</a>        <a href="chap-builtin-cmd.html#wait">wait</a>
+                  <a href="chap-builtin-cmd.html#fg">fg</a>        <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#bg">bg</a>       <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#kill">kill</a>        <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#disown">disown</a> 
+  [<a href="chap-builtin-cmd.html#External" class="level2">External</a>]      <a href="chap-builtin-cmd.html#test">test</a> [      <a href="chap-builtin-cmd.html#getopts">getopts</a>
+  [<a href="chap-builtin-cmd.html#Conditional" class="level2">Conditional</a>]   <a href="chap-builtin-cmd.html#cmd/true">cmd/true</a>    <a href="chap-builtin-cmd.html#cmd/false">cmd/false</a>               <a href="chap-builtin-cmd.html#colon">colon</a> :
+  [<a href="chap-builtin-cmd.html#Introspection" class="level2">Introspection</a>] <a href="chap-builtin-cmd.html#help">help</a>        <a href="chap-builtin-cmd.html#hash">hash</a>       <a href="chap-builtin-cmd.html#cmd/type">cmd/type</a>    <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#caller">caller</a>
+  [<a href="chap-builtin-cmd.html#Word-Lookup" class="level2">Word Lookup</a>]   <a href="chap-builtin-cmd.html#command">command</a>     <a href="chap-builtin-cmd.html#builtin">builtin</a>
+  [<a href="chap-builtin-cmd.html#Interactive" class="level2">Interactive</a>]   <a href="chap-builtin-cmd.html#alias">alias</a>       <a href="chap-builtin-cmd.html#unalias">unalias</a>    <a href="chap-builtin-cmd.html#history">history</a>     <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#fc">fc</a>     <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#bind">bind</a>
+<span style="color: darkred">X </span>[<a href="chap-builtin-cmd.html#Unsupported" class="level2">Unsupported</a>]   <a href="chap-builtin-cmd.html#enable">enable</a>
+</code></pre>
+<h2 id="stdlib">
+  Standard Library <a class="group-link" href="chap-stdlib.html">stdlib</a>
+</h2>
+<pre><code class="language-chapter-links-stdlib">  [<a href="chap-stdlib.html#two" class="level2">two</a>]           <a href="chap-stdlib.html#log">log</a>             <a href="chap-stdlib.html#die">die</a>
+  [<a href="chap-stdlib.html#no-quotes" class="level2">no-quotes</a>]     <a href="chap-stdlib.html#nq-assert">nq-assert</a>       <a href="chap-stdlib.html#nq-run">nq-run</a>          
+                  <a href="chap-stdlib.html#nq-capture">nq-capture</a>      <a href="chap-stdlib.html#nq-capture-2">nq-capture-2</a>
+                  <a href="chap-stdlib.html#nq-redir">nq-redir</a>        <a href="chap-stdlib.html#nq-redir-2">nq-redir-2</a>
+  [<a href="chap-stdlib.html#bash-strict" class="level2">bash-strict</a>]   
+  [<a href="chap-stdlib.html#task-five" class="level2">task-five</a>]     
+</code></pre>
+<h2 id="front-end">
+  Front End <a class="group-link" href="chap-front-end.html">front-end</a>
+</h2>
+<pre><code class="language-chapter-links-front-end">  [<a href="chap-front-end.html#Usage" class="level2">Usage</a>]         <a href="chap-front-end.html#oils-usage">oils-usage</a>   <a href="chap-front-end.html#osh-usage">osh-usage</a>             <a href="chap-front-end.html#shell-flags">shell-flags</a>
+                  <a href="chap-front-end.html#config">config</a>       <a href="chap-front-end.html#startup">startup</a>               <a href="chap-front-end.html#line-editing">line-editing</a>          
+                  <a href="chap-front-end.html#exit-codes">exit-codes</a>
+  [<a href="chap-front-end.html#Lexing" class="level2">Lexing</a>]        <a href="chap-front-end.html#comment">comment</a> #    <a href="chap-front-end.html#line-continuation">line-continuation</a> \   <a href="chap-front-end.html#ascii-whitespace">ascii-whitespace</a> [ \t\r\n]
+</code></pre>
+<h2 id="cmd-lang">
+  Command Language <a class="group-link" href="chap-cmd-lang.html">cmd-lang</a>
+</h2>
+<pre><code class="language-chapter-links-cmd-lang">  [<a href="chap-cmd-lang.html#Commands" class="level2">Commands</a>]      <a href="chap-cmd-lang.html#simple-command">simple-command</a>               <a href="chap-cmd-lang.html#command-lookup-order">command-lookup-order</a>
+                  <a href="chap-cmd-lang.html#prefix-binding">prefix-binding</a>               <a href="chap-cmd-lang.html#semicolon">semicolon</a> ;    
+  [<a href="chap-cmd-lang.html#Conditional" class="level2">Conditional</a>]   <a href="chap-cmd-lang.html#case">case</a>           <a href="chap-cmd-lang.html#if">if</a>            <a href="chap-cmd-lang.html#dbracket">dbracket</a> [[
+                  <a href="chap-cmd-lang.html#bang">bang</a> !         <a href="chap-cmd-lang.html#and">and</a> &amp;&amp;        <a href="chap-cmd-lang.html#or">or</a> ||
+  [<a href="chap-cmd-lang.html#Iteration" class="level2">Iteration</a>]     <a href="chap-cmd-lang.html#while">while</a>          <a href="chap-cmd-lang.html#until">until</a>         <a href="chap-cmd-lang.html#for">for</a>            <a href="chap-cmd-lang.html#for-expr-sh">for-expr-sh</a> ((
+  [<a href="chap-cmd-lang.html#Control-Flow" class="level2">Control Flow</a>]  <a href="chap-cmd-lang.html#break">break</a>          <a href="chap-cmd-lang.html#continue">continue</a>      <a href="chap-cmd-lang.html#return">return</a>         <a href="chap-cmd-lang.html#exit">exit</a>
+  [<a href="chap-cmd-lang.html#Grouping" class="level2">Grouping</a>]      <a href="chap-cmd-lang.html#sh-func">sh-func</a>        <a href="chap-cmd-lang.html#sh-block">sh-block</a> {    <a href="chap-cmd-lang.html#subshell">subshell</a> (
+  [<a href="chap-cmd-lang.html#Concurrency" class="level2">Concurrency</a>]   <a href="chap-cmd-lang.html#pipe">pipe</a> |       <span style="color: darkred">X </span><a href="chap-cmd-lang.html#pipe-amp">pipe-amp</a> |&amp;   <a href="chap-cmd-lang.html#ampersand">ampersand</a> &amp;
+  [<a href="chap-cmd-lang.html#Redirects" class="level2">Redirects</a>]     <a href="chap-cmd-lang.html#redir-file">redir-file</a>     &gt;  &gt;&gt;  &gt;|  &lt;  &lt;&gt;   not impl: &amp;&gt;
+                  <a href="chap-cmd-lang.html#redir-desc">redir-desc</a>     &gt;&amp;  &lt;&amp;
+                  <a href="chap-cmd-lang.html#here-doc">here-doc</a>       &lt;&lt;  &lt;&lt;-
+                  <a href="chap-cmd-lang.html#here-str">here-str</a>       &lt;&lt;&lt;
+  [<a href="chap-cmd-lang.html#Other-Command" class="level2">Other Command</a>] <a href="chap-cmd-lang.html#dparen">dparen</a> ((      <a href="chap-cmd-lang.html#time">time</a>        <span style="color: darkred">X </span><a href="chap-cmd-lang.html#coproc">coproc</a>       <span style="color: darkred">X </span><a href="chap-cmd-lang.html#select">select</a>
+</code></pre>
+<h2 id="osh-assign">
+  Assignments and Expressions <a class="group-link" href="chap-osh-assign.html">osh-assign</a>
+</h2>
+<pre><code class="language-chapter-links-osh-assign">  [<a href="chap-osh-assign.html#Literals" class="level2">Literals</a>]      <a href="chap-osh-assign.html#sh-init-list">sh-init-list</a>  a=(v1 [i]=v2 [k]+=v3)   a+=(v1 [i]=v2 [k]+=v3)
+                  <a href="chap-osh-assign.html#sh-array">sh-array</a>      array[123]=v   &quot;${array[@]}&quot;
+                  <a href="chap-osh-assign.html#sh-assoc">sh-assoc</a>      assoc['k']=v   &quot;${assoc[@]}&quot;   &quot;${!assoc[@]}&quot;  
+  [<a href="chap-osh-assign.html#Operators" class="level2">Operators</a>]     <a href="chap-osh-assign.html#sh-assign">sh-assign</a>     str='xyz'
+                  <a href="chap-osh-assign.html#sh-append">sh-append</a>     str+='abc'
+  [<a href="chap-osh-assign.html#Builtins" class="level2">Builtins</a>]      <a href="chap-osh-assign.html#local">local</a>     <a href="chap-osh-assign.html#readonly">readonly</a>    <a href="chap-osh-assign.html#export">export</a>   <a href="chap-osh-assign.html#unset">unset</a>   <a href="chap-osh-assign.html#shift">shift</a>
+                  <a href="chap-osh-assign.html#declare">declare</a>   <a href="chap-osh-assign.html#typeset">typeset</a>   <span style="color: darkred">X </span><a href="chap-osh-assign.html#let">let</a>
+</code></pre>
+<h2 id="word-lang">
+  Word Language <a class="group-link" href="chap-word-lang.html">word-lang</a>
+</h2>
+
+<pre><code class="language-chapter-links-word-lang_33">  [<a href="chap-word-lang.html#Joining" class="level2">Joining</a>]       <a href="chap-word-lang.html#osh-word-join">osh-word-join</a> 'single'\'$myvar&quot;double $x&quot;
+  [<a href="chap-word-lang.html#Quotes" class="level2">Quotes</a>]        <a href="chap-word-lang.html#osh-string">osh-string</a>    'abc'  $'line\n'  &quot;$var&quot;
+  [<a href="chap-word-lang.html#Substitutions" class="level2">Substitutions</a>] <a href="chap-word-lang.html#command-sub">command-sub</a>   $(date)   `date`
+                  <a href="chap-word-lang.html#var-sub">var-sub</a>       ${var}   $0   $9   
+                  <a href="chap-word-lang.html#arith-sub">arith-sub</a>     $((1 + 2))
+                  <a href="chap-word-lang.html#tilde-sub">tilde-sub</a>     ~/src
+                  <a href="chap-word-lang.html#proc-sub">proc-sub</a>      diff &lt;(sort L.txt) &lt;(sort R.txt)
+  [<a href="chap-word-lang.html#Var-Ops" class="level2">Var Ops</a>]       <a href="chap-word-lang.html#op-bracket">op-bracket</a>    ${a[i+1]}, ${a[*]}
+                  <a href="chap-word-lang.html#op-indirect">op-indirect</a>   ${!x}
+                  <a href="chap-word-lang.html#op-test">op-test</a>       ${x:-default}
+                  <a href="chap-word-lang.html#op-strip">op-strip</a>      ${x%%suffix}  etc.
+                  <a href="chap-word-lang.html#op-patsub">op-patsub</a>     ${x//y/z}
+                  <a href="chap-word-lang.html#op-slice">op-slice</a>      ${a[@]:0:1}
+                  <a href="chap-word-lang.html#op-format">op-format</a>     ${x@P} ${x@Q} etc.
+</code></pre>
+<h2 id="mini-lang">
+  Other Mini Languages <a class="group-link" href="chap-mini-lang.html">mini-lang</a>
+</h2>
+
+<pre><code class="language-chapter-links-mini-lang_33">  [<a href="chap-mini-lang.html#Arithmetic" class="level2">Arithmetic</a>]    <a href="chap-mini-lang.html#arith-context">arith-context</a> Where legacy arithmetic is allowed
+                  <a href="chap-mini-lang.html#sh-numbers">sh-numbers</a>    0xFF  0755  etc.
+                  <a href="chap-mini-lang.html#sh-arith">sh-arith</a>      1 + 2*3   a *= 2
+                  <a href="chap-mini-lang.html#sh-logical">sh-logical</a>    !a &amp;&amp; b
+                  <a href="chap-mini-lang.html#sh-bitwise">sh-bitwise</a>    ~a ^ b
+  [<a href="chap-mini-lang.html#Boolean" class="level2">Boolean</a>]       <a href="chap-mini-lang.html#bool-expr">bool-expr</a>     [[ ! $x &amp;&amp; $y || $z ]]
+                                test ! $x -a $y -o $z
+                  <a href="chap-mini-lang.html#bool-infix">bool-infix</a>    $a -nt $b    $x == $y
+                  <a href="chap-mini-lang.html#bool-path">bool-path</a>     -d /etc
+                  <a href="chap-mini-lang.html#bool-str">bool-str</a>      -n foo   -z '' 
+                  <a href="chap-mini-lang.html#bool-other">bool-other</a>    -o errexit   -v name[index]
+  [<a href="chap-mini-lang.html#Patterns" class="level2">Patterns</a>]      <a href="chap-mini-lang.html#glob-pat">glob-pat</a>      *.py
+                  <a href="chap-mini-lang.html#extglob">extglob</a>       ,(*.py|*.sh)
+                  <a href="chap-mini-lang.html#regex">regex</a>         [[ foo =~ [a-z]+ ]]
+  [<a href="chap-mini-lang.html#Other-Sublang" class="level2">Other Sublang</a>] <a href="chap-mini-lang.html#braces">braces</a>        {alice,bob}@example.com
+                  <a href="chap-mini-lang.html#histsub">histsub</a>       !$  !!  !n
+                  <a href="chap-mini-lang.html#char-escapes">char-escapes</a>  \t  \c  \x00  \u03bc
+</code></pre>
+<h2 id="option">
+  Global Shell Options <a class="group-link" href="chap-option.html">option</a>
+</h2>
+
+<pre><code class="language-chapter-links-option_22">  [<a href="chap-option.html#Errors" class="level2">Errors</a>]         nounset -u      errexit -e   inherit_errexit   pipefail
+  [<a href="chap-option.html#Globbing" class="level2">Globbing</a>]       noglob -f       nullglob     failglob        X dotglob
+                   dashglob (true)
+  [<a href="chap-option.html#Other-Option" class="level2">Other Option</a>]   noclobber -C
+  [<a href="chap-option.html#Debugging" class="level2">Debugging</a>]      errtrace -E     extdebug   X verbose           xtrace -x     
+  [<a href="chap-option.html#Interactive" class="level2">Interactive</a>]    emacs           vi
+  [<a href="chap-option.html#Compat" class="level2">Compat</a>]         eval_unsafe_arith            ignore_flags_not_impl
+                   ignore_shopt_not_impl
+</code></pre>
+<h2 id="special-var">
+  Special Variables <a class="group-link" href="chap-special-var.html">special-var</a>
+</h2>
+<pre><code class="language-chapter-links-special-var">  [<a href="chap-special-var.html#Interactive" class="level2">Interactive</a>]   <a href="chap-special-var.html#OILS_COMP_UI">OILS_COMP_UI</a>
+  [<a href="chap-special-var.html#Oils-VM" class="level2">Oils VM</a>]       <a href="chap-special-var.html#OILS_VERSION">OILS_VERSION</a>      <a href="chap-special-var.html#LIB_OSH">LIB_OSH</a>
+  [<a href="chap-special-var.html#POSIX-Special" class="level2">POSIX Special</a>] $@  $*  $#     $?  $-     $$  $!   $0  $9
+  [<a href="chap-special-var.html#Shell-Vars" class="level2">Shell Vars</a>]    <a href="chap-special-var.html#IFS">IFS</a>             <span style="color: darkred">X </span><a href="chap-special-var.html#LANG">LANG</a>       <span style="color: darkred">X </span><a href="chap-special-var.html#GLOBIGNORE">GLOBIGNORE</a>
+  [<a href="chap-special-var.html#Shell-Options" class="level2">Shell Options</a>] <a href="chap-special-var.html#SHELLOPTS">SHELLOPTS</a>       <span style="color: darkred">X </span><a href="chap-special-var.html#BASHOPTS">BASHOPTS</a>
+  [<a href="chap-special-var.html#Other-Env" class="level2">Other Env</a>]     <a href="chap-special-var.html#HOME">HOME</a>              <a href="chap-special-var.html#PATH">PATH</a>
+  [<a href="chap-special-var.html#Other-Special" class="level2">Other Special</a>] <a href="chap-special-var.html#BASH_REMATCH">BASH_REMATCH</a>     @<a href="chap-special-var.html#PIPESTATUS">PIPESTATUS</a>
+  [<a href="chap-special-var.html#Platform" class="level2">Platform</a>]      <a href="chap-special-var.html#HOSTNAME">HOSTNAME</a>          <a href="chap-special-var.html#OSTYPE">OSTYPE</a>
+  [<a href="chap-special-var.html#Call-Stack" class="level2">Call Stack</a>]    @<a href="chap-special-var.html#BASH_SOURCE">BASH_SOURCE</a>     @<a href="chap-special-var.html#FUNCNAME">FUNCNAME</a>    @<a href="chap-special-var.html#BASH_LINENO">BASH_LINENO</a>   
+                <span style="color: darkred">X </span>@<a href="chap-special-var.html#BASH_ARGV">BASH_ARGV</a>     <span style="color: darkred">X </span>@<a href="chap-special-var.html#BASH_ARGC">BASH_ARGC</a>
+  [<a href="chap-special-var.html#Tracing" class="level2">Tracing</a>]       <a href="chap-special-var.html#LINENO">LINENO</a>
+  [<a href="chap-special-var.html#Process-State" class="level2">Process State</a>] <a href="chap-special-var.html#UID">UID</a>               <a href="chap-special-var.html#EUID">EUID</a>         <a href="chap-special-var.html#PPID">PPID</a>       <span style="color: darkred">X </span><a href="chap-special-var.html#BASHPID">BASHPID</a>
+<span style="color: darkred">X </span>[<a href="chap-special-var.html#Process-Stack" class="level2">Process Stack</a>] <a href="chap-special-var.html#BASH_SUBSHELL">BASH_SUBSHELL</a>     <a href="chap-special-var.html#SHLVL">SHLVL</a>
+<span style="color: darkred">X </span>[<a href="chap-special-var.html#Shell-State" class="level2">Shell State</a>]   <a href="chap-special-var.html#BASH_CMDS">BASH_CMDS</a>        @<a href="chap-special-var.html#DIRSTACK">DIRSTACK</a>
+  [<a href="chap-special-var.html#Completion" class="level2">Completion</a>]   @<a href="chap-special-var.html#COMP_WORDS">COMP_WORDS</a>        <a href="chap-special-var.html#COMP_CWORD">COMP_CWORD</a>    <a href="chap-special-var.html#COMP_LINE">COMP_LINE</a>   <a href="chap-special-var.html#COMP_POINT">COMP_POINT</a>
+                  <a href="chap-special-var.html#COMP_WORDBREAKS">COMP_WORDBREAKS</a>  @<a href="chap-special-var.html#COMPREPLY">COMPREPLY</a>   <span style="color: darkred">X </span><a href="chap-special-var.html#COMP_KEY">COMP_KEY</a>
+                <span style="color: darkred">X </span><a href="chap-special-var.html#COMP_TYPE">COMP_TYPE</a>         <a href="chap-special-var.html#COMP_ARGV">COMP_ARGV</a>
+  [<a href="chap-special-var.html#History" class="level2">History</a>]       <a href="chap-special-var.html#HISTFILE">HISTFILE</a>
+  [<a href="chap-special-var.html#cd" class="level2">cd</a>]            <a href="chap-special-var.html#PWD">PWD</a>               <a href="chap-special-var.html#OLDPWD">OLDPWD</a>      <span style="color: darkred">X </span><a href="chap-special-var.html#CDPATH">CDPATH</a>
+  [<a href="chap-special-var.html#getopts" class="level2">getopts</a>]       <a href="chap-special-var.html#OPTIND">OPTIND</a>            <a href="chap-special-var.html#OPTARG">OPTARG</a>      <span style="color: darkred">X </span><a href="chap-special-var.html#OPTERR">OPTERR</a>
+  [<a href="chap-special-var.html#read" class="level2">read</a>]          <a href="chap-special-var.html#REPLY">REPLY</a>
+  [<a href="chap-special-var.html#Functions" class="level2">Functions</a>]   <span style="color: darkred">X </span><a href="chap-special-var.html#RANDOM">RANDOM</a>            <a href="chap-special-var.html#SECONDS">SECONDS</a>
+</code></pre>
+<h2 id="plugin">
+  Plugins and Hooks <a class="group-link" href="chap-plugin.html">plugin</a>
+</h2>
+<pre><code class="language-chapter-links-plugin">  [<a href="chap-plugin.html#Signals" class="level2">Signals</a>]       <a href="chap-plugin.html#SIGTERM">SIGTERM</a>     <a href="chap-plugin.html#SIGINT">SIGINT</a>     <a href="chap-plugin.html#SIGQUIT">SIGQUIT</a>
+                  <a href="chap-plugin.html#SIGTTIN">SIGTTIN</a>     <a href="chap-plugin.html#SIGTTOU">SIGTTOU</a>    <a href="chap-plugin.html#SIGWINCH">SIGWINCH</a>
+  [<a href="chap-plugin.html#Traps" class="level2">Traps</a>]         <a href="chap-plugin.html#DEBUG">DEBUG</a>       <a href="chap-plugin.html#ERR">ERR</a>        <a href="chap-plugin.html#EXIT">EXIT</a>    <span style="color: darkred">X </span><a href="chap-plugin.html#RETURN">RETURN</a>
+  [<a href="chap-plugin.html#Words" class="level2">Words</a>]         <a href="chap-plugin.html#PS1">PS1</a>       <span style="color: darkred">X </span><a href="chap-plugin.html#PS2">PS2</a>      <span style="color: darkred">X </span><a href="chap-plugin.html#PS3">PS3</a>       <a href="chap-plugin.html#PS4">PS4</a>
+  [<a href="chap-plugin.html#Completion" class="level2">Completion</a>]    <a href="chap-plugin.html#complete">complete</a>
+  [<a href="chap-plugin.html#Other-Plugin" class="level2">Other Plugin</a>]  <a href="chap-plugin.html#PROMPT_COMMAND">PROMPT_COMMAND</a>       <span style="color: darkred">X </span><a href="chap-plugin.html#command_not_found">command_not_found</a>    
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Language Influences</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/language-influences.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Language Influences</h1>
+<p>Almost all syntax in YSH comes from another language.  This doc lists some of
+these influences.</p>
+<p>Reading this page isn't essential for all users, but it may help some users
+remember the syntax.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#general-philosophy">General Philosophy</a></div>
+  <div class="toclevel1"><a href="#major-influences">Major Influences</a></div>
+  <div class="toclevel2"><a href="#posix-shell">POSIX Shell</a></div>
+  <div class="toclevel2"><a href="#bash-and-ksh">bash and ksh</a></div>
+  <div class="toclevel2"><a href="#python">Python</a></div>
+  <div class="toclevel2"><a href="#javascript">JavaScript</a></div>
+  <div class="toclevel2"><a href="#ruby">Ruby</a></div>
+  <div class="toclevel2"><a href="#perl">Perl</a></div>
+  <div class="toclevel2"><a href="#julia">Julia</a></div>
+  <div class="toclevel2"><a href="#go">Go</a></div>
+  <div class="toclevel2"><a href="#awk">Awk</a></div>
+  <div class="toclevel2"><a href="#lisp">Lisp</a></div>
+  <div class="toclevel2"><a href="#haskell">Haskell</a></div>
+  <div class="toclevel1"><a href="#minor-influences">Minor Influences</a></div>
+  <div class="toclevel2"><a href="#make-find-and-xargs">make, find and xargs</a></div>
+  <div class="toclevel2"><a href="#tcl">Tcl</a></div>
+  <div class="toclevel2"><a href="#php">PHP</a></div>
+  <div class="toclevel2"><a href="#lua">Lua</a></div>
+  <div class="toclevel2"><a href="#c">C</a></div>
+  <div class="toclevel2"><a href="#c">C++</a></div>
+  <div class="toclevel2"><a href="#swiftrust">Swift/Rust</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div> 
+<a name="general-philosophy"></a>
+<h2>General Philosophy</h2>
+<p>At a high level, YSH is a bash-compatible shell language that adds features
+from popular dynamic languages.</p>
+<p>Its design is more conservative than that of other alternative shells.  Our
+goals are to:</p>
+<ul>
+<li><strong>Preserve</strong> what works best about shell: processes, pipelines, and files.</li>
+<li><strong>Clean up</strong> the sharp edges like quoting, ad hoc parsing and splitting</li>
+<li><strong>Integrate</strong> features from Python, JavaScript, Ruby, and other languages
+listed below.</li>
+</ul>
+<a name="major-influences"></a>
+<h2>Major Influences</h2>
+<a name="posix-shell"></a>
+<h3>POSIX Shell</h3>
+<p>The command and word syntax comes from shell:</p>
+<pre><code>ls | wc -l                        <span class="sh-comment"># pipeline</span>
+echo $var &quot;${var} $(hostname)&quot;    <span class="sh-comment"># variable and command sub</span>
+echo one; echo two                <span class="sh-comment"># sequence of commands</span>
+test -d /tmp &amp;&amp; test -d /tmp/foo  <span class="sh-comment"># builtins and operators</span>
+</code></pre>
+<p>Shell-like extensions in YSH:</p>
+<pre><code>echo $[42 + a[i]]                 <span class="sh-comment"># Expression substitution</span>
+cd /tmp { echo hi }               <span class="sh-comment"># Block arguments</span>
+</code></pre>
+<a name="bash-and-ksh"></a>
+<h3>bash and ksh</h3>
+<p>We implement many bash semantics, like &quot;named references&quot; for out variables:</p>
+<pre><code>f() {
+  local -n out=$1    <span class="sh-comment"># -n for named reference</span>
+  out=bar
+}
+
+x=foo
+f x
+echo x=$x            <span class="sh-comment"># =&gt; x=bar</span>
+</code></pre>
+<p>Though we discourage dynamic scope.  YSH provides a better mechanism called
+<code>value.Place</code>.</p>
+<pre><code>proc f(; out) {
+  call out-&gt;setValue('bar')
+}
+
+var x = 'foo'
+f (&amp;x)               <span class="sh-comment"># pass a place</span>
+echo x=$x            <span class="sh-comment"># =&gt; x=bar</span>
+</code></pre>
+
+<a name="python"></a>
+<h3>Python</h3>
+<p>The YSH expression language is mostly Python compatible.  Expressions occur on
+the right-hand side of <code>=</code>:</p>
+<pre><code>var a = 42 + a[i]
+var b = fib(10)
+var c = 'yes' if mybool else 'no'
+</code></pre>
+<p>Proc signatures take influence from Python:</p>
+<pre><code>proc mycopy(src, dest='/tmp') {  <span class="sh-comment"># Python-like default value</span>
+  cp --verbose $src $dest
+}
+</code></pre>
+<p>Related: differences documented in <a href="ysh-vs-python.html">YSH Expressions vs.
+Python</a>.</p>
+<hr />
+<p>J8 strings often have a leading letter, similar to Python's syntax:</p>
+<pre><code>var raw_str = r'C:\Program Files\'    
+var unicode = u'mu = \u{03bc}'
+var bytes   = b'\yfe \yff'
+</code></pre>
+<hr />
+<p>The syntax of type objects is similar to Python's syntax:</p>
+<pre><code>parser (&amp;spec) {
+  flag --source (List[Str])  <span class="sh-comment"># List[Str] is a type object</span>
+}
+</code></pre>
+<p>(Though YSH always capitalizes type names.)</p>
+<a name="javascript"></a>
+<h3>JavaScript</h3>
+<p>YSH uses JavaScript's dict literals:</p>
+<pre><code>var d1 = {name: 'Alice', age: 10}  <span class="sh-comment"># Keys aren't quoted</span>
+
+var d2 = {[mystr]: 'value'}        <span class="sh-comment"># Key expressions in []</span>
+
+var name = 'Bob'
+var age = 15
+var d3 = {name, age}  <span class="sh-comment"># Omitted values taken from surrounding scope</span>
+</code></pre>
+<p>Blocks use curly braces, so most code resembles C / Java / JavaScript:</p>
+<pre><code>if (x &gt; 0) {
+  echo 'positive'
+} else {
+  echo 'zero or negative'
+}
+
+var i = 5
+while (i &gt; 0) {
+  echo $i
+  setvar i -= 1
+}
+</code></pre>
+<a name="ruby"></a>
+<h3>Ruby</h3>
+<p>YSH has Ruby-like blocks:</p>
+<pre><code>cd /tmp {
+  echo $PWD  <span class="sh-comment"># prints /tmp</span>
+}
+echo $PWD
+</code></pre>
+<a name="perl"></a>
+<h3>Perl</h3>
+<p>The <code>@</code> character comes from Perl (and PowerShell):</p>
+<pre><code>var myarray = :| one two three |
+echo @myarray          <span class="sh-comment"># @ is the &quot;splice&quot; operator</span>
+
+echo @[arrayfunc(x, y)]
+
+for i in @(seq 3) {    <span class="sh-comment"># split command sub</span>
+  echo $i
+}
+</code></pre>
+
+<p>Perl can be viewed as a mixture of shell, awk, and sed.  YSH is a similar
+agglomeration of languages, but it's statically parsed.</p>
+<a name="julia"></a>
+<h3>Julia</h3>
+<p>The semicolon in <code>proc</code> and <code>func</code> definitions comes from Julia:</p>
+<pre><code>func f(x, y; invert=false) {
+  if (invert) {
+    return (-x - y)
+  } else {
+    return (x + y)
+  }
+}
+</code></pre>
+<p>Multiline strings in YSH strip leading whitespace, similar to Julia:</p>
+<pre><code>proc p {
+  <span class="sh-comment"># Because leading and trailing space are stripped, this is 2 lines long</span>
+  var foods = '''
+  peanut
+  coconut
+  '''
+}
+</code></pre>
+<p>(Julia has something like blocks too.)</p>
+<a name="go"></a>
+<h3>Go</h3>
+<p>Like Go, Oils is UTF-8-centric.  (Go blog: <a href="https://go.dev/blog/strings">Strings, bytes, runes and
+characters in Go</a>.)</p>
+<p>The design of for loops is roughly influenced by Go:</p>
+<pre><code>for i, item in (mylist) {  <span class="sh-comment"># ask for index and value</span>
+  echo &quot;$i $item&quot;
+}
+
+for i, k, v in (mydict) {  <span class="sh-comment"># ask for index, key, and value</span>
+  echo &quot;$i $k $v&quot;
+}
+</code></pre>
+<a name="awk"></a>
+<h3>Awk</h3>
+<p>YSH gets its regex match operator from Awk:</p>
+<pre><code>if (mystr ~ /digit+/) {
+  echo 'Number'
+}
+</code></pre>
+<p>(We don't use Perl's <code>=~</code> operator.)</p>
+<a name="lisp"></a>
+<h3>Lisp</h3>
+<p>YSH has &quot;quotation types&quot; that represent unevaluated code.  Like Lisp, they
+give you control over evaluation:</p>
+<pre><code>var my_cmd = ^(ls /tmp | wc -l)
+eval (my_cmd)
+
+var my_expr = ^[42 + a[i]]
+var v = evalExpr(my_expr)
+
+var my_template = ^&quot;hi $name&quot;  <span class="sh-comment"># unimplemented</span>
+</code></pre>
+<a name="haskell"></a>
+<h3>Haskell</h3>
+<p>YSH also uses <code>++</code> to concatenate strings and lists:</p>
+<pre><code>var mystr = a ++ b    
+var mystr = &quot;$a$b&quot;       <span class="sh-comment"># very similar</span>
+
+var mylist = c ++ d
+var mylist = :| @c @d |  <span class="sh-comment"># also converts every element to a string</span>
+</code></pre>
+<p>YSH has a <code>value.IO</code> type that makes functions pure:</p>
+<pre><code>func renderPrompt(io) {
+  return (io-&gt;promptVal('$') ++ &quot; &quot;)
+}
+</code></pre>
+<a name="minor-influences"></a>
+<h2>Minor Influences</h2>
+<a name="make-find-and-xargs"></a>
+<h3>make, find and xargs</h3>
+<p>Our design for Ruby-like blocks was influenced by these mini-languages.</p>
+<a name="tcl"></a>
+<h3>Tcl</h3>
+<p>YSH uses <code>proc</code> and <code>setvar</code>, which makes it look something like Tcl:</p>
+<pre><code> proc p(x) {
+   setvar y = x * 2
+   echo $y
+ }
+
+ p 3  <span class="sh-comment"># prints 6</span>
+</code></pre>
+<p>But this is mostly superficial: YSH isn't homoiconic like Tcl is, and has a
+detailed syntax.  It intentionally avoids dynamic parsing.</p>
+<p>However, <a href="https://trs.jpl.nasa.gov/bitstream/handle/2014/7660/03-1728.pdf">Data Definition and Code Generation in Tcl (PDF)</a> shows
+how Tcl can be used a configuration language:</p>
+<pre><code>change 6/11/2003 {
+  author &quot;Will Duquette&quot;
+  description {
+    Added the SATl component to UCLO.
+  }
+}
+</code></pre>
+<p>Hay blocks in YSH allow this to be expressed very similarly:</p>
+<pre><code>hay define Change
+
+Change 6/11/2003 {
+  author = &quot;Will Duquette&quot;
+  description = '''
+    Added the SATl component to UCLO.
+  '''
+}
+</code></pre>
+<a name="php"></a>
+<h3>PHP</h3>
+<p>PHP has global variables like <code>_REQUEST</code> and <code>_POST</code>.</p>
+<p>YSH has <code>_error</code>, <code>_group()</code>, <code>_start()</code>, etc.  These are global variables that
+are &quot;silently&quot; mutated by the interpreter (and functions to access such global
+data).</p>
+<a name="lua"></a>
+<h3>Lua</h3>
+<p>YSH also uses a leading <code>=</code> to print expressions in the REPL.</p>
+<pre><code>= 1 + 2
+</code></pre>
+<p>Lua's implementation as a pure ANSI C core without I/O was also influential.</p>
+<a name="c"></a>
+<h3>C</h3>
+<p>Most of our C-like syntax can be attributed to JavaScript or Python.  But the
+<code>value.Place</code> type is created with the <code>&amp;</code> operator, and should be familiar to
+C users:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo hi | read --all (&amp;myvar)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;myvar=$myvar&quot;</span>
+=&gt; myvar=hi
+</code></pre>
+<p>So a <code>value.Place</code> behaves like a pointer in some ways.</p>
+<p>The <code>&amp;</code> syntax may also feel familiar to Rust users.</p>
+<a name="c"></a>
+<h3>C++</h3>
+<p>Using <code>-&gt;</code> to indicate mutating methods may feel familiar to C++ users:</p>
+<pre><code>call mylist-&gt;append(42)
+</code></pre>
+<p>Compared with:</p>
+<pre><code>var x = mystr.trim()
+</code></pre>
+<a name="swiftrust"></a>
+<h3>Swift/Rust</h3>
+<p>YSH has an explicit range syntax that is inspired by Swift and Rust:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= 3 ..&lt; 5</span>  <span class="sh-comment"># =&gt; 3, 4</span>
+<span class="sh-prompt">$</span> <span class="sh-command">= 3 ..= 5</span>  <span class="sh-comment"># =&gt; 3, 4, 5</span>
+</code></pre>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="novelties.html">Novelties in OSH and YSH</a></li>
+</ul>
+ 
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

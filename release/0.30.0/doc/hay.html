@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hay - Custom Languages for Unix Systems</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/hay.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Hay - Custom Languages for Unix Systems</h1>
+<p><em>Hay</em> lets you use the syntax of the YSH to declare <strong>data</strong> and
+interleaved <strong>code</strong>.  It allows the shell to better serve its role as
+essential <strong>glue</strong>.  For example, these systems all combine Unix processes in
+various ways:</p>
+<ul>
+<li>local build systems (Ninja, CMake, Debian package builds, Docker/OCI builds)</li>
+<li>remote build services (VM-based continuous integration like sourcehut, Github
+Actions)</li>
+<li>local process supervisors (SysV init, systemd)</li>
+<li>remote process supervisors / cluster managers (Slurm, Kubernetes)</li>
+</ul>
+<p>Slogans:</p>
+<ul>
+<li><em>Hay Ain't YAML</em>.
+<ul>
+<li>It evaluates to <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> + Shell Scripts.</li>
+</ul>
+</li>
+<li><em>We need a better <strong>control plane</strong> language for the cloud</em>.</li>
+<li><em>YSH adds the missing declarative part to shell</em>.</li>
+</ul>
+<p>This doc describes how to use Hay, with motivating examples.</p>
+<p>As of 2022, this is a new feature of YSH, and <strong>it needs user feedback</strong>.
+Nothing is set in stone, so you can influence the language and its features!</p>
+
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#example">Example</a></div>
+  <div class="toclevel1"><a href="#understanding-hay">Understanding Hay</a></div>
+  <div class="toclevel2"><a href="#analogies">Analogies</a></div>
+  <div class="toclevel2"><a href="#prior-art">Prior Art</a></div>
+  <div class="toclevel2"><a href="#comparison">Comparison</a></div>
+  <div class="toclevel1"><a href="#overview">Overview</a></div>
+  <div class="toclevel2"><a href="#two-kinds-of-nodes-and-three-kinds-of-evaluation">Two Kinds of Nodes, and Three Kinds of Evaluation</a></div>
+  <div class="toclevel2"><a href="#two-stages-of-evaluation">Two Stages of Evaluation</a></div>
+  <div class="toclevel2"><a href="#result-schema">Result Schema</a></div>
+  <div class="toclevel1"><a href="#three-ways-to-invoke-hay">Three Ways to Invoke Hay</a></div>
+  <div class="toclevel2"><a href="#inline-hay-has-no-restrictions">Inline Hay Has No Restrictions</a></div>
+  <div class="toclevel2"><a href="#in-separate-files">In Separate Files</a></div>
+  <div class="toclevel2"><a href="#in-a-block">In A Block</a></div>
+  <div class="toclevel1"><a href="#security-model-restricted-sandboxed">Security Model: Restricted != Sandboxed</a></div>
+  <div class="toclevel1"><a href="#reference">Reference</a></div>
+  <div class="toclevel2"><a href="#shell-builtins">Shell Builtins</a></div>
+  <div class="toclevel2"><a href="#functions">Functions</a></div>
+  <div class="toclevel2"><a href="#options">Options</a></div>
+  <div class="toclevel1"><a href="#usage-interleaving-hay-and-ysh">Usage: Interleaving Hay and YSH</a></div>
+  <div class="toclevel2"><a href="#conditionals">Conditionals</a></div>
+  <div class="toclevel2"><a href="#iteration">Iteration</a></div>
+  <div class="toclevel2"><a href="#remove-duplication-with-proc">Remove Duplication with <code>proc</code></a></div>
+  <div class="toclevel1"><a href="#more-usage-patterns">More Usage Patterns</a></div>
+  <div class="toclevel2"><a href="#using-ysh-for-the-second-stage">Using YSH for the Second Stage</a></div>
+  <div class="toclevel2"><a href="#using-python-for-the-second-stage">Using Python for the Second Stage</a></div>
+  <div class="toclevel2"><a href="#locating-errors-in-the-original-hay-file">Locating Errors in the Original <code>.hay</code> File</a></div>
+  <div class="toclevel2"><a href="#debian-d-dirs">Debian <code>.d</code> Dirs</a></div>
+  <div class="toclevel2"><a href="#parallel-loading">Parallel Loading</a></div>
+  <div class="toclevel1"><a href="#style">Style</a></div>
+  <div class="toclevel2"><a href="#attributes-vs-procs">Attributes vs. Procs</a></div>
+  <div class="toclevel2"><a href="#attributes-vs-flags">Attributes vs. Flags</a></div>
+  <div class="toclevel2"><a href="#dicts-vs-blocks">Dicts vs. Blocks</a></div>
+  <div class="toclevel2"><a href="#ysh-vs-shell">YSH vs. Shell</a></div>
+  <div class="toclevel1"><a href="#future-work">Future Work</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+</div>
+<a name="example"></a>
+<h2>Example</h2>
+<p>Hay could be used to configure a hypothetical Linux package manager:</p>
+<pre><code><span class="sh-comment"># cpython.hay -- A package definition</span>
+
+hay define Package/TASK  <span class="sh-comment"># define a tree of Hay node types</span>
+
+Package cpython {        <span class="sh-comment"># a node with attributes, and children</span>
+
+  version = '3.9'
+  url = 'https://python.org'
+
+  TASK build {           <span class="sh-comment"># a child node, with YSH code</span>
+    ./configure
+    make
+  }
+}
+</code></pre>
+<p>This program evaluates to a JSON tree, which you can consume from programs in
+any language, including YSH:</p>
+<pre><code>{ &quot;type&quot;: &quot;Package&quot;,
+  &quot;args&quot;: [ &quot;cpython&quot; ],
+  &quot;attrs&quot;: { &quot;version&quot;: &quot;3.9&quot;, &quot;url&quot;: &quot;https://python.org&quot; },
+  &quot;children&quot;: [
+     { &quot;type&quot;: &quot;TASK&quot;,
+       &quot;args&quot;: [ &quot;build&quot; ],
+       &quot;code_str&quot;: &quot;  ./configure\n  make\n&quot;
+     }
+  ]
+}
+</code></pre>
+<p>That is, a package manager can use the attributes to create a build
+environment, then execute shell code within it.  This is a <em>staged evaluation
+model</em>.</p>
+<a name="understanding-hay"></a>
+<h2>Understanding Hay</h2>
+<p>A goal of Hay is to restore the <strong>simplicity</strong> of Unix to distributed systems.
+It's all just <strong>code and data</strong>!</p>
+<p>This means that it's a bit abstract, so here are a few ways of understanding
+it.</p>
+<a name="analogies"></a>
+<h3>Analogies</h3>
+<p>The relation between Hay and YSH is like the relationship between these pairs
+of languages:</p>
+<ul>
+<li><a href="/cross-ref.html?tag=YAML#YAML">YAML</a> / <a href="https://pkg.go.dev/text/template">Go templates</a>, which are used in Helm config for Kubernetes.
+<ul>
+<li>YAML data specifies a <strong>service</strong>, and templates specify <strong>variants</strong>.</li>
+</ul>
+</li>
+<li>Two common ways of building C and C++ code:
+<ul>
+<li><a href="/cross-ref.html?tag=make#make">Make</a> / <a href="/cross-ref.html?tag=autotools#autotools">Autotools</a></li>
+<li><a href="/cross-ref.html?tag=ninja#ninja">Ninja</a> / <a href="https://cmake.org">CMake</a></li>
+<li>Make and Ninja specify a <strong>build graph</strong>, while autotools and CMake detect
+a <strong>configured variant</strong> with respect to your system.</li>
+</ul>
+</li>
+</ul>
+<p>Each of these is <em>70's-style macro programming</em> — a stringly-typed
+language generating another stringly-typed language, with all the associated
+problems.</p>
+<p>In contrast, Hay and YSH are really the same language, with the same syntax,
+and the same Python- and JavaScript-like dynamic <strong>types</strong>.  Hay is just YSH
+that <strong>builds up data</strong> instead of executing commands.</p>
+<p>(Counterpoint: Ninja is intended for code generation, and it makes sense for
+YSH to generate simple languages.)</p>
+<a name="prior-art"></a>
+<h3>Prior Art</h3>
+<p>See the <a href="https://github.com/oilshell/oil/wiki/Survey-of-Config-Languages">Survey of Config Languages</a> on the wiki, which puts them in
+these categories:</p>
+<ol>
+<li>Languages for String Data
+<ul>
+<li>INI, XML, <a href="/cross-ref.html?tag=YAML#YAML">YAML</a>, ...</li>
+</ul>
+</li>
+<li>Languages for Typed Data
+<ul>
+<li><a href="/cross-ref.html?tag=JSON#JSON">JSON</a>, TOML, ...</li>
+</ul>
+</li>
+<li>Programmable String-ish Languages
+<ul>
+<li>Go templates, CMake, autotools/m4, ...</li>
+</ul>
+</li>
+<li>Programmable Typed Data
+<ul>
+<li>Nix expressions, Starlark, Cue, ...</li>
+</ul>
+</li>
+<li>Internal DSLs in General Purpose Languages
+<ul>
+<li>Hay, Guile Scheme for Guix, Ruby blocks, ...</li>
+</ul>
+</li>
+</ol>
+<p>Excerpts:</p>
+<p><a href="/cross-ref.html?tag=YAML#YAML">YAML</a> is a data format that is (surprisingly) the de-facto control plane
+language for the cloud.  It's an approximate superset of <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>.</p>
+<p><a href="https://github.com/vstakhov/libucl">UCL</a> (universal config language) and <a href="https://github.com/hashicorp/hcl">HCL</a> (HashiCorp config language) are
+influenced by the <a href="https://en.wikipedia.org/wiki/Nginx">Nginx</a> config file syntax.  If you can read any of these
+languages, you can read Hay.</p>
+<p><a href="/cross-ref.html?tag=nix#nix">Nix</a> has a <a href="https://wiki.nixos.org/wiki/Nix_Expression_Language">functional language</a> to configure Linux distros.  In
+contrast, Hay is multi-paradigm and imperative.</p>
+<p>The <a href="https://github.com/bazelbuild/starlark">Starlark</a> language is a dialect of Python used by the <a href="https://bazel.build/">Bazel</a> build
+system.  It uses imperative code to specify build graph variants, and you can
+use this same pattern in Hay.  That is, if statements, for loops, and functions
+are useful in Starlark and Hay.</p>
+<p><a href="https://www.ruby-lang.org/en/">Ruby</a>'s use of <a href="http://radar.oreilly.com/2014/04/make-magic-with-ruby-dsls.html">first-class
+blocks</a>
+inspired YSH.  They're used in systems like Vagrant (VM dev environments) and
+Rake (a build system).</p>
+<p>In <a href="https://en.wikipedia.org/wiki/Lisp_(programming_language)">Lisp</a>, code and data are expressed with the same syntax, and can be
+interleaved.
+<a href="https://guix.gnu.org/manual/en/html_node/G_002dExpressions.html">G-Expressions</a>
+in Guix use a <em>staged evaluation model</em>, like Hay.</p>
+<a name="comparison"></a>
+<h3>Comparison</h3>
+<p>The biggest difference between Hay and <a href="https://github.com/vstakhov/libucl">UCL</a> / <a href="https://github.com/hashicorp/hcl">HCL</a> is that it's
+<strong>embedded in a shell</strong>.  In other words, Hay languages are <em>internal DSLs</em>,
+while those languages are <em>external</em>.</p>
+<p>This means:</p>
+<ol>
+<li>You can <strong>interleave</strong> shell code with Hay data.  We'll discuss the many
+uses of this below.
+<ul>
+<li>On the other hand, it's OK to configure simple systems with plain data
+like <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>.  Hay is for when that stops working!</li>
+</ul>
+</li>
+<li>Hay isn't a library you embed in another program.  Instead, you use
+Unix-style <strong>process-based</strong> composition.
+<ul>
+<li>For example, <a href="https://github.com/hashicorp/hcl">HCL</a> is written in Go, which may be hard to embed in a C
+or Rust program.</li>
+<li>Note that a process is a good <strong>security</strong> boundary.  It can be
+additionally run in an OS container or VM.</li>
+</ul>
+</li>
+</ol>
+
+<p>The sections below elaborate on these points.</p>
+
+<a name="overview"></a>
+<h2>Overview</h2>
+<p>Hay nodes have a regular structure:</p>
+<ul>
+<li>They start with a &quot;command&quot;, which is called the <strong>type</strong>.</li>
+<li>They accept <strong>string</strong> arguments and <strong>block</strong> arguments.  There must be at
+least one argument.</li>
+</ul>
+<a name="two-kinds-of-nodes-and-three-kinds-of-evaluation"></a>
+<h3>Two Kinds of Nodes, and Three Kinds of Evaluation</h3>
+<p>There are two kinds of node with this structure.</p>
+<p>(1) <code>SHELL</code> nodes contain <strong>unevaluated</strong> code, and their type is ALL CAPS.
+The code is turned into a string that can be executed elsewhere.</p>
+<pre><code>TASK build {
+  ./configure
+  make
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># ... {&quot;code_str&quot;: &quot;  ./configure\n  make\n&quot;}</span>
+</code></pre>
+<p>(2) <code>Attr</code> nodes contain <strong>data</strong>, and their type starts with a capital letter.
+They eagerly evaluate a block in a new <strong>stack frame</strong> and turn it into an
+<strong>attributes dict</strong>.</p>
+<pre><code>Package cpython {
+  version = '3.9'
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># ... {&quot;attrs&quot;: {&quot;version&quot;: &quot;3.9&quot;}} ...</span>
+</code></pre>
+<p>These blocks have a special rule to allow <em>bare assignments</em> like <code>version = '3.9'</code>.  That is, you don't need keywords like <code>const</code> or <code>var</code>.</p>
+<p>(3) In contrast to these two types of Hay nodes, YSH builtins that take a block
+usually evaluate it eagerly:</p>
+<pre><code>cd /tmp {  <span class="sh-comment"># run in a new directory</span>
+  echo $PWD
+}
+</code></pre>
+<p>Builtins are spelled with <code>lower</code> case letters, so <code>SHELL</code> and <code>Attr</code> nodes
+won't be confused with them.</p>
+<a name="two-stages-of-evaluation"></a>
+<h3>Two Stages of Evaluation</h3>
+<p>So Hay is designed to be used with a <em>staged evaluation model</em>:</p>
+<ol>
+<li>The first stage follows the rules above:
+<ul>
+<li>Tree of Hay nodes → <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> + Unevaluated shell.</li>
+<li>You can use variables, conditionals, loops, and more.</li>
+</ul>
+</li>
+<li>Your app or system controls the second stage.  You can invoke YSH again to
+execute shell inside a VM, inside a Linux container, or on a remote machine.</li>
+</ol>
+<p>These two stages conceptually different, but use the <strong>same</strong> syntax and
+evaluator!  Again, the evaluator runs in a mode where it <strong>builds up data</strong>
+rather than executing commands.</p>
+<a name="result-schema"></a>
+<h3>Result Schema</h3>
+<p>Here's a description of the result of Hay evaluation (the first stage).</p>
+<pre><code><span class="sh-comment"># The source may be &quot;cpython.hay&quot;</span>
+FileResult = (source Str, children List[NodeResult])
+
+NodeResult =
+  <span class="sh-comment"># package cpython { version = '3.9' }</span>
+  Attr (type                Str,
+        args                List[Str],
+        attrs               Map[Str, Any],
+        children            List[NodeResult])
+
+  <span class="sh-comment"># TASK build { ./configure; make }</span>
+| Shell(type                Str,
+        args                List[Str],
+        location_str        Str,
+        location_start_line Int,
+        code_str            Str)
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>Except for user-defined attributes, the result is statically typed.</li>
+<li>Shell nodes are always leaf nodes.</li>
+<li>Attr nodes may or may not be leaf nodes.</li>
+</ul>
+<a name="three-ways-to-invoke-hay"></a>
+<h2>Three Ways to Invoke Hay</h2>
+<a name="inline-hay-has-no-restrictions"></a>
+<h3>Inline Hay Has No Restrictions</h3>
+<p>You can put Hay blocks and normal shell code in the same file.  Retrieve the
+result of Hay evaluation with the <code>_hay()</code> function.</p>
+<pre><code><span class="sh-comment"># myscript.ysh</span>
+
+hay define Rule
+
+Rule mylib.o {
+  inputs = ['mylib.c']
+
+  <span class="sh-comment"># not recommended, but allowed</span>
+  echo 'hi'
+  ls /tmp/$(whoami)
+}
+
+echo 'bye'  <span class="sh-comment"># other shell code</span>
+
+const result = _hay()
+json write (result)
+</code></pre>
+<p>In this case, there are no restrictions on the commands you can run.</p>
+<a name="in-separate-files"></a>
+<h3>In Separate Files</h3>
+<p>You can put hay definitions in their own file:</p>
+<pre><code><span class="sh-comment"># my-config.hay</span>
+
+Rule mylib.o {
+  inputs = ['mylib.c']
+}
+
+echo 'hi'  <span class="sh-comment"># allowed for debugging</span>
+<span class="sh-comment"># ls /tmp/$(whoami) would fail due to restrictions on hay evaluation</span>
+</code></pre>
+<p>In this case, you can use <code>echo</code> and <code>write</code>, but the interpreted is
+<strong>restricted</strong> (see below).</p>
+<p>Parse it with <code>parseHay()</code>, and evaluate it with <code>evalHay()</code>:</p>
+<pre><code><span class="sh-comment"># my-evaluator.ysh</span>
+
+hay define Rule  <span class="sh-comment"># node types for the file</span>
+const h = parseHay('build.hay')
+const result = evalHay(h)
+
+json write (result)
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># {</span>
+<span class="sh-comment">#   &quot;children&quot;: [</span>
+<span class="sh-comment">#     { &quot;type&quot;: &quot;Rule&quot;,</span>
+<span class="sh-comment">#       &quot;args&quot;: [&quot;mylib.o&quot;],</span>
+<span class="sh-comment">#       &quot;attrs&quot;: {&quot;inputs&quot;: [&quot;mylib.c&quot;]}</span>
+<span class="sh-comment">#     }</span>
+<span class="sh-comment">#   ]</span>
+<span class="sh-comment"># }</span>
+</code></pre>
+<a name="in-a-block"></a>
+<h3>In A Block</h3>
+<p>Instead of creating separate files, you can also use the <code>hay eval</code> builtin:</p>
+<pre><code>hay define Rule
+
+hay eval :result {  <span class="sh-comment"># assign to the variable 'result'</span>
+  Rule mylib.o {
+    inputs = ['mylib.c']
+  }
+}
+
+json write (result)  <span class="sh-comment"># same as above</span>
+</code></pre>
+<p>This is mainly for testing and demos.</p>
+<a name="security-model-restricted-sandboxed"></a>
+<h2>Security Model: Restricted != Sandboxed</h2>
+<p>The &quot;restrictions&quot; are <strong>not</strong> a security boundary!  (They could be, but we're
+not making promises now.)</p>
+<p>Even with <code>evalHay()</code> and <code>hay eval</code>, the config file is evaluated in the
+<strong>same interpreter</strong>.  But the following restrictions apply:</p>
+<ul>
+<li>External commands aren't allowed</li>
+<li>Builtins other than <code>echo</code> and <code>write</code> aren't allowed
+<ul>
+<li>For example, the <code>.hay</code> file can't invoke <code>shopt</code> to change global shell
+options</li>
+</ul>
+</li>
+<li>A new stack frame is created, so the <code>.hay</code> file can't mutate your locals
+<ul>
+<li>However it can still mutate globals with <code>setglobal</code>!</li>
+</ul>
+</li>
+</ul>
+<p>In summary, Hay evaluation is restricted to prevent basic mistakes, but your
+code isn't completely separate from the evaluated Hay file.</p>
+<p>If you want to evaluate untrusted code, use a <strong>separate process</strong>, and run it
+in a container or VM.</p>
+<a name="reference"></a>
+<h2>Reference</h2>
+<p>Here is a list of all the mechanisms mentioned.</p>
+<a name="shell-builtins"></a>
+<h3>Shell Builtins</h3>
+<ul>
+<li><code>hay</code>
+<ul>
+<li><code>hay define</code> to define node types.</li>
+<li><code>hay pp</code> to pretty print the node types.</li>
+<li><code>hay reset</code> to delete both the node types <strong>and</strong> the current evaluation
+result.</li>
+<li><code>hay eval :result { ... }</code> to evaluate in restricted mode, and put the
+result in a variable.</li>
+</ul>
+</li>
+<li>Implementation detail: the <code>haynode</code> builtin is run when types like
+<code>Package</code> and <code>TASK</code> are invoked.  That is, all node types are aliases for
+this same builtin.</li>
+</ul>
+<a name="functions"></a>
+<h3>Functions</h3>
+<ul>
+<li><code>parseHay()</code> parses a file, just as <code>bin/ysh</code> does.</li>
+<li><code>evalHay()</code> evaluates the parsed file in restricted mode, like <code>hay eval</code>.</li>
+<li><code>_hay()</code> retrieves the current result
+<ul>
+<li>It's useful interactive debugging.</li>
+<li>The name starts with <code>_</code> because it's a &quot;register&quot; mutated by the
+interpreter.</li>
+</ul>
+</li>
+</ul>
+<a name="options"></a>
+<h3>Options</h3>
+<p>Hay is parsed and evaluated with option group <code>ysh:all</code>, which includes
+<code>parse_proc</code> and <code>parse_equals</code>.</p>
+
+<a name="usage-interleaving-hay-and-ysh"></a>
+<h2>Usage: Interleaving Hay and YSH</h2>
+<p>Why would you want to interleave data and code?  One reason is to naturally
+express variants of a configuration.  Here are some examples.</p>
+<p><strong>Build variants</strong>.  There are many variants of the YSH binary:</p>
+<ul>
+<li><code>dbg</code> and <code>opt</code>. the compiler optimization level, and whether debug symbols
+are included.</li>
+<li><code>asan</code> and <code>ubsan</code>.  Dynamic analysis with Clang sanitizers.</li>
+<li><code>-D GC_EVERY_ALLOC</code>. Make a build that helps debug the garbage collector.</li>
+</ul>
+<p>So the Ninja build graph to produce these binaries is <strong>shaped</strong> similarly, but
+it <strong>varies</strong> with compiler and linker flags.</p>
+<p><strong>Service variants</strong>.  A common problem in distributed systems is how to
+develop and debug services locally.</p>
+<p>Do your service dependencies live in the cloud, or are they run locally?  What
+about state?  Common variants:</p>
+<ul>
+<li><code>local</code>. Part or all of the service runs locally, so you may pass flags like
+<code>--auth-service localhost:8001</code> to binaries.</li>
+<li><code>staging</code>. A complete copy of the service, in a different cloud, with a
+different database.</li>
+<li><code>prod</code>. The live instance running with user data.</li>
+</ul>
+<p>Again, these collections of services are all <strong>shaped</strong> similarly, but the
+flags <strong>vary</strong> based on where binaries are physically running.</p>
+<hr />
+<p>This model can be referred to as <a href="https://www.oilshell.org/blog/2021/04/build-ci-comments.html">&quot;graph metaprogramming&quot; or &quot;staged
+programming&quot;</a>.  In YSH, it's done with dynamically typed
+data like integers and dictionaries.  In contrast, systems like CMake and
+autotools are more stringly typed.</p>
+<p>The following <strong>examples</strong> are meant to be &quot;evocative&quot;; they're not based on
+real code.  Again, user feedback can improve them!</p>
+<a name="conditionals"></a>
+<h3>Conditionals</h3>
+<p>Conditionals can go on the inside of a block:</p>
+<pre><code>Service auth.example.com {    <span class="sh-comment"># node taking a block</span>
+  if (variant === 'local') {  <span class="sh-comment"># condition</span>
+    port = 8001
+  } else {
+    port = 80
+  }
+}
+</code></pre>
+<p>Or on the outside:</p>
+<pre><code>Service web {               <span class="sh-comment"># node</span>
+  root = '/home/www'
+}
+
+if (variant === 'local') {  <span class="sh-comment"># condition</span>
+  Service auth-local {      <span class="sh-comment"># node</span>
+    port = 8001
+  }
+}
+</code></pre>
+<a name="iteration"></a>
+<h3>Iteration</h3>
+<p>Iteration can also go on the inside of a block:</p>
+<pre><code>Rule foo.o {   <span class="sh-comment"># node</span>
+  inputs = []  <span class="sh-comment"># populate with all .cc files except one</span>
+
+  <span class="sh-comment"># variables ending with _ are &quot;hidden&quot; from block evaluation</span>
+  for name_ in *.cc {
+    if (name_ !== 'skipped.cc') {
+      call inputs-&gt;append(name_)
+    }
+  }
+}
+</code></pre>
+<p>Or on the outside:</p>
+<pre><code>for name_ in *.cc {                <span class="sh-comment"># loop</span>
+  Rule $(basename $name_ .cc).o {  <span class="sh-comment"># node</span>
+    inputs = [name_]
+  }
+}
+</code></pre>
+<a name="remove-duplication-with-proc"></a>
+<h3>Remove Duplication with <code>proc</code></h3>
+<p>Procs can wrap blocks:</p>
+<pre><code>proc myrule(name) {
+  Rule dbg/$name.o {      <span class="sh-comment"># node</span>
+    inputs = [&quot;$name.c&quot;]
+    flags = ['-O0']
+  }
+
+  Rule opt/$name.o {      <span class="sh-comment"># node</span>
+    inputs = [&quot;$name.c&quot;]
+    flags = ['-O2']
+  }
+}
+
+myrule foo  <span class="sh-comment"># call proc</span>
+myrule bar  <span class="sh-comment"># call proc</span>
+</code></pre>
+<p>Or they can be invoked from within blocks:</p>
+<pre><code>proc set-port (port_num; out) {
+  call out-&gt;setValue(&quot;localhost:$port_num&quot;)
+}
+
+Service foo {        <span class="sh-comment"># node</span>
+  set-port 80 (&amp;p1)  <span class="sh-comment"># call proc</span>
+  set-port 81 (&amp;p2)  <span class="sh-comment"># call proc</span>
+}
+</code></pre>
+<a name="more-usage-patterns"></a>
+<h2>More Usage Patterns</h2>
+<a name="using-ysh-for-the-second-stage"></a>
+<h3>Using YSH for the Second Stage</h3>
+<p>The general pattern is:</p>
+<pre><code>./my-evaluator.ysh my-config.hay | json read (&amp;result)
+</code></pre>
+<p>The evaluator does the following:</p>
+<ol>
+<li>Sets up the execution context with <code>hay define</code></li>
+<li>Parses <code>my-config.hay</code> with <code>parseHay()</code></li>
+<li>Evaluates it with <code>evalHay()</code></li>
+<li>Prints the result as JSON.</li>
+</ol>
+<p>Then a separate YSH processes reads this JSON and executes application code.</p>
+<p>TODO: Show code example.</p>
+<a name="using-python-for-the-second-stage"></a>
+<h3>Using Python for the Second Stage</h3>
+<p>In Python, you would:</p>
+<ol>
+<li>Use the <code>subprocess</code> module to invoke <code>./my-evaluator.ysh my-config.hay</code>.</li>
+<li>Use the <code>json</code> module to parse the result.</li>
+<li>Then execute application code using the data.</li>
+</ol>
+<p>TODO: Show code example.</p>
+<a name="locating-errors-in-the-original-hay-file"></a>
+<h3>Locating Errors in the Original <code>.hay</code> File</h3>
+<p>The YSH interpreter has 2 flags starting with <code>--location</code> that give you
+control over error messages.</p>
+<pre><code>ysh --location-str 'foo.hay' --location-start-line 42 -- stage2.ysh
+</code></pre>
+<p>Set them to the values of fields <code>location_str</code> and <code>location_start_line</code> in
+the result of <code>SHELL</code> node evaluation.</p>
+<a name="debian-d-dirs"></a>
+<h3>Debian <code>.d</code> Dirs</h3>
+<p>Debian has a pattern of splitting configuration into a <strong>directory</strong> of
+concatenated files.  It's easier for shell scripts to add to a directory than
+add to a file.</p>
+<p>This can be done with an evaluator that simply enumerates all files:</p>
+<pre><code>var results = []
+for path in myconfig.d/*.hay {
+  const code = parseHay(path)
+  const result = eval(hay)
+  call results-&gt;append(result)
+}
+
+<span class="sh-comment"># Now iterate through results</span>
+</code></pre>
+<a name="parallel-loading"></a>
+<h3>Parallel Loading</h3>
+<p>TODO: Example of using <code>xargs -P</code> to spawn processes with <code>parseHay()</code> and
+<code>evalHay()</code>.  Then merge the JSON results.</p>
+<a name="style"></a>
+<h2>Style</h2>
+<a name="attributes-vs-procs"></a>
+<h3>Attributes vs. Procs</h3>
+<p>Assigning attributes and invoking procs can look similar:</p>
+<pre><code>Package grep {
+  version = '1.0'  <span class="sh-comment"># An attribute?</span>
+
+  version 1.0  <span class="sh-comment"># or call proc 'version'?</span>
+}
+</code></pre>
+<p>The first style is better for typed data like integers and dictionaries.  The
+latter style isn't useful here, but it could be if <code>version 1.0</code> created
+complex Hay nodes.</p>
+<a name="attributes-vs-flags"></a>
+<h3>Attributes vs. Flags</h3>
+<p>Hay nodes shouldn't take flags or <code>--</code>.  Flags are for key-value pairs, and
+blocks are better for expressing such data.</p>
+<p>No:</p>
+<pre><code>Package --version 1.0 grep {
+  license = 'GPL'
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code>Package grep {
+  version = '1.0'
+  license = 'GPL'
+}
+</code></pre>
+<a name="dicts-vs-blocks"></a>
+<h3>Dicts vs. Blocks</h3>
+<p>Superficially, dicts and blocks are similar:</p>
+<pre><code>Package grep {
+  mydict = {name: 'value'}  <span class="sh-comment"># a dict</span>
+
+  mynode foo {              <span class="sh-comment"># a node taking a block</span>
+    name = 'value'
+  }
+}
+</code></pre>
+<p>Use dicts in cases where you don't know the names or types up front, like</p>
+<pre><code>files = {'README.md': true, '__init__.py': false}
+</code></pre>
+<p>Use blocks when there's a <strong>schema</strong>.  Blocks are also different because:</p>
+<ul>
+<li>You can use <code>if</code> statements and <code>for</code> loops in them.</li>
+<li>You can call <code>TASK build; TASK test</code> within a block, creating multiple
+objects of the same type.</li>
+<li>Later: custom validation</li>
+</ul>
+<a name="ysh-vs-shell"></a>
+<h3>YSH vs. Shell</h3>
+<p>Hay files are parsed as YSH, not OSH.  That includes <code>SHELL</code> nodes:</p>
+<pre><code>TASK build {
+  cp @deps /tmp   <span class="sh-comment"># YSH splicing syntax</span>
+}
+</code></pre>
+<p>If you want to use POSIX shell or bash, use two arguments, the second of which
+is a multi-line string:</p>
+<pre><code>TASK build '''
+  cp &quot;${deps[@]}&quot; /tmp
+'''
+</code></pre>
+<p>The YSH style gives you <em>static parsing</em>, which catches some errors earlier.</p>
+<a name="future-work"></a>
+<h2>Future Work</h2>
+<ul>
+<li><code>hay proc</code> for arbitrary schema validation, including JSON schema</li>
+<li>Examples of running hay in a secure process / container, in various languages</li>
+<li>Sandboxing:
+<ul>
+<li>More find-grained rules?</li>
+<li>&quot;restricted&quot; could come with a security guarantee.  I've avoided making
+such guarantees,  but I think it's possible as YSH matures.  The
+interpreter uses dependency inversion to isolate I/O.</li>
+</ul>
+</li>
+<li>More location info, including the source file.</li>
+</ul>
+<p><a href="https://github.com/oilshell/oil/wiki/Where-To-Send-Feedback">Please send
+feedback</a> about
+Hay.  It will inform and prioritize this work!</p>
+<a name="links"></a>
+<h2>Links</h2>
+<ul>
+<li>Blog posts tagged #<a href="/blog/tags.html?tag=hay#hay">hay</a>.  Hay is a general mechanism, so it's
+useful to explain it with concrete examples.</li>
+<li><a href="https://trs.jpl.nasa.gov/bitstream/handle/2014/7660/03-1728.pdf">Data Definition and Code Generation in Tcl</a> (2003, PDF)
+<ul>
+<li>Like Hay, it has the (Type, Name, Attributes) data model.</li>
+</ul>
+</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Config-Dialect">https://github.com/oilshell/oil/wiki/Config-Dialect</a>.  Design notes and related links on the wiki.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

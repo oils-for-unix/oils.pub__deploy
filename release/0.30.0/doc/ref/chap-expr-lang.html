@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Expression Language (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-expr-lang.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>YSH Expression Language</strong></p>
+</div>
+<p>This chapter describes the YSH expression language, which includes <a href="/cross-ref.html?tag=eggex#eggex">Egg
+Expressions</a>.</p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Assignment">Assignment</a> <br/>
+  <a class="dense-toc-h3" href="#assign">assign</a> <br/>
+  <a class="dense-toc-h3" href="#aug-assign">aug-assign</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Literals">Literals</a> <br/>
+  <a class="dense-toc-h3" href="#atom-literal">atom-literal</a> <br/>
+  <a class="dense-toc-h3" href="#int-literal">int-literal</a> <br/>
+  <a class="dense-toc-h3" href="#float-literal">float-literal</a> <br/>
+  <a class="dense-toc-h3" href="#char-literal">char-literal</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-string">ysh-string</a> <br/>
+  <a class="dense-toc-h3" href="#triple-quoted">triple-quoted</a> <br/>
+  <a class="dense-toc-h3" href="#list-literal">list-literal</a> <br/>
+  <a class="dense-toc-h3" href="#dict-literal">dict-literal</a> <br/>
+  <a class="dense-toc-h3" href="#range">range</a> <br/>
+  <a class="dense-toc-h3" href="#block-expr">block-expr</a> <br/>
+  <a class="dense-toc-h3" href="#expr-literal">expr-literal</a> <br/>
+  <a class="dense-toc-h3" href="#str-template">str-template</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Operators">Operators</a> <br/>
+  <a class="dense-toc-h3" href="#op-precedence">op-precedence</a> <br/>
+  <a class="dense-toc-h3" href="#concat">concat <code>++</code></a> <br/>
+  <a class="dense-toc-h3" href="#ysh-equals">ysh-equals</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-in">ysh-in</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-compare">ysh-compare</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-logical">ysh-logical</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-arith">ysh-arith</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-bitwise">ysh-bitwise</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-ternary">ysh-ternary</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-index">ysh-index</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-attr">ysh-attr</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-slice">ysh-slice</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-func-call">ysh-func-call</a> <br/>
+  <a class="dense-toc-h3" href="#thin-arrow">thin-arrow</a> <br/>
+  <a class="dense-toc-h3" href="#fat-arrow">fat-arrow</a> <br/>
+  <a class="dense-toc-h3" href="#match-ops">match-ops</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Eggex">Eggex</a> <br/>
+  <a class="dense-toc-h3" href="#re-literal">re-literal</a> <br/>
+  <a class="dense-toc-h3" href="#re-primitive">re-primitive</a> <br/>
+  <a class="dense-toc-h3" href="#class-literal">class-literal</a> <br/>
+  <a class="dense-toc-h3" href="#named-class">named-class</a> <br/>
+  <a class="dense-toc-h3" href="#re-repeat">re-repeat</a> <br/>
+  <a class="dense-toc-h3" href="#re-compound">re-compound</a> <br/>
+  <a class="dense-toc-h3" href="#re-capture">re-capture</a> <br/>
+  <a class="dense-toc-h3" href="#re-splice">re-splice</a> <br/>
+  <a class="dense-toc-h3" href="#re-flags">re-flags</a> <br/>
+  <a class="dense-toc-h3" href="#re-multiline">re-multiline</a> <br/>
+</div>
+</div>
+</div>
+<a name="Assignment"></a>
+<h2>Assignment</h2>
+<a name="assign"></a>
+<h3>assign</h3>
+<p>The <code>=</code> operator is used with assignment keywords:</p>
+<pre><code>var x = 42
+setvar x = 43
+
+const y = 'k'
+
+setglobal z = 'g'
+</code></pre>
+<a name="aug-assign"></a>
+<h3>aug-assign</h3>
+<p>The augmented assignment operators are:</p>
+<pre><code>+=   -=   *=   /=   **=   //=   %=
+&amp;=   |=   ^=   &lt;&lt;=   &gt;&gt;=
+</code></pre>
+<p>They are used with <code>setvar</code> and <code>setglobal</code>.  For example:</p>
+<pre><code>setvar x += 2
+</code></pre>
+<p>is the same as:</p>
+<pre><code>setvar x = x + 2
+</code></pre>
+<p>Likewise, these are the same:</p>
+<pre><code>setglobal a[i] -= 1
+
+setglobal a[i] = a[i] - 1
+</code></pre>
+<a name="Literals"></a>
+<h2>Literals</h2>
+<a name="atom-literal"></a>
+<h3>atom-literal</h3>
+<p>YSH uses JavaScript-like spellings for these three &quot;atoms&quot;:</p>
+<pre><code>null           <span class="sh-comment"># type Null</span>
+true   false   <span class="sh-comment"># type Bool</span>
+</code></pre>
+<p>Note: to signify &quot;no value&quot;, you may sometimes use an empty string <code>''</code>,
+instead of <code>null</code>.</p>
+<ul>
+<li>Related: <a href="chap-type-method.html#Null">Null</a> type, <a href="chap-type-method.html#Bool">Bool</a> type</li>
+</ul>
+<a name="int-literal"></a>
+<h3>int-literal</h3>
+<p>There are several ways to write integers.  Examples:</p>
+<pre><code>var decimal = 42
+var big = 42_000
+
+var hex = 0x0010_ffff
+
+var octal = 0o755
+
+var binary = 0b0001_0000
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#Int">Int</a> type</li>
+</ul>
+<a name="float-literal"></a>
+<h3>float-literal</h3>
+<p>Floating point numbers looke like C, Python, or JavaScript:</p>
+<pre><code>var myfloat = 3.14
+
+var f2 = -1.5e-100
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#Float">Float</a> type</li>
+</ul>
+<a name="char-literal"></a>
+<h3>char-literal</h3>
+<p>The expression language has 3 kinds of backslash escapes, denoting bytes or
+UTF-8:</p>
+<pre><code>var backslash = \\
+var quotes = \' ++ \&quot;   <span class="sh-comment"># same as u'\'' ++ '&quot;'</span>
+
+var mu = \u{3bc}        <span class="sh-comment"># same as u'\u{3bc}'</span>
+
+var nul = \y00          <span class="sh-comment"># same as b'\y00'</span>
+</code></pre>
+<p>Notice that this is the same syntax that's available within quoted J8 strings.
+That is, the expression <code>\\</code> denotes the same thing as <code>u'\\'</code>.</p>
+<ul>
+<li>Related: <a href="chap-type-method.html#Str">Str</a> type</li>
+</ul>
+<a name="ysh-string"></a>
+<h3>ysh-string</h3>
+<p>YSH has single and double-quoted strings borrowed from Bourne shell, and
+C-style strings borrowed from J8 Notation.</p>
+<p>Double quoted strings respect <code>$</code> interpolation:</p>
+<pre><code>var dq = &quot;hello $world and $(hostname)&quot;
+</code></pre>
+<p>You can add a <code>$</code> before the left quote to be explicit: <code>$&quot;x is $x&quot;</code> rather
+than <code>&quot;x is $x&quot;</code>.</p>
+<p>Single quoted strings may be raw:</p>
+<pre><code>var s = r'line\n'      <span class="sh-comment"># raw string means \n is literal, NOT a newline</span>
+</code></pre>
+<p>Or <em>J8 strings</em> with backslash escapes:</p>
+<pre><code>var s = u'line\n \u{3bc}'        <span class="sh-comment"># unicode string means \n is a newline</span>
+var s = b'line\n \u{3bc} \yff'   <span class="sh-comment"># same thing, but also allows bytes</span>
+</code></pre>
+<p>Both <code>u''</code> and <code>b''</code> strings evaluate to the single <code>Str</code> type.  The difference
+is that <code>b''</code> strings allow the <code>\yff</code> byte escape.</p>
+<a name="Notes"></a>
+<h4>Notes</h4>
+<p>There's no way to express a single quote in raw strings.  Use one of the other
+forms instead:</p>
+<pre><code>var sq = &quot;single quote: ' &quot;
+var sq = u'single quote: \' '
+</code></pre>
+<p>Sometimes you can omit the <code>r</code>, e.g. where there are no backslashes and thus no
+ambiguity:</p>
+<pre><code>echo 'foo'
+echo r'foo'  <span class="sh-comment"># same thing</span>
+</code></pre>
+<p>The <code>u''</code> and <code>b''</code> strings are called <em>J8 strings</em> because the syntax in YSH
+<strong>code</strong> matches JSON-like <strong>data</strong>.</p>
+<pre><code>var strU = u'mu = \u{3bc}'  <span class="sh-comment"># J8 string with escapes</span>
+var strB = b'bytes \yff'    <span class="sh-comment"># J8 string that can express byte strings</span>
+</code></pre>
+<p>More examples:</p>
+<pre><code>var myRaw = r'[a-z]\n'      <span class="sh-comment"># raw strings can be used for regexes (not</span>
+                            <span class="sh-comment"># eggexes)</span>
+</code></pre>
+<a name="triple-quoted"></a>
+<h3>triple-quoted</h3>
+<p>Triple-quoted string literals have leading whitespace stripped on each line.
+They come in the same variants:</p>
+<pre><code>var dq = &quot;&quot;&quot;
+    hello $world and $(hostname)
+    no leading whitespace
+    &quot;&quot;&quot;
+
+var myRaw = r'''
+    raw string
+    no leading whitespace
+    '''
+
+var strU = u'''
+    string that happens to be unicode \u{3bc}
+    no leading whitespace
+    '''
+
+var strB = b'''
+    string that happens to be bytes \u{3bc} \yff
+    no leading whitespace
+    '''
+</code></pre>
+<p>Again, you can omit the <code>r</code> prefix if there's no backslash, because it's not
+ambiguous:</p>
+<pre><code>var myRaw = '''
+    raw string
+    no leading whitespace
+    '''
+</code></pre>
+<a name="list-literal"></a>
+<h3>list-literal</h3>
+<p>Lists have a Python-like syntax:</p>
+<pre><code>var mylist = ['one', 'two', [42, 43]]
+</code></pre>
+<p>And a shell-like syntax:</p>
+<pre><code>var list2 = :| one two |
+</code></pre>
+<p>The shell-like syntax accepts the same syntax as a simple command:</p>
+<pre><code>ls $mystr @ARGV *.py {foo,bar}@example.com
+
+<span class="sh-comment"># Rather than executing ls, evaluate words into a List</span>
+var cmd = :| ls $mystr @ARGV *.py {foo,bar}@example.com |
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#List">List</a> type</li>
+</ul>
+<a name="dict-literal"></a>
+<h3>dict-literal</h3>
+<p>Dicts look like JavaScript.</p>
+<pre><code>var d = {
+  key1: 'value',  <span class="sh-comment"># key can be unquoted if it looks like a var name</span>
+  'key2': 42,     <span class="sh-comment"># or quote it</span>
+
+  ['key2' ++ suffix]: 43,   <span class="sh-comment"># bracketed expression</span>
+}
+</code></pre>
+<p>Omitting a value means that the corresponding key takes the value of a var of
+the same name:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var x = 42</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var y = 43</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var d = {x, y}</span>  <span class="sh-comment"># values omitted</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= d</span>
+(Dict)  {x: 42, y: 43}
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#Dict">Dict</a> type</li>
+</ul>
+<a name="range"></a>
+<h3>range</h3>
+<p>A Range is a sequence of numbers that can be iterated over. The <code>..&lt;</code> operator
+constructs half-open ranges.</p>
+<pre><code>for i in (0 ..&lt; 3) {
+  echo $i
+}
+=&gt; 0
+=&gt; 1
+=&gt; 2
+</code></pre>
+<p>The <code>..=</code> operator constructs closed ranges:</p>
+<pre><code>for i in (0 ..= 3) {
+  echo $i
+}
+=&gt; 0
+=&gt; 1
+=&gt; 2
+=&gt; 3
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#Range">Range</a> type</li>
+</ul>
+<a name="block-expr"></a>
+<h3>block-expr</h3>
+<p>In YSH expressions, we use <code>^()</code> to create a <a href="chap-type-method.html#Command">Command</a> object:</p>
+<pre><code>var myblock = ^(echo $PWD; ls *.txt)
+</code></pre>
+<p>It's more common for <a href="chap-type-method.html#Command">Command</a> objects to be created with block arguments,
+which are not expressions:</p>
+<pre><code>cd /tmp {
+  echo $PWD
+  ls *.txt
+}
+</code></pre>
+<a name="expr-literal"></a>
+<h3>expr-literal</h3>
+<p>An expression literal is an object that holds an unevaluated expression:</p>
+<pre><code>var myexpr = ^[1 + 2*3]
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#Expr">Expr</a> type</li>
+</ul>
+<a name="str-template"></a>
+<h3>str-template</h3>
+<p>String templates use the same syntax as double-quoted strings:</p>
+<pre><code>var mytemplate = ^&quot;name = $name, age = $age&quot;
+</code></pre>
+<p>Related topics:</p>
+<ul>
+<li>The type of a template is <a href="chap-type-method.html#Expr">Expr</a>.</li>
+<li><a href="chap-type-method.html#replace">Str.replace</a></li>
+<li><a href="#ysh-string">ysh-string</a></li>
+</ul>
+<a name="Operators"></a>
+<h2>Operators</h2>
+<a name="op-precedence"></a>
+<h3>op-precedence</h3>
+<p>YSH operator precedence is identical to Python's operator precedence.</p>
+<p>New operators:</p>
+<ul>
+<li><code>++</code> has the same precedence as <code>+</code></li>
+<li><code>-&gt;</code> and <code>=&gt;</code> have the same precedence as <code>.</code></li>
+</ul>
+
+<a name="concat"></a>
+<h3 id="concat">concat <code>++</code></h3>
+<p>The concatenation operator works on <code>Str</code> objects:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var s = 'hello'</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var t = s ++ ' world'</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= t</span>
+(Str)   &quot;hello world&quot;
+</code></pre>
+<p>and <code>List</code> objects:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var L = ['one', 'two']</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var M = L ++ ['three', '4']</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= M</span>
+(List)   [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;4&quot;]
+</code></pre>
+<p>String interpolation can be nicer than <code>++</code>:</p>
+<pre><code>var t2 = &quot;${s} world&quot;  <span class="sh-comment"># same as t</span>
+</code></pre>
+<p>Likewise, splicing lists can be nicer:</p>
+<pre><code>var M2 = :| @L three 4 |  <span class="sh-comment"># same as M</span>
+</code></pre>
+<a name="ysh-equals"></a>
+<h3>ysh-equals</h3>
+<p>YSH has strict equality:</p>
+<pre><code>a === b       <span class="sh-comment"># Python-like, without type conversion</span>
+a !== b       <span class="sh-comment"># negated</span>
+</code></pre>
+<p>And type converting equality:</p>
+<pre><code>'3' ~== 3     <span class="sh-comment"># True, type conversion</span>
+</code></pre>
+<p>The <code>~==</code> operator expects a string as the left operand.</p>
+<hr />
+<p>Note that:</p>
+<ul>
+<li><code>3 === 3.0</code> is false because integers and floats are different types, and
+there is no type conversion.</li>
+<li><code>3 ~== 3.0</code> is an error, because the left operand isn't a string.</li>
+</ul>
+<p>You may want to use explicit <code>int()</code> and <code>float()</code> to convert numbers, and then
+compare them.</p>
+<hr />
+<p>Compare objects for identity with <code>is</code>:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var d = {}    </span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var e = d</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= d is d</span>
+(Bool)   true
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= d is {other: 'dict'}</span>
+(Bool)   false
+</code></pre>
+<p>To negate <code>is</code>, use <code>is not</code> (like Python:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">d is not {other: 'dict'}</span>
+(Bool)   true
+</code></pre>
+<a name="ysh-in"></a>
+<h3>ysh-in</h3>
+<p>The <code>in</code> operator tests if a key is in a dictionary:</p>
+<pre><code>var d = {k: 42}
+if ('k' in d) {
+  echo yes
+}  <span class="sh-comment"># =&gt; yes</span>
+</code></pre>
+<p>Unlike Python, <code>in</code> doesn't work on <code>Str</code> and <code>List</code> instances.  This because
+those operations take linear time rather than constant time (O(n) rather than
+O(1)).</p>
+<p>TODO: Use <code>includes() / contains()</code> methods instead.</p>
+<a name="ysh-compare"></a>
+<h3>ysh-compare</h3>
+<p>The comparison operators apply to integers or floats:</p>
+<pre><code>4 &lt; 4   <span class="sh-comment"># =&gt; false</span>
+4 &lt;= 4  <span class="sh-comment"># =&gt; true</span>
+
+5.0 &gt; 5.0   <span class="sh-comment"># =&gt; false</span>
+5.0 &gt;= 5.0  <span class="sh-comment"># =&gt; true</span>
+</code></pre>
+<p>Example in context:</p>
+<pre><code>if (x &lt; 0) {
+  echo 'x is negative'
+}
+</code></pre>
+<a name="ysh-logical"></a>
+<h3>ysh-logical</h3>
+<p>The logical operators take boolean operands, and are spelled like Python:</p>
+<pre><code>not
+and  or
+</code></pre>
+<p>Note that they are distinct from <code>!  &amp;&amp;  ||</code>, which are part of the <a href="chap-cmd-lang.html">command
+language</a>.</p>
+<a name="ysh-arith"></a>
+<h3>ysh-arith</h3>
+<p>YSH supports most of the arithmetic operators from Python. Notably, <code>/</code> and <code>%</code>
+differ from Python as <a href="https://www.oilshell.org/blog/2024/03/release-0.21.0.html#integers-dont-do-whatever-python-or-c-does">they round toward zero, not negative
+infinity</a>.</p>
+<p>Use <code>+ - *</code> for <code>Int</code> or <code>Float</code> addition, subtraction and multiplication. If
+any of the operands are <code>Float</code>s, then the output will also be a <code>Float</code>.</p>
+<p>Use <code>/</code> and <code>//</code> for <code>Float</code> division and <code>Int</code> division, respectively. <code>/</code>
+will <em>always</em> result in a <code>Float</code>, meanwhile <code>//</code> will <em>always</em> result in an
+<code>Int</code>.</p>
+<pre><code>= 1 / 2   <span class="sh-comment"># =&gt; (Float) 0.5</span>
+= 1 // 2  <span class="sh-comment"># =&gt; (Int) 0</span>
+</code></pre>
+<p>Use <code>%</code> to compute the <em>remainder</em> of integer division. The left operand must
+be an <code>Int</code> and the right a <em>positive</em> <code>Int</code>.</p>
+<pre><code>= 1 % 2   <span class="sh-comment"># -&gt; (Int) 1</span>
+= -4 % 2  <span class="sh-comment"># -&gt; (Int) 0</span>
+</code></pre>
+<p>Use <code>**</code> for exponentiation. The left operand must be an <code>Int</code> and the right a
+<em>positive</em> <code>Int</code>.</p>
+<p>All arithmetic operators may coerce either of their operands from strings to a
+number, provided those strings are formatted as numbers.</p>
+<pre><code>= 10 + '1'  <span class="sh-comment"># =&gt; (Int) 11</span>
+</code></pre>
+<p>Operators like <code>+ - * /</code> will coerce strings to <em>either</em> an <code>Int</code> or <code>Float</code>.
+However, operators like <code>// ** %</code> and bit shifts will coerce strings <em>only</em> to
+an <code>Int</code>.</p>
+<pre><code>= '1.14' + '2'  <span class="sh-comment"># =&gt; (Float) 3.14</span>
+= '1.14' % '2'  <span class="sh-comment"># Type Error: Left operand is a Str</span>
+</code></pre>
+<a name="ysh-bitwise"></a>
+<h3>ysh-bitwise</h3>
+<p>Bitwise operators are like Python and C:</p>
+<pre><code>~        <span class="sh-comment"># unary complement</span>
+
+&amp;  |  ^  <span class="sh-comment"># binary and, or, xor</span>
+
+&gt;&gt;  &lt;&lt;   <span class="sh-comment"># bit shift</span>
+</code></pre>
+<a name="ysh-ternary"></a>
+<h3>ysh-ternary</h3>
+<p>The ternary operator is borrowed from Python:</p>
+<pre><code>display = 'yes' if len(s) else 'empty'
+</code></pre>
+<a name="ysh-index"></a>
+<h3>ysh-index</h3>
+<p><code>Str</code> objects can be indexed by byte:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var s = 'cat'</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= mystr[1]</span>
+(Str)   'a'  
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= mystr[-1]</span>  <span class="sh-comment"># index from the end</span>
+(Str)   't'
+</code></pre>
+<p><code>List</code> objects:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var mylist = [1, 2, 3]</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= mylist[2]</span>
+(Int)  3
+</code></pre>
+<p><code>Dict</code> objects are indexed by string key:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var mydict = {'key': 42}</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= mydict['key']</span>
+(Int)  42
+</code></pre>
+<a name="ysh-attr"></a>
+<h3>ysh-attr</h3>
+<p>The <code>.</code> operator looks up values on either <code>Dict</code> or <code>Obj</code> instances.</p>
+<p>On dicts, it looks for the value associated with a key.  That is, the
+expression <code>mydict.key</code> is short for <code>mydict['key']</code> (like JavaScript, but
+unlike Python.)</p>
+<hr />
+<p>On objects, the expression <code>obj.x</code> looks for attributes, with a special rule
+for bound methods.  The rules are:</p>
+<ol>
+<li>Search the properties of <code>obj</code> for a field named <code>x</code>.
+<ul>
+<li>If it exists, return the value literally.  (It can be of any type: <code>Func</code>, <code>Int</code>,
+<code>Str</code>, ...)</li>
+</ul>
+</li>
+<li>Search up the prototype chain for a field named <code>x</code>.
+<ul>
+<li>If it exists, and is <strong>not</strong> a <code>Func</code>, return the value literally.</li>
+<li>If it <strong>is</strong> a <code>Func</code>, return <strong>bound method</strong>, which is an (object,
+function) pair.</li>
+</ul>
+</li>
+</ol>
+<p>Later, when the bound method is called, the object is passed as the first
+argument to the function (<code>self</code>), making it a method call.  This is how a
+method has access to the object's properties.</p>
+<p>Example of first rule:</p>
+<pre><code>func Free(i) {
+  return (i + 1)
+}
+var module = Object(null, {Free})
+echo $[module.Free(42)]  <span class="sh-comment"># =&gt; 43</span>
+</code></pre>
+<p>Example of second rule:</p>
+<pre><code>func method(self, i) {
+  return (self.n + i)
+}
+var methods = Object(null, {method})
+var obj = Object(methods, {n: 10})
+echo $[obj.method(42)]  <span class="sh-comment"># =&gt; 52</span>
+</code></pre>
+<a name="ysh-slice"></a>
+<h3>ysh-slice</h3>
+<p>Slicing gives you a subsequence of a <code>Str</code> or <code>List</code>, as in Python.</p>
+<p>Negative indices are relative to the end.</p>
+<p>String example:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var s = 'spam eggs'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">pp (s[1:-1])</span>
+(Str)   &quot;pam egg&quot;
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;x $[s[2:]]&quot;</span>
+x am eggs
+</code></pre>
+<p>List example:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var foods = ['ale', 'bean', 'corn']</span>
+<span class="sh-prompt">$</span> <span class="sh-command">pp (foods[-2:])</span>
+(List)   [&quot;bean&quot;,&quot;corn&quot;]
+
+<span class="sh-prompt">$</span> <span class="sh-command">write -- @[foods[:2]]</span>
+ale
+bean
+</code></pre>
+<a name="ysh-func-call"></a>
+<h3>ysh-func-call</h3>
+<p>A function call expression looks like Python:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">= f('s', 't', named=42)</span>
+</code></pre>
+<p>A semicolon <code>;</code> can be used after positional args and before named args, but
+isn't always required:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">= f('s', 't'; named=42)</span>
+</code></pre>
+<p>In these cases, the <code>;</code> is necessary:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">= f(...args; ...kwargs)</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= f(42, 43; ...kwargs)</span>
+</code></pre>
+<a name="thin-arrow"></a>
+<h3>thin-arrow</h3>
+<p>The thin arrow is for mutating methods:</p>
+<pre><code>var mylist = ['bar']
+call mylist-&gt;pop()
+
+var mydict = {name: 'foo'}
+call mydict-&gt;erase('name')
+</code></pre>
+<p>On <code>Obj</code> instances, <code>obj-&gt;mymethod</code> looks up the prototype chain for a function
+named <code>M/mymethod</code>.  The <code>M/</code> prefix signals mutation.</p>
+<p>Example:</p>
+<pre><code>func inc(self, n) {
+  setvar self.i += n
+}
+var Counter_methods = Object(null, {'M/inc': inc})
+var c = Object(Counter_methods, {i: 0})
+
+call c-&gt;inc(5)
+echo $[c.i]  <span class="sh-comment"># =&gt; 5</span>
+</code></pre>
+<p>It does <strong>not</strong> look in the properties of an object.</p>
+<a name="fat-arrow"></a>
+<h3>fat-arrow</h3>
+<p>The fat arrow is for transforming methods:</p>
+<pre><code>if (s =&gt; startsWith('prefix')) {
+  echo 'yes'
+}
+</code></pre>
+<p>If the method lookup on <code>s</code> fails, it looks for free functions.  This means it
+can be used for &quot;chaining&quot; transformations:</p>
+<pre><code>var x = myFunc() =&gt; list() =&gt; join()
+</code></pre>
+<a name="match-ops"></a>
+<h3>match-ops</h3>
+<p>YSH has four pattern matching operators: <code>~   !~   ~~   !~~</code>.</p>
+<p>Does string match an <strong>eggex</strong>?</p>
+<pre><code>var filename = 'x42.py'
+if (filename ~ / d+ /) {
+  echo 'yes'
+}  <span class="sh-comment"># =&gt; yes</span>
+</code></pre>
+<p>This performs a <strong>search</strong>.  To change that, add <code>%start</code> or <code>%end</code> anchors to
+the pattern:</p>
+<pre><code>if (filename ~ / %start d+ %end /) {
+  echo 'yes'
+}  <span class="sh-comment"># nothing printed</span>
+</code></pre>
+<hr />
+<p>Does a string match a POSIX regular expression (ERE syntax)?</p>
+<pre><code>if (filename ~ '[[:digit:]]+') {
+  echo 'number'
+}
+</code></pre>
+<p>This is also a search, which can be anchored with <code>^</code> and <code>$</code>.</p>
+<hr />
+<p>Negate the result with the <code>!~</code> operator:</p>
+<pre><code>if (filename !~ /space/ ) {
+  echo 'no space'
+}
+
+if (filename !~ '[[:space:]]' ) {
+  echo 'no space'
+}
+</code></pre>
+<hr />
+<p>Does a string match a <strong>glob</strong>?</p>
+<pre><code>if (filename ~~ '*.py') {
+  echo 'Python'
+}  <span class="sh-comment"># =&gt; Python</span>
+
+if (filename !~~ '*.py') {  <span class="sh-comment"># negation</span>
+  echo 'not Python'
+}  <span class="sh-comment"># nothing printed</span>
+</code></pre>
+<p>Take care not to confuse glob patterns and regular expressions.</p>
+<p>For example, globs don't have <code>%start %end</code> or <code>^ $</code>.  They are always
+&quot;anchored&quot;.</p>
+<ul>
+<li>Related doc: <a href="../ysh-regex-api.html">YSH Regex API</a></li>
+</ul>
+<a name="Eggex"></a>
+<h2>Eggex</h2>
+<a name="re-literal"></a>
+<h3>re-literal</h3>
+<p>An eggex literal looks like this:</p>
+<pre><code>/ expression ; flags ; translation preference /
+</code></pre>
+<p>The flags and translation preference are both optional.</p>
+<p>Examples:</p>
+<pre><code>var pat = / d+ /  <span class="sh-comment"># =&gt; [[:digit:]]+</span>
+</code></pre>
+<p>You can specify flags passed to libc <code>regcomp()</code>:</p>
+<pre><code>var pat = / d+ ; reg_icase reg_newline / 
+</code></pre>
+<p>You can specify a translation preference after a second semi-colon:</p>
+<pre><code>var pat = / d+ ; ; ERE / 
+</code></pre>
+<p>Right now the translation preference does nothing.  It could be used to
+translate eggex to PCRE or Python syntax.</p>
+<ul>
+<li>Related doc: <a href="../eggex.html">Egg Expressions</a></li>
+</ul>
+<a name="re-primitive"></a>
+<h3>re-primitive</h3>
+<p>There are two kinds of eggex primitives.</p>
+<p>&quot;Zero-width assertions&quot; match a position rather than a character:</p>
+<pre><code>%start           <span class="sh-comment"># translates to ^</span>
+%end             <span class="sh-comment"># translates to $</span>
+</code></pre>
+<p>Literal characters appear within <strong>single</strong> quotes:</p>
+<pre><code>'oh *really*'    <span class="sh-comment"># translates to regex-escaped string</span>
+</code></pre>
+<p>Double-quoted strings are <strong>not</strong> eggex primitives.  Instead, you can use
+splicing of strings:</p>
+<pre><code>var dq = &quot;hi $name&quot;    
+var eggex = / @dq /
+</code></pre>
+<a name="class-literal"></a>
+<h3>class-literal</h3>
+<p>An eggex character class literal specifies a set.  It can have individual
+characters and ranges:</p>
+<pre><code>[ 'x' 'y' 'z' a-f A-F 0-9 ]  <span class="sh-comment"># 3 chars, 3 ranges</span>
+</code></pre>
+<p>Omit quotes on ASCII characters:</p>
+<pre><code>[ x y z ]  <span class="sh-comment"># avoid typing 'x' 'y' 'z'</span>
+</code></pre>
+<p>Sets of characters can be written as strings</p>
+<pre><code>[ 'xyz' ]  <span class="sh-comment"># any of 3 chars, not a sequence of 3 chars</span>
+</code></pre>
+<p>Backslash escapes are respected:</p>
+<pre><code>[ \\ \' \&quot; \0 ]
+[ \xFF \u{3bc} ]
+</code></pre>
+<p>(Note that we don't use <code>\yFF</code>, as in J8 strings.)</p>
+<p>Splicing:</p>
+<pre><code>[ @str_var ]
+</code></pre>
+<p>Negation always uses <code>!</code></p>
+<pre><code>![ a-f A-F 'xyz' @str_var ]
+</code></pre>
+<a name="named-class"></a>
+<h3>named-class</h3>
+<p>Perl-like shortcuts for sets of characters:</p>
+<pre><code>[ dot ]    <span class="sh-comment"># =&gt; .</span>
+[ digit ]  <span class="sh-comment"># =&gt; [[:digit:]]</span>
+[ space ]  <span class="sh-comment"># =&gt; [[:space:]]</span>
+[ word ]   <span class="sh-comment"># =&gt; [[:alpha:]][[:digit:]]_</span>
+</code></pre>
+<p>Abbreviations:</p>
+<pre><code>[ d s w ]  <span class="sh-comment"># Same as [ digit space word ]</span>
+</code></pre>
+<p>Valid POSIX classes:</p>
+<pre><code>alnum   cntrl   lower   space
+alpha   digit   print   upper
+blank   graph   punct   xdigit
+</code></pre>
+<p>Negated:</p>
+<pre><code>!digit   !space   !word
+!d   !s   !w
+!alnum  <span class="sh-comment"># etc.</span>
+</code></pre>
+<a name="re-repeat"></a>
+<h3>re-repeat</h3>
+<p>Eggex repetition looks like POSIX syntax:</p>
+<pre><code>/ 'a'? /      <span class="sh-comment"># zero or one</span>
+/ 'a'* /      <span class="sh-comment"># zero or more</span>
+/ 'a'+ /      <span class="sh-comment"># one or more</span>
+</code></pre>
+<p>Counted repetitions:</p>
+<pre><code>/ 'a'{3} /    <span class="sh-comment"># exactly 3 repetitions</span>
+/ 'a'{2,4} /  <span class="sh-comment"># between 2 to 4 repetitions</span>
+</code></pre>
+<a name="re-compound"></a>
+<h3>re-compound</h3>
+<p>Sequence expressions with a space:</p>
+<pre><code>/ word digit digit /   <span class="sh-comment"># Matches 3 characters in sequence</span>
+                       <span class="sh-comment"># Examples: a42, b51</span>
+</code></pre>
+<p>(Compare <code>/ [ word digit ] /</code>, which is a set matching 1 character.)</p>
+<p>Alternation with <code>|</code>:</p>
+<pre><code>/ word | digit /       <span class="sh-comment"># Matches 'a' OR '9', for example</span>
+</code></pre>
+<p>Grouping with parentheses:</p>
+<pre><code>/ (word digit) | \\ /  <span class="sh-comment"># Matches a9 or \</span>
+</code></pre>
+<a name="re-capture"></a>
+<h3>re-capture</h3>
+<p>To retrieve a substring of a string that matches an Eggex, use a &quot;capture
+group&quot; like <code>&lt;capture ...&gt;</code>.</p>
+<p>Here's an eggex with a <strong>positional</strong> capture:</p>
+<pre><code>var pat = / 'hi ' &lt;capture d+&gt; /  <span class="sh-comment"># access with _group(1)</span>
+                                  <span class="sh-comment"># or Match =&gt; _group(1)</span>
+</code></pre>
+<p>Captures can be <strong>named</strong>:</p>
+<pre><code>&lt;capture d+ as month&gt;       <span class="sh-comment"># access with _group('month')</span>
+                            <span class="sh-comment"># or Match =&gt; group('month')</span>
+</code></pre>
+<p>Captures can also have a type <strong>conversion func</strong>:</p>
+<pre><code>&lt;capture d+ : int&gt;          <span class="sh-comment"># _group(1) returns Int</span>
+
+&lt;capture d+ as month: int&gt;  <span class="sh-comment"># _group('month') returns Int</span>
+</code></pre>
+<p>Related docs and help topics:</p>
+<ul>
+<li><a href="../ysh-regex-api.html">YSH Regex API</a></li>
+<li><a href="chap-builtin-func.html#_group"><code>_group()</code></a></li>
+<li><a href="chap-type-method.html#group"><code>Match =&gt; group()</code></a></li>
+</ul>
+<a name="re-splice"></a>
+<h3>re-splice</h3>
+<p>To build an eggex out of smaller expressions, you can <strong>splice</strong> eggexes
+together:</p>
+<pre><code>var D = / [0-9][0-9] /
+var time = / @D ':' @D /  <span class="sh-comment"># [0-9][0-9]:[0-9][0-9]</span>
+</code></pre>
+<p>If the variable begins with a capital letter, you can omit <code>@</code>:</p>
+<pre><code>var ip = / D ':' D /
+</code></pre>
+<p>You can also splice a string:</p>
+<pre><code>var greeting = 'hi'
+var pat = / @greeting ' world' /  <span class="sh-comment"># hi world</span>
+</code></pre>
+<p>Splicing is <strong>not</strong> string concatenation; it works on eggex subtrees.</p>
+<a name="re-flags"></a>
+<h3>re-flags</h3>
+<p>Valid ERE flags, which are passed to libc's <code>regcomp()</code>:</p>
+<ul>
+<li><code>reg_icase</code> aka <code>i</code> - ignore case</li>
+<li><code>reg_newline</code> - 4 matching changes related to newlines</li>
+</ul>
+<p>See <code>man regcomp</code>.</p>
+<a name="re-multiline"></a>
+<h3>re-multiline</h3>
+<p>Multi-line eggexes aren't yet implemented.  Splicing makes it less necessary:</p>
+<pre><code>var Name  = / &lt;capture [a-z]+ as name&gt; /
+var Num   = / &lt;capture d+ as num&gt; /
+var Space = / &lt;capture s+ as space&gt; /
+
+<span class="sh-comment"># For variables named like CapWords, splicing @Name doesn't require @</span>
+var lexer = / Name | Num | Space /
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

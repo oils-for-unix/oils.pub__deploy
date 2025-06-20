@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oil's Expression Language: A Mix of Python and JavaScript</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/old/expression-language.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Oil's Expression Language: A Mix of Python and JavaScript</h1>
+<p>Recall that Oil is composed of three interleaved languages:
+<a href="word-language.html">words</a>, <a href="command-language.html">commands</a>, and
+<strong>expressions</strong>.</p>
+<p>This doc describes expressions, but only the things that are <strong>not</strong> in:</p>
+<ul>
+<li><a href="oil-language-tour.html">A Tour of the Oil Language</a>.  The best intro.</li>
+<li>The <code>#expr-lang</code> section of <a href="oil-help-topics.html#expr-lang">Oil Help
+Topics</a>.  A reference.</li>
+<li><a href="eggex.html">Egg Expressions</a>.  A &quot;sublanguage&quot; this language.</li>
+</ul>
+<p>TODO: This doc should have example shell sessions, like the tour does.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#preliminaries">Preliminaries</a></div>
+  <div class="toclevel2"><a href="#comparison-to-python-and-javascript">Comparison to Python and JavaScript</a></div>
+  <div class="toclevel2"><a href="#constructs-shared-between-word-and-expression-languages">Constructs Shared Between Word and Expression Languages</a></div>
+  <div class="toclevel1"><a href="#literals-for-data-types">Literals for Data Types</a></div>
+  <div class="toclevel2"><a href="#string-literals-like-shell-but-less-confusion-about-backslashes">String Literals: Like Shell, But Less Confusion About Backslashes</a></div>
+  <div class="toclevel2"><a href="#float-literals">Float Literals</a></div>
+  <div class="toclevel2"><a href="#list-type-both-array-and-list-literals">List Type: Both &quot;Array&quot; and List Literals</a></div>
+  <div class="toclevel2"><a href="#dict-literals-look-like-javascript">Dict Literals Look Like JavaScript</a></div>
+  <div class="toclevel2"><a href="#block-expr">Block, Expr</a></div>
+  <div class="toclevel1"><a href="#operators-on-multiple-types">Operators on Multiple Types</a></div>
+  <div class="toclevel2"><a href="#exact-equality">Exact Equality <code>=== !==</code></a></div>
+  <div class="toclevel2"><a href="#approximate-equality">Approximate Equality <code>~==</code></a></div>
+  <div class="toclevel2"><a href="#function-and-method-calls">Function and Method Calls</a></div>
+  <div class="toclevel1"><a href="#boolean-operators">Boolean Operators</a></div>
+  <div class="toclevel2"><a href="#logical-not-and-or">Logical: <code>not</code> <code>and</code> <code>or</code></a></div>
+  <div class="toclevel2"><a href="#ternary">Ternary</a></div>
+  <div class="toclevel1"><a href="#arithmetic">Arithmetic</a></div>
+  <div class="toclevel2"><a href="#arithmetic">Arithmetic <code>+ - * /</code></a></div>
+  <div class="toclevel2"><a href="#arithmetic-and">Arithmetic <code>// %</code> and <code>**</code></a></div>
+  <div class="toclevel2"><a href="#bitwise">Bitwise <code>~ &amp; | ^ &lt;&lt; &gt;&gt;</code></a></div>
+  <div class="toclevel1"><a href="#comparison-of-integers-and-floats">Comparison of Integers and Floats <code>&lt; &lt;= &gt; &gt;=</code></a></div>
+  <div class="toclevel1"><a href="#string-pattern-matching-and">String Pattern Matching <code>~</code> and <code>~~</code></a></div>
+  <div class="toclevel1"><a href="#string-and-list-operators">String and List Operators</a></div>
+  <div class="toclevel2"><a href="#concatenation-with">Concatenation with <code>++</code></a></div>
+  <div class="toclevel2"><a href="#indexing-ai">Indexing <code>a[i]</code></a></div>
+  <div class="toclevel2"><a href="#slicing-aij">Slicing <code>a[i:j]</code></a></div>
+  <div class="toclevel1"><a href="#dict-operators">Dict Operators</a></div>
+  <div class="toclevel2"><a href="#membership-with-in">Membership with <code>in</code></a></div>
+  <div class="toclevel2"><a href="#d-key-is-a-shortcut-for-dkey"><code>d-&gt;key</code> is a shortcut for <code>d['key']</code></a></div>
+  <div class="toclevel1"><a href="#deferred">Deferred</a></div>
+  <div class="toclevel2"><a href="#list-and-dict-comprehensions">List and Dict Comprehensions</a></div>
+  <div class="toclevel2"><a href="#splat-and">Splat <code>*</code> and <code>**</code></a></div>
+  <div class="toclevel2"><a href="#ranges-1n-vs-slices">Ranges <code>1:n</code> (vs slices)</a></div>
+  <div class="toclevel1"><a href="#appendices">Appendices</a></div>
+  <div class="toclevel2"><a href="#oil-vs-tea">Oil vs. Tea</a></div>
+  <div class="toclevel2"><a href="#implementation-notes">Implementation Notes</a></div>
+</div>
+<a name="preliminaries"></a>
+<h2>Preliminaries</h2>
+<a name="comparison-to-python-and-javascript"></a>
+<h3>Comparison to Python and JavaScript</h3>
+<p>For a short summary, see <a href="oil-vs-python.html">Oil vs. Python</a>.</p>
+<a name="constructs-shared-between-word-and-expression-languages"></a>
+<h3>Constructs Shared Between Word and Expression Languages</h3>
+<p>String literals can be used in both words and expressions:</p>
+<pre><code>echo 'foo'
+var x = 'foo'
+
+echo &quot;hello $name&quot;
+var y = &quot;hello $name&quot;
+
+echo $'\t TAB'
+var z = $'\t TAB'
+</code></pre>
+<p>This includes multi-line string literals:</p>
+<pre><code>echo '''
+hello 
+world
+'''
+
+var x = '''
+hello
+world
+'''
+
+# (and the 2 other kinds)
+</code></pre>
+<p>Command substitution is shared:</p>
+<pre><code>echo $(hostname)
+var a = $(hostname)  # no quotes necessary
+var b = &quot;name is $(hostname)&quot;
+</code></pre>
+<p>String substitution is shared:</p>
+<pre><code>echo ${MYVAR:-}
+var c = ${MYVAR:-}
+var d = &quot;var is ${MYVAR:-}&quot;
+</code></pre>
+<p>Not shared:</p>
+<ul>
+<li>Unquoted substitution <code>$foo</code> isn't available in expression mode.  (It should
+be or bare <code>foo</code>, or <code>&quot;$foo&quot;</code>)</li>
+<li>Expression sub <code>$[1 + 2]</code> is usually not necessary in expression mode, so it
+isn't available.  You can use a quoted string like <code>var x = &quot;$[1 + 2]&quot;</code>.</li>
+</ul>
+<a name="literals-for-data-types"></a>
+<h2>Literals for Data Types</h2>
+<a name="string-literals-like-shell-but-less-confusion-about-backslashes"></a>
+<h3>String Literals: Like Shell, But Less Confusion About Backslashes</h3>
+<p>Oil has 3 kinds of string literal.  See the docs in the intro for detail, as
+well as the <a href="strings.html">Strings</a> doc.</p>
+<p>As a detail, Oil disallows this case:</p>
+<pre><code>$ var x = '\n'
+  var x = '\n'
+           ^~
+[ interactive ]:1: Strings with backslashes should look like r'\n' or $'\n'
+</code></pre>
+<p>In expression mode, you're forced to specify an explicit <code>r</code> or <code>$</code> when the
+string has backslashes.  This is because shell has the opposite default as
+Python: In shell, unadorned strings are raw.  In Python, unadorned strings
+respect C escapes.</p>
+<a name="float-literals"></a>
+<h3>Float Literals</h3>
+<ul>
+<li>Floating point literals are also like C/Python: <code>1.23e-10</code>.  Except:
+<ul>
+<li>A number is required before the <code>.</code> now</li>
+<li>No <code>1_000_000.123_456</code> because that was hard to implement as a hand-written
+Python regex.</li>
+</ul>
+</li>
+</ul>
+<p>Those last two caveats about floats are TODOs:
+<a href="https://github.com/oilshell/oil/issues/483">https://github.com/oilshell/oil/issues/483</a></p>
+<a name="list-type-both-array-and-list-literals"></a>
+<h3>List Type: Both &quot;Array&quot; and List Literals</h3>
+<p>There is a single list type, but it has two syntaxes:</p>
+<ul>
+<li><code>:| one two three |</code> for an &quot;array&quot; of strings.  This is equivalent to
+<code>['one', 'two', 'three']</code>.</li>
+<li><code>[1, [2, 'three', {}]]</code> for arbitrary Python-like &quot;lists&quot;.</li>
+</ul>
+<p>Longer example:</p>
+<pre><code>var x = :| a b c |
+var x = :|
+  'single quoted'
+  &quot;double quoted $var&quot;
+  $'c string'
+  glob/*.py
+  brace-{a,b,c}-{1..3}
+|
+</code></pre>
+<a name="dict-literals-look-like-javascript"></a>
+<h3>Dict Literals Look Like JavaScript</h3>
+<p>Dict literals use JavaScript's rules, which are similar but not identical to
+Python.</p>
+<p>The key can be either a <strong>bare word</strong> or <strong>bracketed expression</strong>.</p>
+<p>(1) For example, <code>{age: 30}</code> means what <code>{'age': 30}</code> does in Python.  That is,
+<code>age</code> is <strong>not</strong> the name of a variable.  This fits more with the &quot;dict as ad
+hoc struct&quot; philosophy.</p>
+<p>(2) In <code>{[age]: 30}</code>, <code>age</code> is a variable.  You can put an arbitrary expression
+in there like <code>{['age'.upper()]: 30}</code>.  (Note: Lua also has this bracketed key
+syntax.)</p>
+<p>(3) <code>{age, key2}</code> is the same as <code>{age: age, key2: key2}</code>.  That is, if the
+name is a bare word, you can leave off the value, and it will be looked up in
+the context where the dictionary is defined.</p>
+<p>This is what ES2015 calls &quot;shorthand object properties&quot;:</p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer</a></li>
+</ul>
+<a name="block-expr"></a>
+<h3>Block, Expr</h3>
+<p>TODO:</p>
+<pre><code>var myblock = ^(ls | wc -l)  
+var myexpr = ^[1 + 2]
+</code></pre>
+<a name="operators-on-multiple-types"></a>
+<h2>Operators on Multiple Types</h2>
+<p>Like JavaScript, Oil has two types of equality, but uses <code>===</code> and <code>~==</code> rather
+than <code>===</code> and <code>==</code>.</p>
+<a name="exact-equality"></a>
+<h3>Exact Equality <code>=== !==</code></h3>
+<ul>
+<li>TODO: types must be the same, so <code>'42' === 42</code> is not just false, but it's an
+<strong>error</strong>.</li>
+</ul>
+<a name="approximate-equality"></a>
+<h3>Approximate Equality <code>~==</code></h3>
+<ul>
+<li>There's no negative form like <code>!==</code>.  Use <code>not (a ~== b)</code> instead.</li>
+<li>Valid Operand Types:
+<ul>
+<li>LHS: <code>Str</code> only</li>
+<li>RHS: <code>Str</code>, <code>Int</code>, <code>Bool</code></li>
+</ul>
+</li>
+</ul>
+<p>Examples:</p>
+<pre><code>' foo ' ~== 'foo'  # whitespace stripped on LEFT only
+' 42 ' ~== 42
+' TRue ' ~== true  # true, false, 0, 1, and I think T, F
+</code></pre>
+<p>Currently, there are no semantics for floats, so none of these work:</p>
+<pre><code>' 42.0 ' ~== 42
+' 42 ' ~== 42.0
+42.0 ~== 42
+42 ~== 42.0
+</code></pre>
+<p>(Should <code>float_equals()</code> be a separate function?)</p>
+<a name="function-and-method-calls"></a>
+<h3>Function and Method Calls</h3>
+<pre><code>var result = add(x, y)
+var result = foo(x, named='default')
+
+if (s.startswith('prefix')) {
+  echo yes
+}
+</code></pre>
+<p>Use Cases:</p>
+<pre><code>var d = {1: 2, 3: 4}
+const k = keys(d)
+</code></pre>
+<a name="boolean-operators"></a>
+<h2>Boolean Operators</h2>
+<a name="logical-not-and-or"></a>
+<h3>Logical: <code>not</code> <code>and</code> <code>or</code></h3>
+<p>Like Python.</p>
+<a name="ternary"></a>
+<h3>Ternary</h3>
+<pre><code>var cond = true
+var x = 'yes' if cond else 'no'
+</code></pre>
+<a name="arithmetic"></a>
+<h2>Arithmetic</h2>
+
+<a name="arithmetic"></a>
+<h3>Arithmetic <code>+ - * /</code></h3>
+<p>These are like Python, but they do string to number conversion (but not unary
+<code>-</code>.) A number is an integer or float.</p>
+<p>That is:</p>
+<ul>
+<li><code>'1' + '2'</code> evaluates to <code>3</code> because <code>1 + 2</code> evaluates to <code>3</code>.</li>
+<li><code>'1' + '2.5'</code> evaluates to <code>3.5</code> because <code>1 + 2.5</code> evaluates to <code>3.5</code>.</li>
+</ul>
+<a name="arithmetic-and"></a>
+<h3>Arithmetic <code>// %</code> and <code>**</code></h3>
+<p>Also like Python, but they do string to <strong>integer</strong> conversion.</p>
+<ul>
+<li><code>'9' // '4'</code> evaluates to <code>2</code> because <code>9 / 4</code> evaluates to <code>2</code>.</li>
+</ul>
+<a name="bitwise"></a>
+<h3>Bitwise <code>~ &amp; | ^ &lt;&lt; &gt;&gt;</code></h3>
+<p>Like Python.</p>
+<a name="comparison-of-integers-and-floats"></a>
+<h2>Comparison of Integers and Floats <code>&lt; &lt;= &gt; &gt;=</code></h2>
+<p>These operators also do string to number conversion.  That is:</p>
+<ul>
+<li><code>'22' &lt; '3'</code> false because <code>22 &lt; 3</code> is false.  (It would be true under
+lexicographical comparison.)</li>
+<li><code>'3.1' &lt;= '3.14'</code> is true because <code>3.1 &lt;= 3.14</code> is true.</li>
+</ul>
+<p>TODO:</p>
+<ul>
+<li>Do we have <code>is</code> and <code>is not</code>?  I think it's useful for lists and dicts</li>
+<li>Remove chained comparison?  This syntax is directly from Python.
+<ul>
+<li>That is, <code>x op y op  z</code> is a shortcut for <code>x op y and y op z</code></li>
+</ul>
+</li>
+</ul>
+<a name="string-pattern-matching-and"></a>
+<h2>String Pattern Matching <code>~</code> and <code>~~</code></h2>
+<ul>
+<li>Eggex: <code>~</code> <code>!~</code>
+<ul>
+<li>Similar to bash's <code>[[ $x =~ $pat ]]</code></li>
+</ul>
+</li>
+<li>Glob: <code>~~</code> <code>!~~</code>
+<ul>
+<li>Similar to bash's <code>[[ $x == *.py ]]</code></li>
+</ul>
+</li>
+</ul>
+<a name="string-and-list-operators"></a>
+<h2>String and List Operators</h2>
+<p>In addition to pattern matching.</p>
+<a name="concatenation-with"></a>
+<h3>Concatenation with <code>++</code></h3>
+<pre><code>s ++ 'suffix'
+L ++ [1, 2] ++ :| a b |
+</code></pre>
+<a name="indexing-ai"></a>
+<h3>Indexing <code>a[i]</code></h3>
+<pre><code>var s = 'foo'
+var second = s[1]    # are these integers though?  maybe slicing gives you things of length 1
+echo $second  # 'o'
+
+var a = :| spam eggs ham |
+var second = a[1]
+echo $second  # =&gt; 'eggs'
+
+echo $[a[-1]]  # =&gt; ham
+</code></pre>
+<p>Semantics are like Python:  Out of bounds is an error.</p>
+<a name="slicing-aij"></a>
+<h3>Slicing <code>a[i:j]</code></h3>
+<pre><code>var s = 'food'
+var slice = s[1:3]
+echo $second  # 'oo'
+
+var a = :| spam eggs ham |
+var slice = a[1:3]
+write -- @slice  # eggs, ham
+</code></pre>
+<p>Semantics are like Python:  Out of bounds is <strong>not</strong> an error.</p>
+<a name="dict-operators"></a>
+<h2>Dict Operators</h2>
+<a name="membership-with-in"></a>
+<h3>Membership with <code>in</code></h3>
+<ul>
+<li>And <code>not in</code></li>
+<li>But strings and arrays use functions?
+<ul>
+<li>.find() ?  It's more of an algorithm.</li>
+</ul>
+</li>
+</ul>
+<a name="d-key-is-a-shortcut-for-dkey"></a>
+<h3><code>d-&gt;key</code> is a shortcut for <code>d['key']</code></h3>
+<blockquote>
+<p>the distinction between attributes and dictionary members always seemed weird
+and unnecessary to me.</p>
+</blockquote>
+<p>I've been thinking about this for <a href="http://www.oilshell.org/blog/2019/08/22.html">the Oil
+language</a>, which is heavily
+influenced by Python.</p>
+<p>The problem is that dictionary attributes come from user data, i.e. from JSON,
+while methods like <code>.keys()</code> come from the interpreter, and Python allows you
+to provide user-defined methods like <code>mydict.mymethod()</code> too.</p>
+<p>Mixing all of those things in the same namespace seems like a bad idea.</p>
+<p>In Oil I might do introduce an <code>-&gt;</code> operator, so <code>d-&gt;mykey</code> is a shortcut for
+<code>d['mykey']</code>.</p>
+<pre><code>d.keys(), d.values(), d.items()  # methods
+d-&gt;mykey
+d['mykey']
+</code></pre>
+<p>Maybe you could disallow user-defined attributes on dictionaries, and make them
+free:</p>
+<pre><code>keys(d), values(d), items(d)
+d.mykey  # The whole namespace is available for users
+</code></pre>
+<p>However I don't like that this makes dictionaries a special case.  Thoughts?</p>
+<a name="deferred"></a>
+<h2>Deferred</h2>
+<a name="list-and-dict-comprehensions"></a>
+<h3>List and Dict Comprehensions</h3>
+<p>List comprehensions might be useful for a &quot;faster&quot; for loop?  It only does
+expressions?</p>
+<a name="splat-and"></a>
+<h3>Splat <code>*</code> and <code>**</code></h3>
+<p>Python allows splatting into lists:</p>
+<pre><code>a = [1, 2] 
+b = [*a, 3]
+</code></pre>
+<p>And dicts:</p>
+<pre><code>d = {'name': 'alice'}
+d2 = {**d, age: 42}
+</code></pre>
+<a name="ranges-1n-vs-slices"></a>
+<h3>Ranges <code>1:n</code> (vs slices)</h3>
+<p>Deferred because you can use</p>
+<pre><code>for i in @(seq $n) {
+  echo $i
+}
+</code></pre>
+<p>This gives you strings but that's OK for now.  We don't yet have a &quot;fast&quot; for
+loop.</p>
+<p>Notes:</p>
+<ul>
+<li>Oil slices don't have a &quot;step&quot; argument.  Justification:
+<ul>
+<li>R only has <code>start:end</code>, it doesn't have <code>start:end:step</code></li>
+<li>Julia has <code>start:step:end</code>!</li>
+<li>I don't think the <strong>step</strong> is so useful that it has to be first class
+syntax.  In other words, Python's syntax is optimized for a rare case --
+e.g. <code>a[::2]</code>.</li>
+</ul>
+</li>
+<li>Python has slices, but it doesn't have a range syntax.  You have to write
+<code>range(0, n)</code>.</li>
+<li>A syntactic difference between slices and ranges: slice endpoints can be
+<strong>implicit</strong>, like <code>a[:n]</code> and <code>a[3:]</code>.</li>
+</ul>
+<a name="appendices"></a>
+<h2>Appendices</h2>
+<a name="oil-vs-tea"></a>
+<h3>Oil vs. Tea</h3>
+<ul>
+<li>Tea: truthiness of <code>Str*</code> is a problem.  Nul, etc.
+<ul>
+<li><code>if (mystr)</code> vs <code>if (len(mystr))</code></li>
+<li>though I think strings should be non-nullable value types?  They are
+slices.</li>
+<li>they start off as the empty slice</li>
+</ul>
+</li>
+<li>Automatic conversions of strings to numbers
+<ul>
+<li><code>42</code> and <code>3.14</code> and <code>1e100</code></li>
+</ul>
+</li>
+</ul>
+<a name="implementation-notes"></a>
+<h3>Implementation Notes</h3>
+<ul>
+<li>Limitation:
+<ul>
+<li>Start with Str, StrArray, and AssocArray data model</li>
+<li>Then add int, float, bool, null (for JSON)</li>
+<li>Then add fully recursive data model (depends on FC)
+<ul>
+<li><code>value = ... | dict[str, value]</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Repo Overview</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/repo-overview.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils Repo Overview</h1>
+<p>Try this to show a summary of what's in the repo and their line counts:</p>
+<pre><code>$ metrics/source-code.sh overview
+</code></pre>
+<p>(Other functions in this file may be useful as well.)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#executable-spec">Executable Spec</a></div>
+  <div class="toclevel2"><a href="#a-collection-of-interpreters">A Collection of Interpreters</a></div>
+  <div class="toclevel2"><a href="#dsls-code-generators">DSLs / Code Generators</a></div>
+  <div class="toclevel1"><a href="#multiple-build-systems">Multiple Build Systems</a></div>
+  <div class="toclevel2"><a href="#dev-build-runs-under-cpython">Dev Build Runs Under CPython</a></div>
+  <div class="toclevel2"><a href="#generate-c-and-build-native-code-with-a-ninja-wrapper">Generate C++, and Build Native Code with a <code>ninja</code> Wrapper</a></div>
+  <div class="toclevel2"><a href="#end-user-build-system-has-few-dependencies">End User Build System Has Few Dependencies</a></div>
+  <div class="toclevel2"><a href="#build-dependencies">Build Dependencies</a></div>
+  <div class="toclevel1"><a href="#dev-tools">Dev Tools</a></div>
+  <div class="toclevel2"><a href="#several-kinds-of-tests">Several Kinds of Tests</a></div>
+  <div class="toclevel2"><a href="#scripts">Scripts</a></div>
+  <div class="toclevel2"><a href="#temp-dirs">Temp Dirs</a></div>
+  <div class="toclevel1"><a href="#docs">Docs</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="executable-spec"></a>
+<h2>Executable Spec</h2>
+<a name="a-collection-of-interpreters"></a>
+<h3>A Collection of Interpreters</h3>
+<p>Oils is naturally structured as a set of mutually recursive parsers and
+evaluators.  These interpreters are specified at a high-level: with regular
+languages, Zephyr ASDL, and a statically-typed subset of Python.</p>
+<pre><code>bin/              # Main entry points like bin/osh (source in bin/oils_for_unix.py)
+frontend/         # Input and lexing common to OSH and YSH
+osh/              # OSH parsers and evaluators (cmd, word, sh_expr)
+ysh/              # YSH parser and evaluator
+data_lang/        # Languages based on JSON
+core/             # Other code shared between OSH and YSH
+builtin/          # Builtin commands and functions
+pylib/            # Borrowed from the Python standard library.
+tools/            # User-facing tools, e.g. the osh2oil translator
+display/          # User interface
+</code></pre>
+<a name="dsls-code-generators"></a>
+<h3>DSLs / Code Generators</h3>
+<p>Here are the tools that transform that high-level code to efficient code:</p>
+<pre><code>asdl/             # ASDL implementation, derived from CPython
+pgen2/            # Parser Generator, borrowed from CPython
+mycpp/            # Experimental translator from typed Python to C++.
+                  # Depends on MyPy.  See mycpp/README.md
+pea/              # Experiment: a cleaner version of mycpp?
+opy/              # Obsolete Python compiler
+</code></pre>
+<a name="multiple-build-systems"></a>
+<h2>Multiple Build Systems</h2>
+<a name="dev-build-runs-under-cpython"></a>
+<h3>Dev Build Runs Under CPython</h3>
+<p>The Oils interpreter can run under a regular Python interpreter!  This build is
+<strong>slow</strong>.</p>
+<pre><code>build/ 
+  py.sh           # For development builds, running CPython
+pyext/            # Python extension modules, e.g. libc.c
+Python-2.7.13/    # For the slow Python build
+Makefile          # For the tarball
+</code></pre>
+<a name="generate-c-and-build-native-code-with-a-ninja-wrapper"></a>
+<h3>Generate C++, and Build Native Code with a <code>ninja</code> Wrapper</h3>
+<p>We have native code to support the <code>oils-for-unix</code> build, which is pure C++.</p>
+<p>We build it with a Bazel-like wrapper around <code>ninja</code>:</p>
+<pre><code>NINJA-config.sh       # Generates build.ninja
+
+build/                # High level build
+  ninja_main.py       # invoked by NINJA-config.sh
+  ninja_lib.py        # build rules
+  ninja-rules-cpp.sh
+  ninja-rules-py.sh
+cpp/                  # C++ code which complements the mycpp translation
+  NINJA_subgraph.py
+mycpp/                # Runtime for the translator
+  NINJA_subgraph.py
+
+prebuilt/             # Prebuilt files committed to git, instead of in
+                      # _gen/
+
+# Temp dirs (see below)
+_bin/
+_build/
+_gen/
+_test/
+</code></pre>
+<a name="end-user-build-system-has-few-dependencies"></a>
+<h3>End User Build System Has Few Dependencies</h3>
+<p>Distro maintainers or end users should build from the <code>oils-for-unix</code> tarball,
+not the repo.  (<a href="https://github.com/oils-for-unix/oils/wiki/The-Oils-Repo-Is-Different-From-the-Tarball-Releases">The Oils Repo Is Different From the Tarball
+Releases</a>.)</p>
+<p>We ship these files in the tarball:</p>
+<pre><code>configure
+_build/
+  oils.sh  # generated shell script
+install
+</code></pre>
+<p>So instead of running <code>ninja</code>, end users run <code>_build/oils.sh</code>, which invokes
+the same &quot;actions&quot; as <code>ninja</code>.</p>
+<p>This means they don't need to install <code>ninja</code> — they only need a C++
+compiler and a shell.</p>
+<a name="build-dependencies"></a>
+<h3>Build Dependencies</h3>
+<p>TODO: this section is out of date.  We now use &quot;wedges&quot; in <code>~/wedge</code>.</p>
+<p>These tools are built from shell scripts in <code>soil/</code>.  The <code>oil_DEPS</code> dir is
+&quot;parallel&quot; to Oils because it works better with container bind mounds.</p>
+<pre><code>../oil_DEPS/
+  re2c/           # to build the lexer
+  cmark/          # for building docs
+  spec-bin/       # shells to run spec tests against
+  mypy/           # MyPy repo
+  mycpp-venv/     # MyPy binaries deps in a VirtualEnv
+
+  py3/            # for mycpp and pea/
+  cpython-full/   # for bootstrapping Oils-CPython
+</code></pre>
+<a name="dev-tools"></a>
+<h2>Dev Tools</h2>
+<a name="several-kinds-of-tests"></a>
+<h3>Several Kinds of Tests</h3>
+<p>Unit tests are named <code>foo_test.py</code> and live next to <code>foo.py</code>.</p>
+<pre><code>test/             # Test automation
+  gold/           # Gold Test cases
+  gold.sh         
+  sh_spec.py      # shell spec test framework
+  spec.sh         # Types of test runner: spec, unit, gold, wild
+  unit.sh         
+  wild.sh
+testdata/
+spec/             # Spec test cases
+  bin/            # tools used in many spec tests
+  testdata/       # scripts for specific test cases
+  stateful/       # Tests that use pexpect
+</code></pre>
+<a name="scripts"></a>
+<h3>Scripts</h3>
+<p>We use a lot of automation to improve the dev process.  It's largely written in
+shell, of course!</p>
+<pre><code>benchmarks/       # Benchmarks should be run on multiple machines.
+metrics/          # Metrics don't change between machines (e.g. code size)
+client/           # Demonstration of OSH as a headless server.
+deps/             # Dev dependencies and Docker images
+devtools/         # For Oils developers (not end users)
+  release.sh      # The (large) release process.
+  services/       # talk to cloud services
+demo/             # Demonstrations of bash/shell features.  Could be
+                  # moved to tests/ if automated.
+  old/            # A junk drawer.
+web/              # HTML/JS/CSS for tests and tools
+soil/             # Multi-cloud continuous build (e.g. sourcehut, Github)
+</code></pre>
+<a name="temp-dirs"></a>
+<h3>Temp Dirs</h3>
+<p>Directories that begin with <code>_</code> are <strong>not</strong> stored in <code>git</code>.  The dev tools
+above create and use these dirs.</p>
+<pre><code>_bin/             # Native executables are put here
+  cxx-dbg/
+_build/           # Temporary build files
+_cache/           # Dev dependency tarballs
+_devbuild/        # Generated Python code, etc.
+_gen/             # Generated C++ code that mirrors the repo
+  frontend/
+_release/         # Source release tarballs are put here
+  VERSION/        # Published at oilshell.org/release/$VERSION/
+    benchmarks/
+    doc/
+    metrics/
+    test/
+      spec.wwz
+      wild.wwz
+      ...
+    web/          # Static files, copy of $REPO_ROOT/web
+      table/
+_test/            # Unit tests, mycpp examples
+  tasks/
+_tmp/             # Output of other test suites; temp files
+  spec/
+  wild/
+    raw/
+    www/
+  osh-parser/
+  osh-runtime/
+  vm-baseline/
+  startup/
+  ...
+</code></pre>
+<a name="docs"></a>
+<h2>Docs</h2>
+<pre><code>doc/              # A mix of docs
+doctools/         # Tools that use lazylex/ to transform Markdown/HTML
+data_lang/        # doctools/ builds upon the &quot;HTM8&quot; subset in this dir
+README.md         # This page, which is For Oils developers
+
+LICENSE.txt       # For end users
+INSTALL.txt
+</code></pre>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="oils-repo/README.html">README.md</a>.  If you want to modify Oils, start here.
+We welcome contributions!</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

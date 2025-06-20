@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tracing Execution in Oils (`xtrace`)</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/xtrace.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Tracing Execution in Oils (<code>xtrace</code>)</h1>
+<p>Oils extends shell's <code>set -x</code> / <code>xtrace</code> mechanism to give you more visibility
+into your program's execution.  It shows high-level program structure
+(&quot;functions&quot;, <code>eval</code>) as well as runtime events (starting and stopping external
+processes).</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#background">Background</a></div>
+  <div class="toclevel2"><a href="#whats-wrong-with-set-x">What's Wrong With <code>set -x</code>?</a></div>
+  <div class="toclevel1"><a href="#oils-enhancements">Oils Enhancements</a></div>
+  <div class="toclevel2"><a href="#option-names">Option Names</a></div>
+  <div class="toclevel2"><a href="#variables-for-the-trace-line">Variables for the Trace Line</a></div>
+  <div class="toclevel1"><a href="#other-useful-variables">Other Useful Variables</a></div>
+  <div class="toclevel1"><a href="#parsing-xtrace_rich-output">Parsing <code>xtrace_rich</code> Output</a></div>
+</div>
+<a name="background"></a>
+<h2>Background</h2>
+<p>In shell, the <code>$PS4</code> variable controls the prefix of each trace line.  The
+default value is <code>'+ '</code>, which results in traces like this:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">sh -x -c 'echo 1; echo 2'</span>
++ echo 1
+1
++ echo 2
+2
+</code></pre>
+<a name="whats-wrong-with-set-x"></a>
+<h3>What's Wrong With <code>set -x</code>?</h3>
+<ul>
+<li>It shows only an <code>argv</code> array for commands.  It doesn't tell you if the
+command is a builtin, shell function, or external binary, which is important
+for program comprehension (and performance).</li>
+<li>It doesn't show you which commands are run in <strong>which processes</strong>.  Because
+processes have their own state, this is also crucial for understanding a
+shell program.  (Example: does <code>echo x | read</code> mutate a variable?)</li>
+<li>It's <strong>missing</strong> other information, like when processes are started and
+stopped, the exit status, and when commands come from <code>eval</code> or <code>source</code>.</li>
+<li>Shell <strong>concurrency</strong> makes the trace incomprehensible.  For example, partial
+lines can be interleaved.</li>
+<li>Most implementations don't show non-printable and whitespace characters in a
+coherent way.</li>
+</ul>
+
+<a name="oils-enhancements"></a>
+<h2>Oils Enhancements</h2>
+<p>Oils solves these problems.  Here's an example of tracing a builtin, a pipeline,
+then another builtin:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">osh -O ysh:upgrade -x -c 'set +e; ls | grep OOPS | wc -l; echo end'</span>
+. builtin set '+e'
+&gt; pipeline
+  | part 103
+    . 103 exec ls
+  | part 104
+    . 104 exec grep OOPS
+  | command 105: wc -l
+  ; process 103: status 0
+  ; process 104: status 1
+  ; process 105: status 0
+&lt; pipeline
+. builtin echo end
+</code></pre>
+<ul>
+<li>Builtins are shown with the <code>builtin</code> prefix.</li>
+<li>External commands are shown with the <code>command</code> prefix.</li>
+<li>Bare <code>exec()</code> calls are shown with the <code>exec</code> prefix.</li>
+<li>It shows <strong>synchronous</strong> shell constructs with indentation and the <code>&gt;</code>
+and <code>&lt;</code> characters.  This includes the entire pipeline, as well as <code>proc</code>
+calls (not shown).</li>
+<li>It shows process starts and ends with the <code>|</code> and <code>;</code> characters.  These are
+<strong>asynchronous</strong> in general.</li>
+<li>It shows the exit status of <strong>every process</strong>, which is important for
+reasoning about failure.</li>
+<li>It annotates trace lines with the shell PID (when it's not the root PID).</li>
+<li>Strings in <code>argv</code> arrays may be quoted with <a href="//oils.pub/release/latest/doc/qsn.html">QSN</a>.  This
+shows special characters unambiguously, and ensures that each trace entry is
+exactly one physical line.</li>
+</ul>
+<a name="option-names"></a>
+<h3>Option Names</h3>
+<p>This functionality is enabled by the
+<a href="ref/chap-option.html#ysh:upgrade">xtrace_rich</a> option, but you should
+generally use the <code>ysh:upgrade</code> option group.  This group turns on
+<a href="ref/chap-option.html#ysh:upgrade">xtrace_rich</a> and turns off <a href="ref/chap-option.html#ysh:upgrade">xtrace_details</a>, which  is equivalent to:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">shopt --set xtrace_rich</span>
+<span class="sh-prompt">$</span> <span class="sh-command">shopt --unset xtrace_details</span>
+</code></pre>
+<a name="variables-for-the-trace-line"></a>
+<h3>Variables for the Trace Line</h3>
+<p>In YSH, the default trace line prefix is:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">PS4='${SHX_indent}${SHX_punct}${SHX_pid_str} '</span>
+</code></pre>
+<ul>
+<li><code>SHX_indent</code> is affected by synchronous constructs like <code>proc</code> and <code>eval</code>, as
+well as new processes.</li>
+<li><code>SHX_pid_str</code> is only set for child shell processes (to avoid redundancy).
+It has a space at the beginning like <code>' 123'</code>.</li>
+</ul>
+<p><code>SHX_punct</code> is one of the following:</p>
+<ul>
+<li><code>+</code> for legacy shell tracing (<a href="ref/chap-option.html#ysh:upgrade">xtrace_details</a>)</li>
+<li><code>.</code> for <code>builtin</code> and <code>exec</code></li>
+<li><code>&gt;</code> and <code>&lt;</code> for internal, stack-based, <strong>synchronous</strong> constructs
+<ul>
+<li><code>proc</code>, <code>eval</code>, and <code>source</code>, an entire pipeline, and the <code>wait</code> builtin</li>
+<li>running trap handlers (which happens in the main loop)</li>
+</ul>
+</li>
+<li><code>|</code> and <code>;</code> for process start and wait
+<ul>
+<li><strong>synchronous</strong> processes: subshell aka <a href="ref/chap-builtin-cmd.html#forkwait">forkwait</a>, command sub
+like <code>$(date)</code>, simple commands (<code>;</code>)</li>
+<li><strong>async</strong> processes: <a href="ref/chap-builtin-cmd.html#fork">fork</a> (<code>&amp;</code>), pipeline parts, process subs
+like <code>&lt;(sort left.txt)</code>, the process that writes a here doc</li>
+</ul>
+</li>
+</ul>
+<p>TODO: Cross-shell tracing</p>
+<ul>
+<li><code>SHX_descriptor</code> is alias for <code>BASH_XTRACEFD</code> ?</li>
+<li>Inherited <code>$SHX_indent</code> and <code>$SHX_pid_str</code></li>
+</ul>
+<a name="other-useful-variables"></a>
+<h2>Other Useful Variables</h2>
+<p>These variables can enhance the traces.</p>
+<ul>
+<li><code>@BASH_SOURCE</code>, <code>@BASH_LINENO</code>, <code>@FUNCNAME</code>, <code>$LINENO</code>
+<ul>
+<li>TODO: Add <code>@SOURCE_NAMES</code> as alias?  <code>LINE_NUMS</code>?</li>
+</ul>
+</li>
+<li>TODO: <code>$SECONDS</code> for timing</li>
+</ul>
+
+<a name="parsing-xtrace_rich-output"></a>
+<h2>Parsing <code>xtrace_rich</code> Output</h2>
+<p>TODO</p>
+<ul>
+<li>It's concurrent, but lines are atomically written</li>
+<li>Specify a regular language?</li>
+<li>Coalesce by PID?</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>

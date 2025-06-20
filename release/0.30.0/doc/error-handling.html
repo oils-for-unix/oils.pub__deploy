@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Fixes Shell's Error Handling (`errexit`)</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/error-handling.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.30.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Fixes Shell's Error Handling (<code>errexit</code>)</h1>
+<style>
+  .faq {
+    font-style: italic;
+    color: purple;
+  }
+
+  /* copied from web/blog.css */
+  .attention {
+    text-align: center;
+    background-color: #DEE;
+    padding: 1px 0.5em;
+
+    /* to match p tag etc. */
+    margin-left: 2em;
+  }
+</style>
+<p>YSH is unlike other shells:</p>
+<ul>
+<li>It never silently ignores an error, and it never loses an exit code.</li>
+<li>There's no reason to write an YSH script without <code>errexit</code>, which is on by
+default.</li>
+</ul>
+<p>This document explains how YSH makes these guarantees.  We first review shell
+error handling, and discuss its fundamental problems.  Then we show idiomatic
+YSH code, and look under the hood at the underlying mechanisms.</p>
+<p>(If you just want to <strong>use</strong> YSH, see <a href="ysh-error.html">YSH Error Handling: A Quick
+Guide</a>.)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#review-of-shell-error-handling-mechanisms">Review of Shell Error Handling Mechanisms</a></div>
+  <div class="toclevel2"><a href="#posix-shell">POSIX Shell</a></div>
+  <div class="toclevel2"><a href="#bash">Bash</a></div>
+  <div class="toclevel1"><a href="#fundamental-problems">Fundamental Problems</a></div>
+  <div class="toclevel2"><a href="#when-is-set">When Is <code>$?</code> Set?</a></div>
+  <div class="toclevel2"><a href="#what-does-mean">What Does <code>$?</code> Mean?</a></div>
+  <div class="toclevel2"><a href="#the-meaning-of-if">The Meaning of <code>if</code></a></div>
+  <div class="toclevel2"><a href="#design-mistake-the-disabled-errexit-quirk">Design Mistake: The Disabled <code>errexit</code> Quirk</a></div>
+  <div class="toclevel1"><a href="#ysh-error-handling-the-big-picture">YSH Error Handling: The Big Picture</a></div>
+  <div class="toclevel2"><a href="#ysh-fails-on-every-error">YSH Fails On Every Error</a></div>
+  <div class="toclevel2"><a href="#try-handles-command-and-expression-errors"><code>try</code> Handles Command and Expression Errors</a></div>
+  <div class="toclevel2"><a href="#boolstatus-enforces-0-or-1-status"><code>boolstatus</code> Enforces 0 or 1 Status</a></div>
+  <div class="toclevel2"><a href="#faq-on-language-design">FAQ on Language Design</a></div>
+  <div class="toclevel1"><a href="#reference-global-options">Reference: Global Options</a></div>
+  <div class="toclevel2"><a href="#command_sub_errexit-adds-more-errors"><code>command_sub_errexit</code> Adds More Errors</a></div>
+  <div class="toclevel2"><a href="#process_sub_fail-is-analogous-to-pipefail"><code>process_sub_fail</code> Is Analogous to <code>pipefail</code></a></div>
+  <div class="toclevel2"><a href="#strict_errexit-flags-two-problems"><code>strict_errexit</code> Flags Two Problems</a></div>
+  <div class="toclevel2"><a href="#sigpipe_status_ok-ignores-an-issue-with-pipefail"><code>sigpipe_status_ok</code> Ignores an Issue With <code>pipefail</code></a></div>
+  <div class="toclevel2"><a href="#verbose_errexit"><code>verbose_errexit</code></a></div>
+  <div class="toclevel2"><a href="#faq-on-options">FAQ on Options</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#related-docs">Related Docs</a></div>
+  <div class="toclevel1"><a href="#appendices">Appendices</a></div>
+  <div class="toclevel2"><a href="#list-of-pitfalls">List Of Pitfalls</a></div>
+  <div class="toclevel2"><a href="#disabled-errexit-quirk-if-myfunc-pitfall">Disabled <code>errexit</code> Quirk / <code>if myfunc</code> Pitfall</a></div>
+  <div class="toclevel2"><a href="#the-meta-pitfall">The Meta Pitfall</a></div>
+  <div class="toclevel2"><a href="#quirky-behavior-of">Quirky Behavior of <code>$?</code></a></div>
+  <div class="toclevel1"><a href="#acknowledgments">Acknowledgments</a></div>
+</div>
+<a name="review-of-shell-error-handling-mechanisms"></a>
+<h2>Review of Shell Error Handling Mechanisms</h2>
+<p>POSIX shell has fundamental problems with error handling.  With <code>set -e</code> aka
+<code>errexit</code>, you're <a href="http://mywiki.wooledge.org/BashFAQ/105">damned if you do and damned if you don't</a>.</p>
+<p>GNU <a href="/cross-ref.html?tag=bash#bash">bash</a> fixes some of the problems, but <strong>adds its own</strong>, e.g. with
+respect to process subs, command subs, and assignment builtins.</p>
+<p>YSH fixes all the problems by adding new builtin commands, special variables,
+and global options.  But you see a simple interface with <code>try</code> and <code>_error</code>.</p>
+<p>Let's review a few concepts before discussing YSH.</p>
+<a name="posix-shell"></a>
+<h3>POSIX Shell</h3>
+<ul>
+<li>The special variable <code>$?</code> is the exit status of the &quot;last command&quot;.  It's a
+number between <code>0</code> and <code>255</code>.</li>
+<li>If <code>errexit</code> is enabled, the shell will abort if <code>$?</code> is nonzero.
+<ul>
+<li>This is subject to the <em>Disabled <code>errexit</code> Quirk</em>, which I describe below.</li>
+</ul>
+</li>
+</ul>
+<p>These mechanisms are fundamentally incomplete.</p>
+<a name="bash"></a>
+<h3>Bash</h3>
+<p>Bash improves error handling for pipelines like <code>ls /bad | wc</code>.</p>
+<ul>
+<li><code>${PIPESTATUS[@]}</code> stores the exit codes of all processes in a pipeline.</li>
+<li>When <code>set -o pipefail</code> is enabled, <code>$?</code> takes into account every process in a
+pipeline.
+<ul>
+<li>Without this setting, the failure of <code>ls</code> would be ignored.</li>
+</ul>
+</li>
+<li><code>shopt -s inherit_errexit</code> was introduced in bash 4.4 to re-introduce error
+handling in command sub child processes.  This fixes a bash-specific bug.</li>
+</ul>
+<p>But there are still places where bash will lose an exit code.</p>
+<p> </p>
+<a name="fundamental-problems"></a>
+<h2>Fundamental Problems</h2>
+<p>Let's look at <strong>four</strong> fundamental issues with shell error handling.  They
+underlie the <strong>nine</strong> <a href="#list-of-pitfalls">shell pitfalls enumerated in the
+appendix</a>.</p>
+<a name="when-is-set"></a>
+<h3>When Is <code>$?</code> Set?</h3>
+<p>Each external process and shell builtin has one exit status.  But the
+definition of <code>$?</code> is obscure: it's tied to the <code>pipeline</code> rule in the POSIX
+shell grammar, which does <strong>not</strong> correspond to a single process or builtin.</p>
+<p>We saw that <code>pipefail</code> fixes one case:</p>
+<pre><code>ls /nonexistent | wc   <span class="sh-comment"># 2 processes, 2 exit codes, but just one $?</span>
+</code></pre>
+<p>But there are others:</p>
+<pre><code>local x=$(false)                 <span class="sh-comment"># 2 exit codes, but just one $?</span>
+diff &lt;(sort left) &lt;(sort right)  <span class="sh-comment"># 3 exit codes, but just one $?</span>
+</code></pre>
+<p>This issue means that shell scripts fundamentally <strong>lose errors</strong>.  The
+language is unreliable.</p>
+<a name="what-does-mean"></a>
+<h3>What Does <code>$?</code> Mean?</h3>
+<p>Each process or builtin decides the meaning of its exit status independently.
+Here are two common choices:</p>
+<ol>
+<li><strong>The Failure Paradigm</strong>
+<ul>
+<li><code>0</code> for success, or non-zero for an error.</li>
+<li>Examples: most shell builtins, <code>ls</code>, <code>cp</code>, ...</li>
+</ul>
+</li>
+<li><strong>The Boolean Paradigm</strong>
+<ul>
+<li><code>0</code> for true, <code>1</code> for false, or a different number like <code>2</code> for an error.</li>
+<li>Examples: the <code>test</code> builtin, <code>grep</code>, <code>diff</code>, ...</li>
+</ul>
+</li>
+</ol>
+<p>New error handling constructs in YSH deal with this fundamental inconsistency.</p>
+<a name="the-meaning-of-if"></a>
+<h3>The Meaning of <code>if</code></h3>
+<p>Shell's <code>if</code> statement tests whether a command exits zero or non-zero:</p>
+<pre><code>if grep class *.py; then
+  echo 'found class'
+else
+  echo 'not found'  <span class="sh-comment"># is this true?</span>
+fi
+</code></pre>
+<p>So while you'd expect <code>if</code> to work in the boolean paradigm, it's closer to
+the failure paradigm.  This means that using <code>if</code> with certain commands can
+cause the <em>Error or False Pitfall</em>:</p>
+<pre><code>if grep 'class\(' *.py; then  <span class="sh-comment"># grep syntax error, status 2</span>
+  echo 'found class('
+else
+  echo 'not found is a lie'
+fi
+<span class="sh-comment"># =&gt; grep: Unmatched ( or \(</span>
+<span class="sh-comment"># =&gt; not found is a lie</span>
+</code></pre>
+<p>That is, the <code>else</code> clause conflates grep's <strong>error</strong> status 2 and <strong>false</strong>
+status 1.</p>
+<p>Strangely enough, I encountered this pitfall while trying to disallow shell's
+error handling pitfalls in YSH!  I describe this in another appendix as the
+&quot;<a href="#the-meta-pitfall">meta pitfall</a>&quot;.</p>
+<a name="design-mistake-the-disabled-errexit-quirk"></a>
+<h3>Design Mistake: The Disabled <code>errexit</code> Quirk</h3>
+<p>There's more bad news about the design of shell's <code>if</code> statement.  It's subject
+to the <em>Disabled <code>errexit</code> Quirk</em>, which means when you use a <strong>shell function</strong>
+in a conditional context, errors are unexpectedly <strong>ignored</strong>.</p>
+<p>That is, while <code>if ls /tmp</code> is useful, <code>if my-ls-function /tmp</code> should be
+avoided.  It yields surprising results.</p>
+<p>I call this the <em><code>if myfunc</code> Pitfall</em>, and show an example in <a href="#disabled-errexit-quirk-if-myfunc-pitfall">the
+appendix</a>.</p>
+<p>We can't fix this decades-old bug in shell.  Instead we disallow dangerous code
+with <code>strict_errexit</code>, and add new error handling mechanisms.</p>
+<p> </p>
+<a name="ysh-error-handling-the-big-picture"></a>
+<h2>YSH Error Handling: The Big Picture</h2>
+<p>We've reviewed how POSIX shell and bash work, and showed fundamental problems
+with the shell language.</p>
+<p>But when you're using YSH, <strong>you don't have to worry about any of this</strong>!</p>
+<a name="ysh-fails-on-every-error"></a>
+<h3>YSH Fails On Every Error</h3>
+<p>This means you don't have to explicitly check for errors.  Examples:</p>
+<pre><code>shopt --set ysh:upgrade     <span class="sh-comment"># Enable good error handling in bin/osh</span>
+                            <span class="sh-comment"># It's the default in bin/ysh.</span>
+shopt --set strict_errexit  <span class="sh-comment"># Disallow bad shell error handling.</span>
+                            <span class="sh-comment"># Also the default in bin/ysh.</span>
+
+local date=$(date X)        <span class="sh-comment"># 'date' failure is fatal</span>
+<span class="sh-comment"># =&gt; date: invalid date 'X' </span>
+
+echo $(date X)              <span class="sh-comment"># ditto</span>
+
+echo $(date X) $(ls &gt; F)    <span class="sh-comment"># 'ls' isn't executed; 'date' fails first</span>
+
+ls /bad | wc                <span class="sh-comment"># 'ls' failure is fatal</span>
+
+diff &lt;(sort A) &lt;(sort B)    <span class="sh-comment"># 'sort' failure is fatal</span>
+</code></pre>
+<p>On the other hand, you won't experience this problem caused by <code>pipefail</code>:</p>
+<pre><code>yes | head                 <span class="sh-comment"># doesn't fail due to SIGPIPE</span>
+</code></pre>
+<p>The details are explained below.</p>
+<a name="try-handles-command-and-expression-errors"></a>
+<h3><code>try</code> Handles Command and Expression Errors</h3>
+<p>You may want to <strong>handle failure</strong> instead of aborting the shell.  In this
+case, use the <code>try</code> builtin and inspect the <code>_error</code> variable it sets.</p>
+<pre><code>try {                     <span class="sh-comment"># try takes a block of commands</span>
+  ls /etc
+  ls /BAD                 <span class="sh-comment"># it stops at the first failure</span>
+  ls /lib
+}                         <span class="sh-comment"># After try, $? is always 0</span>
+if (_error.code !== 0) {  <span class="sh-comment"># Now check _error</span>
+  echo 'failed'
+}
+</code></pre>
+<p>Note that:</p>
+<ul>
+<li>The <code>_error.code</code> variable is different than <code>$?</code>.
+<ul>
+<li>The leading <code>_</code> is a PHP-like convention for special variables /
+&quot;registers&quot; in YSH.</li>
+</ul>
+</li>
+<li>Idiomatic YSH programs don't look at <code>$?</code>.</li>
+</ul>
+<p>You also have fine-grained control over every process in a pipeline:</p>
+<pre><code>try {
+  ls /bad | wc
+}
+write -- @_pipeline_status  <span class="sh-comment"># every exit status</span>
+</code></pre>
+<p>And each process substitution:</p>
+<pre><code>try {
+  diff &lt;(sort left.txt) &lt;(sort right.txt)
+}
+write -- @_process_sub_status  <span class="sh-comment"># every exit status</span>
+</code></pre>
+<p> </p>
+<div class="attention">
+<p>See <a href="idioms.html#error-handling">YSH vs. Shell Idioms &gt; Error Handling</a> for
+more examples.</p>
+</div>
+<p> </p>
+<p>Certain expressions produce fatal errors, like:</p>
+<pre><code>var x = 42 / 0  <span class="sh-comment"># divide by zero will abort shell</span>
+</code></pre>
+<p>The <code>try</code> builtin also handles them:</p>
+<pre><code>try {
+   var x = 42 / 0
+}
+if failed {
+  echo 'divide by zero'
+}
+</code></pre>
+<p>More examples:</p>
+<ul>
+<li>Index out of bounds <code>a[i]</code></li>
+<li>Nonexistent key <code>d-&gt;foo</code> or <code>d['foo']</code>.</li>
+</ul>
+<p>Such expression evaluation errors result in status <code>3</code>, which is an arbitrary non-zero
+status that's not used by other shells.  Status <code>2</code> is generally for syntax
+errors and status <code>1</code> is for most runtime failures.</p>
+<a name="boolstatus-enforces-0-or-1-status"></a>
+<h3><code>boolstatus</code> Enforces 0 or 1 Status</h3>
+<p>The <code>boolstatus</code> builtin addresses the <em>Error or False Pitfall</em>:</p>
+<pre><code>if boolstatus grep 'class' *.py {  <span class="sh-comment"># may abort the program</span>
+  echo 'found'      <span class="sh-comment"># status 0 means 'found'</span>
+} else {
+  echo 'not found'  <span class="sh-comment"># status 1 means 'not found'</span>
+}
+</code></pre>
+<p>Rather than confusing <strong>error</strong> with <strong>false</strong>, <code>boolstatus</code> will abort the
+program if <code>grep</code> doesn't return 0 or 1.</p>
+<p>You can think of this as a shortcut for</p>
+<pre><code>try {
+  grep 'class' *.py
+}
+case (_error.code) {
+  (0)    { echo 'found' }
+  (1)    { echo 'not found' }
+  (else) { echo 'fatal'
+           exit $[_error.code]
+         }
+}
+</code></pre>
+<a name="faq-on-language-design"></a>
+<h3>FAQ on Language Design</h3>
+<div class="faq">
+<p>Why is there <code>try</code> but no <code>catch</code>?</p>
+</div>
+<p>First, it offers more flexibility:</p>
+<ul>
+<li>The handler usually inspects <code>_error.code</code>, but it may also inspect
+<code>_pipeline_status</code> or <code>_process_sub_status</code>.</li>
+<li>The handler may use <code>case</code> instead of <code>if</code>, e.g. to distinguish true / false
+/ error.</li>
+</ul>
+<p>Second, it makes the language smaller:</p>
+<ul>
+<li><code>try</code> / <code>catch</code> would require specially parsed keywords.  But our <code>try</code> is a
+shell builtin that takes a block, like <code>cd</code> or <code>shopt</code>.</li>
+<li>The builtin also lets us write either <code>try ls</code> or <code>try { ls }</code>, which is hard
+with a keyword.</li>
+</ul>
+<p>Another way to remember this is that there are <strong>three parts</strong> to handling an
+error, each of which has independent choices:</p>
+<ol>
+<li>Does <code>try</code> take a simple command or a block?  For example, <code>try ls</code> versus
+<code>try { ls; var x = 42 / n }</code></li>
+<li>Which status do you want to inspect?</li>
+<li>Inspect it with <code>if</code> or <code>case</code>?  As mentioned, <code>boolstatus</code> is a special
+case of <code>try / case</code>.</li>
+</ol>
+<div class="faq">
+<p>Why is <code>_error.code</code> different from <code>$?</code></p>
+</div>
+<p>This avoids special cases in the interpreter for <code>try</code>, which is again a
+builtin that takes a block.</p>
+<p>The exit status of <code>try</code> is always <code>0</code>.  If it returned a non-zero status, the
+<code>errexit</code> rule would trigger, and you wouldn't be able to handle the error!</p>
+<p>Generally, <a href="proc-block-func.html#errors">errors occur <em>inside</em> blocks, not
+outside</a>.</p>
+<p>Again, idiomatic YSH scripts never look at <code>$?</code>, which is only used to trigger
+shell's <code>errexit</code> rule.  Instead they invoke <code>try</code> and inspect <code>_error.code</code>
+when they want to handle errors.</p>
+<div class="faq">
+<p>Why <code>boolstatus</code>?  Can't you just change what <code>if</code> means in YSH?</p>
+</div>
+<p>I've learned the hard way that when there's a shell <strong>semantics</strong> change, there
+must be a <strong>syntax</strong> change.  In general, you should be able to read code on
+its own, without context.</p>
+<p>Readers shouldn't have to constantly look up whether <code>ysh:upgrade</code> is on.  There
+are some cases where this is necessary, but it should be minimized.</p>
+<p>Also, both <code>if foo</code> and <code>if boolstatus foo</code> are useful in idiomatic YSH code.</p>
+<p> </p>
+<div class="attention">
+<p><strong>Most users can skip to <a href="#summary">the summary</a>.</strong>  You don't need to know all
+the details to use YSH.</p>
+</div>
+<p> </p>
+<a name="reference-global-options"></a>
+<h2>Reference: Global Options</h2>
+<p>Under the hood, we implement the <code>errexit</code> option from POSIX, bash options like
+<code>pipefail</code> and <code>inherit_errexit</code>, and add more options of our
+own.  They're all hidden behind <a href="options.html">option groups</a> like <code>strict:all</code>
+and <code>ysh:upgrade</code>.</p>
+<p>The following sections explain new YSH options.</p>
+<a name="command_sub_errexit-adds-more-errors"></a>
+<h3><code>command_sub_errexit</code> Adds More Errors</h3>
+<p>In all Bourne shells, the status of command subs is lost, so errors are ignored
+(details in the <a href="#quirky-behavior-of">appendix</a>).  For example:</p>
+<pre><code>echo $(date X) $(date Y)  <span class="sh-comment"># 2 failures, both ignored</span>
+echo                      <span class="sh-comment"># program continues</span>
+</code></pre>
+<p>The <code>command_sub_errexit</code> option makes both <code>date</code> invocations an an error.
+The status <code>$?</code> of the parent <code>echo</code> command will be <code>1</code>, so if <code>errexit</code> is
+on, the shell will abort.</p>
+<p>(Other shells should implement <code>command_sub_errexit</code>!)</p>
+<a name="process_sub_fail-is-analogous-to-pipefail"></a>
+<h3><code>process_sub_fail</code> Is Analogous to <code>pipefail</code></h3>
+<p>Similarly, in this example, <code>sort</code> will fail if the file doesn't exist.</p>
+<pre><code>diff &lt;(sort left.txt) &lt;(sort right.txt)  <span class="sh-comment"># any failures are ignored</span>
+</code></pre>
+<p>But there's no way to see this error in bash.  YSH adds <code>process_sub_fail</code>,
+which folds the failure into <code>$?</code> so <code>errexit</code> can do its job.</p>
+<p>You can also inspect the special <code>_process_sub_status</code> array variable to
+implement custom error logic.</p>
+<a name="strict_errexit-flags-two-problems"></a>
+<h3><code>strict_errexit</code> Flags Two Problems</h3>
+<p>Like other <code>strict_*</code> options, YSH <code>strict_errexit</code> improves your shell
+programs, even if you run them under another shell like <a href="/cross-ref.html?tag=bash#bash">bash</a>!  It's
+like a linter <em>at runtime</em>, so it can catch things that <a href="https://www.shellcheck.net/">ShellCheck</a> can't.</p>
+<p><code>strict_errexit</code> disallows code that exhibits these problems:</p>
+<ol>
+<li>The <code>if myfunc</code> Pitfall</li>
+<li>The <code>local x=$(false)</code> Pitfall</li>
+</ol>
+<p>See the appendix for examples of each.</p>
+<a name="rules-to-prevent-the-if-myfunc-pitfall"></a>
+<h4>Rules to Prevent the <code>if myfunc</code> Pitfall</h4>
+<p>In any conditional context, <code>strict_errexit</code> disallows:</p>
+<ol>
+<li>All commands except <code>((</code>, <code>[[</code>, and some simple commands (e.g. <code>echo foo</code>).
+<ul>
+<li>Detail: <code>! ls</code> is considered a pipeline in the shell grammar.  We have to
+allow it, while disallowing <code>ls | grep foo</code>.</li>
+</ul>
+</li>
+<li>Function/proc invocations (which are a special case of simple
+commands.)</li>
+<li>Command sub and process sub (<code>shopt --unset allow_csub_psub</code>)</li>
+</ol>
+<p>This means that you should check the exit status of functions and pipeline
+differently.  See <a href="idioms.html#does-a-function-succeed">Does a Function
+Succeed?</a>, <a href="idioms.html#does-a-pipeline-succeed">Does a Pipeline
+Succeed?</a>, and other <a href="idioms.html">YSH vs. Shell
+Idioms</a>.</p>
+<a name="rule-to-prevent-the-local-xfalse-pitfall"></a>
+<h4>Rule to Prevent the <code>local x=$(false)</code> Pitfall</h4>
+<ul>
+<li>Command Subs and process subs are disallowed in assignment builtins: <code>local</code>,
+<code>declare</code> aka <code>typeset</code>, <code>readonly</code>, and <code>export</code>.</li>
+</ul>
+<p>No:</p>
+<pre><code>local x=$(false)
+</code></pre>
+<p>Yes:</p>
+<pre><code>var x = $(false)   <span class="sh-comment"># YSH style</span>
+
+local x            <span class="sh-comment"># Shell style</span>
+x=$(false)
+</code></pre>
+<a name="sigpipe_status_ok-ignores-an-issue-with-pipefail"></a>
+<h3><code>sigpipe_status_ok</code> Ignores an Issue With <code>pipefail</code></h3>
+<p>When you turn on <code>pipefail</code>, you may inadvertently run into this behavior:</p>
+<pre><code>yes | head
+<span class="sh-comment"># =&gt; y</span>
+<span class="sh-comment"># ...</span>
+
+echo ${PIPESTATUS[@]}
+<span class="sh-comment"># =&gt; 141 0</span>
+</code></pre>
+<p>That is, <code>head</code> closes the pipe after 10 lines, causing the <code>yes</code> command to
+<strong>fail</strong> with <code>SIGPIPE</code> status <code>141</code>.</p>
+<p>This error shouldn't be fatal, so OSH has a <code>sigpipe_status_ok</code> option, which
+is on by default in YSH.</p>
+<a name="verbose_errexit"></a>
+<h3><code>verbose_errexit</code></h3>
+<p>When <code>verbose_errexit</code> is on, the shell prints errors to <code>stderr</code> when the
+<code>errexit</code> rule is triggered.</p>
+<a name="faq-on-options"></a>
+<h3>FAQ on Options</h3>
+<div class="faq">
+<p>Why is there no <code>_command_sub_status</code>?  And why is <code>command_sub_errexit</code> named
+differently than <code>process_sub_fail</code> and <code>pipefail</code>?</p>
+</div>
+<p>Command subs are executed <strong>serially</strong>, while process subs and pipeline parts
+run <strong>in parallel</strong>.</p>
+<p>So a command sub can &quot;abort&quot; its parent command, setting <code>$?</code> immediately.
+The parallel constructs must wait until all parts are done and save statuses in
+an array.  Afterward, they determine <code>$?</code> based on the value of <code>pipefail</code> and
+<code>process_sub_fail</code>.</p>
+<div class="faq">
+<p>Why are <code>strict_errexit</code> and <code>command_sub_errexit</code> different options?</p>
+</div>
+<p>Because <code>shopt --set strict:all</code> can be used to improve scripts that are run
+under other shells like <a href="/cross-ref.html?tag=bash#bash">bash</a>.  It's like a runtime linter that
+disallows dangerous constructs.</p>
+<p>On the other hand, if you write code with <code>command_sub_errexit</code> on, it's
+impossible to get the same failures under bash.  So <code>command_sub_errexit</code> is
+not a <code>strict_*</code> option, and it's meant for code that runs only under YSH.</p>
+<div class="faq">
+<p>What's the difference between bash's <code>inherit_errexit</code> and YSH
+<code>command_sub_errexit</code>?  Don't they both relate to command subs?</p>
+</div>
+<ul>
+<li><code>inherit_errexit</code> enables failure in the <strong>child</strong> process running the
+command sub.</li>
+<li><code>command_sub_errexit</code> enables failure in the <strong>parent</strong> process, after the
+command sub has finished.</li>
+</ul>
+<p> </p>
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>YSH uses three mechanisms to fix error handling once and for all.</p>
+<p>It has two new <strong>builtins</strong> that relate to errors:</p>
+<ol>
+<li><code>try</code> lets you explicitly handle errors when <code>errexit</code> is on.</li>
+<li><code>boolstatus</code> enforces a true/false meaning.  (This builtin is less common).</li>
+</ol>
+<p>It has three <strong>special variables</strong>:</p>
+<ol>
+<li>The <code>_error</code> register, which is set by <code>try</code>.
+<ul>
+<li>Remember that <code>_error.code</code> is distinct from <code>$?</code>, and that idiomatic YSH
+programs don't use <code>$?</code>.</li>
+</ul>
+</li>
+<li>The <code>_pipeline_status</code> array (another name for bash's <code>PIPESTATUS</code>)</li>
+<li>The <code>_process_sub_status</code> array for process substitutions.</li>
+</ol>
+<p>Finally, it supports all of these <strong>global options</strong>:</p>
+<ul>
+<li>From POSIX shell:
+<ul>
+<li><code>errexit</code></li>
+</ul>
+</li>
+<li>From <a href="/cross-ref.html?tag=bash#bash">bash</a>:
+<ul>
+<li><code>pipefail</code></li>
+<li><code>inherit_errexit</code> aborts the child process of a command sub.</li>
+</ul>
+</li>
+<li>New:
+<ul>
+<li><code>command_sub_errexit</code> aborts the parent process immediately after a failed
+command sub.</li>
+<li><code>process_sub_fail</code> is analogous to <code>pipefail</code>.</li>
+<li><code>strict_errexit</code> flags two common problems.</li>
+<li><code>sigpipe_status_ok</code> ignores a spurious &quot;broken pipe&quot; failure.</li>
+<li><code>verbose_errexit</code> controls whether error messages are printed.</li>
+</ul>
+</li>
+</ul>
+<p>When using <code>bin/osh</code>, set all options at once with <code>shopt --set ysh:upgrade strict:all</code>.  Or use <code>bin/ysh</code>, where they're set by default.</p>
+
+<a name="related-docs"></a>
+<h2>Related Docs</h2>
+<ul>
+<li><a href="idioms.html">YSH vs. Shell Idioms</a> shows more examples of <code>try</code> and <code>boolstatus</code>.</li>
+<li><a href="shell-idioms.html">Shell Idioms</a> has a section on fixing <code>strict_errexit</code>
+problems in Bourne shell.</li>
+</ul>
+<p>Good articles on <code>errexit</code>:</p>
+<ul>
+<li>Bash FAQ: <a href="http://mywiki.wooledge.org/BashFAQ/105">Why doesn't <code>set -e</code> do what I expected?</a></li>
+<li><a href="http://fvue.nl/wiki/Bash:_Error_handling">Bash: Error Handling</a> from
+<code>fvue.nl</code></li>
+</ul>
+<p>Spec Test Suites:</p>
+<ul>
+<li><a href="https://www.oilshell.org/release/latest/test/spec.wwz/survey/errexit.html">https://www.oilshell.org/release/latest/test/spec.wwz/survey/errexit.html</a></li>
+<li><a href="https://www.oilshell.org/release/latest/test/spec.wwz/survey/errexit-oil.html">https://www.oilshell.org/release/latest/test/spec.wwz/survey/errexit-oil.html</a></li>
+</ul>
+<p>These docs aren't about error handling, but they're also painstaking
+backward-compatible overhauls of shell!</p>
+<ul>
+<li><a href="simple-word-eval.html">Simple Word Evaluation in Unix Shell</a></li>
+<li><a href="eggex.html">Egg Expressions (YSH Regexes)</a></li>
+</ul>
+<p>For reference, this work on error handling was described in <a href="https://www.oilshell.org/blog/2020/10/osh-features.html">Four Features That
+Justify a New Unix
+Shell</a> (October 2020).
+Since then, we changed <code>try</code> and <code>_error</code> to be more powerful and general.</p>
+<p> </p>
+<a name="appendices"></a>
+<h2>Appendices</h2>
+<a name="list-of-pitfalls"></a>
+<h3>List Of Pitfalls</h3>
+<p>We mentioned some of these pitfalls:</p>
+<ol>
+<li>The <code>if myfunc</code> Pitfall, caused by the Disabled <code>errexit</code> Quirk (<code>strict_errexit</code>)</li>
+<li>The <code>local x=$(false)</code> Pitfall (<code>strict_errexit</code>)</li>
+<li>The Error or False Pitfall (<code>boolstatus</code>, <code>try</code> / <code>case</code>)
+<ul>
+<li>Special case: When the child process is another instance of the shell, the
+Meta Pitfall is possible.</li>
+</ul>
+</li>
+<li>The Process Sub Pitfall (<code>process_sub_fail</code> and <code>_process_sub_status</code>)</li>
+<li>The <code>yes | head</code> Pitfall (<code>sigpipe_status_ok</code>)</li>
+</ol>
+<p>There are two pitfalls related to command subs:</p>
+<ol start="6">
+<li>The <code>echo $(false)</code> Pitfall (<code>command_sub_errexit</code>)</li>
+<li>Bash's <code>inherit_errexit</code> pitfall.
+<ul>
+<li>As mentioned, this bash 4.4 option fixed a bug in earlier versions of
+bash.  YSH reimplements it and turns it on by default.</li>
+</ul>
+</li>
+</ol>
+<p>Here are two more pitfalls that don't require changes to YSH:</p>
+<ol start="8">
+<li>The Trailing <code>&amp;&amp;</code> Pitfall
+<ul>
+<li>When <code>test -d /bin &amp;&amp; echo found</code> is at the end of a function, the exit
+code is surprising.</li>
+<li>Solution: always use <code>if</code> rather than <code>&amp;&amp;</code>.</li>
+<li>More reasons: the <code>if</code> is easier to read, and <code>&amp;&amp;</code> isn't useful when
+<code>errexit</code> is on.</li>
+</ul>
+</li>
+<li>The surprising return value of <code>(( i++ ))</code>, <code>let</code>, <code>expr</code>, etc.
+<ul>
+<li>Solution: Use <code>i=$((i + 1))</code>, which is valid POSIX shell.</li>
+<li>In YSH, use <code>setvar i += 1</code>.</li>
+</ul>
+</li>
+</ol>
+<a name="example-of-inherit_errexit-pitfall"></a>
+<h4>Example of <code>inherit_errexit</code> Pitfall</h4>
+<p>In bash, <code>errexit</code> is disabled in command sub child processes:</p>
+<pre><code>set -e
+shopt -s inherit_errexit  <span class="sh-comment"># needed to avoid 'touch two'</span>
+echo $(touch one; false; touch two)
+</code></pre>
+<p>Without the option, it will touch both files, even though there is a failure
+<code>false</code> after the first.</p>
+<a name="bash-has-a-grammatical-quirk-with-set-o-failglob"></a>
+<h4>Bash has a grammatical quirk with <code>set -o failglob</code></h4>
+<p>This isn't a pitfall, but a quirk that also relates to errors and shell's
+<strong>grammar</strong>.  Recall that the definition of <code>$?</code> is tied to the grammar.</p>
+<p>Consider this program:</p>
+<pre><code>set -o failglob
+echo *.ZZ        <span class="sh-comment"># no files match</span>
+echo status=$?   <span class="sh-comment"># show failure</span>
+<span class="sh-comment"># =&gt; status=1</span>
+</code></pre>
+<p>This is the same program with a newline replaced by a semicolon:</p>
+<pre><code>set -o failglob
+
+<span class="sh-comment"># Surprisingly, bash doesn't execute what's after ; </span>
+echo *.ZZ; echo status=$?
+<span class="sh-comment"># =&gt; (no output)</span>
+</code></pre>
+<p>But it behaves differently. This is because newlines and semicolons are handled
+in different <strong>productions of the grammar</strong>, and produce distinct syntax trees.</p>
+<p>(A related quirk is that this same difference can affect the number of
+processes that shells start!)</p>
+<a name="disabled-errexit-quirk-if-myfunc-pitfall"></a>
+<h3>Disabled <code>errexit</code> Quirk / <code>if myfunc</code> Pitfall</h3>
+<p>This quirk is a bad interaction between the <code>if</code> statement, shell functions,
+and <code>errexit</code>.  It's a <strong>mistake</strong> in the design of the shell language.
+Example:</p>
+<pre><code>set -o errexit     <span class="sh-comment"># don't ignore errors</span>
+
+myfunc() {
+  ls /bad          <span class="sh-comment"># fails with status 1</span>
+  echo 'should not get here'
+}
+
+myfunc  <span class="sh-comment"># Good: script aborts before echo</span>
+<span class="sh-comment"># =&gt; ls: '/bad': no such file or directory</span>
+
+if myfunc; then  <span class="sh-comment"># Surprise!  It behaves differently in a condition.</span>
+  echo OK
+fi
+<span class="sh-comment"># =&gt; ls: '/bad': no such file or directory</span>
+<span class="sh-comment"># =&gt; should not get here</span>
+</code></pre>
+<p>We see &quot;should not get here&quot; because the shell <strong>silently disables</strong> <code>errexit</code>
+while executing the condition of <code>if</code>.  This relates to the fundamental
+problems above:</p>
+<ol>
+<li>Does the function use the failure paradigm or the boolean paradigm?</li>
+<li><code>if</code> tests a single exit status, but every command in a function has an exit
+status.  Which one should we consider?</li>
+</ol>
+<p>This quirk occurs in all <strong>conditional contexts</strong>:</p>
+<ol>
+<li>The condition of the <code>if</code>, <code>while</code>, and <code>until</code>  constructs</li>
+<li>A command/pipeline prefixed by <code>!</code> (negation)</li>
+<li>Every clause in <code>||</code> and <code>&amp;&amp;</code> except the last.</li>
+</ol>
+<a name="the-meta-pitfall"></a>
+<h3>The Meta Pitfall</h3>
+<p>I encountered the <em>Error or False Pitfall</em> while trying to disallow other error
+handling pitfalls!  The <em>meta pitfall</em> arises from a combination of the issues
+discussed:</p>
+<ol>
+<li>The <code>if</code> statement tests for zero or non-zero status.</li>
+<li>The condition of an <code>if</code> may start child processes.  For example, in <code>if myfunc | grep foo</code>,  the <code>myfunc</code> invocation must be run in a subshell.</li>
+<li>You may want an external process to use the <strong>boolean paradigm</strong>, and
+that includes <strong>the shell itself</strong>.  When any of the <code>strict_</code> options
+encounters bad code, it aborts the shell with <strong>error</strong> status <code>1</code>, not
+boolean <strong>false</strong> <code>1</code>.</li>
+</ol>
+<p>The result of this fundamental issue is that <code>strict_errexit</code> is quite strict.
+On the other hand, the resulting style is straightforward and explicit.
+Earlier attempts allowed code that is too subtle.</p>
+<a name="quirky-behavior-of"></a>
+<h3>Quirky Behavior of <code>$?</code></h3>
+<p>This is a different way of summarizing the information above.</p>
+<p>Simple commands have an obvious behavior:</p>
+<pre><code>echo hi           <span class="sh-comment"># $? is 0</span>
+false             <span class="sh-comment"># $? is 1</span>
+</code></pre>
+<p>But the parent process loses errors from failed command subs:</p>
+<pre><code>echo $(false)     <span class="sh-comment"># $? is 0</span>
+                  <span class="sh-comment"># YSH makes it fail with command_sub_errexit</span>
+</code></pre>
+<p>Surprisingly, bare assignments take on the value of any command subs:</p>
+<pre><code>x=$(false)        <span class="sh-comment"># $? is 1 -- we did NOT lose the exit code</span>
+</code></pre>
+<p>But assignment builtins have the problem again:</p>
+<pre><code>local x=$(false)  <span class="sh-comment"># $? is 0 -- exit code is clobbered</span>
+                  <span class="sh-comment"># disallowed by YSH strict_errexit</span>
+</code></pre>
+<p>So shell is confusing and inconsistent, but YSH fixes all these problems.  You
+never lose the exit code of <code>false</code>.</p>
+<p> </p>
+<a name="acknowledgments"></a>
+<h2>Acknowledgments</h2>
+<ul>
+<li>Thank you to <code>ca2013</code> for extensive review and proofreading of this doc.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Thu, 19 Jun 2025 22:13:21 -0400</i>
+    </div>
+  </body>
+</html>
