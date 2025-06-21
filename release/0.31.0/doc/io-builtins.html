@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH I/O Builtins</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/io-builtins.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.31.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>YSH I/O Builtins</h1>
+<p>POSIX shell has overlapping and quirky constructs for doing I/O:</p>
+<ul>
+<li>the builtins <code>echo</code>, <code>printf</code>, and <code>read</code></li>
+<li>the <code>$(command sub)</code> construct</li>
+<li>Bash has <code>mapfile</code> and <code>readarray</code></li>
+</ul>
+<p>YSH rationalizes I/O with:</p>
+<ul>
+<li>A new <code>write</code> builtin</li>
+<li>Long flags to <code>read</code>, like <code>--all</code></li>
+<li>The distinction between <code>$(string sub)</code> and <code>@(array sub)</code></li>
+<li>A set of data languages called <a href="j8-notation.html">J8 Notation</a>.</li>
+</ul>
+<p>YSH also has orthogonal mechanisms for string processing:</p>
+<ul>
+<li><code>${.myproc arg}</code> and <code>@{.myproc arg}</code> are an optimization (TODO)</li>
+<li><code>${x %.2f}</code> as a static version of the <code>printf</code> builtin (TODO)</li>
+<li><code>${x|html}</code> for safe escaping (TODO)</li>
+</ul>
+<p>These are discussed in more detail the <a href="strings.html">strings</a> doc.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#problems-with-shell">Problems With Shell</a></div>
+  <div class="toclevel1"><a href="#summary-of-ysh-features">Summary of YSH features</a></div>
+  <div class="toclevel2"><a href="#write">write</a></div>
+  <div class="toclevel1"><a href="#buffered-vs-unbuffered">Buffered vs. Unbuffered</a></div>
+  <div class="toclevel1"><a href="#invariants">Invariants</a></div>
+  <div class="toclevel2"><a href="#file-string-file">File -&gt; String -&gt; File</a></div>
+  <div class="toclevel2"><a href="#file-array-file">File -&gt; Array -&gt; File</a></div>
+  <div class="toclevel2"><a href="#array-j8-lines-array">Array -&gt; J8 Lines -&gt; Array</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="problems-with-shell"></a>
+<h2>Problems With Shell</h2>
+<ul>
+<li><code>echo</code> is flaky because <code>echo $x</code> is a bug.  <code>$x</code> could be <code>-n</code>.
+<ul>
+<li>YSH <code>write</code> accepts <code>--</code>.</li>
+</ul>
+</li>
+<li><code>read</code> is non-obvious because the <code>-r</code> flag to ignore <code>\</code> line continuations
+isn't the default.  The <code>\</code> creates a mini-language that isn't understood by
+other line-based tools like <code>grep</code> and <code>awk</code>.
+<ul>
+<li>TODO: YSH should have a mechanism to read buffered lines.</li>
+</ul>
+</li>
+<li>There's no way to tell if <code>$()</code> strips the trailing newline,.
+<ul>
+<li>YSH has <code>read --all</code>, as well as lastpipe being on.</li>
+</ul>
+</li>
+</ul>
+<p>Example:</p>
+<pre><code>hostname | read --all (&amp;x)
+write -- $x
+</code></pre>
+<a name="summary-of-ysh-features"></a>
+<h2>Summary of YSH features</h2>
+<ul>
+<li><code>write</code>: <code>--qsn</code>, <code>--sep</code>, <code>--end</code></li>
+<li><code>read</code>: <code>--all</code> (future: <code>--line</code>, <code>--all-lines</code>?)</li>
+<li><code>$(string sub)</code> removes the trailing newline, if any</li>
+<li><code>@(array sub)</code> splits by IFS
+<ul>
+<li>TODO: should it split by <code>IFS=$'\n'</code>?</li>
+</ul>
+</li>
+</ul>
+<a name="write"></a>
+<h3>write</h3>
+<ul>
+<li><code>-sep</code>: Characters to separate each argument.  (Default: newline)</li>
+<li><code>-end</code>: Characters to terminate the whole invocation.  (Default: newline)</li>
+<li><code>-n</code>: A synonym for <code>-end ''</code>.</li>
+</ul>
+<a name="buffered-vs-unbuffered"></a>
+<h2>Buffered vs. Unbuffered</h2>
+<ul>
+<li>The POSIX flags to <code>read</code> issue many <code>read(0, 1)</code> calls.  They do it
+byte-by-byte.</li>
+<li>The <code>--long</code> flags to <code>read</code> use buffered I/O.</li>
+</ul>
+<a name="invariants"></a>
+<h2>Invariants</h2>
+<p>Here are some design notes on making the I/O builtins orthogonal and
+composable.  There should be clean ways to &quot;round trip&quot; data between the OS and
+YSH data structures.</p>
+<a name="file-string-file"></a>
+<h3>File -&gt; String -&gt; File</h3>
+<pre><code>cat input.txt | read --all
+
+<span class="sh-comment"># suppress the newline</span>
+write --end '' $_reply &gt; output.txt
+
+diff input.txt output.txt  <span class="sh-comment"># should be equal</span>
+</code></pre>
+<a name="file-array-file"></a>
+<h3>File -&gt; Array -&gt; File</h3>
+<p>TODO</p>
+<pre><code>cat input.txt | read --all-lines :myarray
+
+<span class="sh-comment"># suppress the newline</span>
+write --sep '' --end '' -- @myarray &gt; output.txt
+
+diff input.txt output.txt  <span class="sh-comment"># should be equal</span>
+</code></pre>
+<a name="array-j8-lines-array"></a>
+<h3>Array -&gt; J8 Lines -&gt; Array</h3>
+<p>TODO</p>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="json.html">JSON</a> support.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 21 Jun 2025 19:05:35 -0400</i>
+    </div>
+  </body>
+</html>

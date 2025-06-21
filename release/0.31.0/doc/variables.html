@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Variable Declaration, Mutation, and Scope</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/variables.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.31.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Variable Declaration, Mutation, and Scope</h1>
+<p>This doc addresses these questions:</p>
+<ul>
+<li>How do variables behave in YSH?</li>
+<li>What are some practical guidelines for using them?</li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#ysh-design-goals">YSH Design Goals</a></div>
+  <div class="toclevel1"><a href="#keywords-are-more-consistent-and-powerful-than-builtins">Keywords Are More Consistent and Powerful Than Builtins</a></div>
+  <div class="toclevel2"><a href="#declare-with-var-and-const">Declare With <code>var</code> and <code>const</code></a></div>
+  <div class="toclevel2"><a href="#mutate-with-setvar-and-setglobal">Mutate With <code>setvar</code> and <code>setglobal</code></a></div>
+  <div class="toclevel2"><a href="#return-by-mutating-a-place-advanced">&quot;Return&quot; By Mutating a <code>Place</code> (advanced)</a></div>
+  <div class="toclevel2"><a href="#comparison-to-shell">Comparison to Shell</a></div>
+  <div class="toclevel1"><a href="#keywords-behave-differently-at-the-top-level-like-javascript">Keywords Behave Differently at the Top Level (Like JavaScript)</a></div>
+  <div class="toclevel2"><a href="#usage-guidelines">Usage Guidelines</a></div>
+  <div class="toclevel2"><a href="#the-top-level-scope-has-only-dynamic-checks">The Top-Level Scope Has Only Dynamic Checks</a></div>
+  <div class="toclevel2"><a href="#proc-and-func-scope-have-static-checks"><code>proc</code> and <code>func</code> Scope Have Static Checks</a></div>
+  <div class="toclevel1"><a href="#procs-dont-use-dynamic-scope">Procs Don't Use &quot;Dynamic Scope&quot;</a></div>
+  <div class="toclevel2"><a href="#reading-variables">Reading Variables</a></div>
+  <div class="toclevel2"><a href="#shell-language-constructs-that-write-variables">Shell Language Constructs That Write Variables</a></div>
+  <div class="toclevel2"><a href="#builtins-that-write-variables">Builtins That Write Variables</a></div>
+  <div class="toclevel2"><a href="#reminder-proc-scope-is-flat">Reminder: Proc Scope is Flat</a></div>
+  <div class="toclevel1"><a href="#more-details">More Details</a></div>
+  <div class="toclevel2"><a href="#examples-of-place-mutation">Examples of Place Mutation</a></div>
+  <div class="toclevel2"><a href="#bare-assignment">Bare Assignment</a></div>
+  <div class="toclevel2"><a href="#temp-bindings">Temp Bindings</a></div>
+  <div class="toclevel1"><a href="#appendix-a-more-on-shell-vs-ysh">Appendix A: More on Shell vs. YSH</a></div>
+  <div class="toclevel1"><a href="#appendix-b-problems-with-top-level-scope-in-other-languages">Appendix B: Problems With Top-Level Scope In Other Languages</a></div>
+  <div class="toclevel1"><a href="#related-documents">Related Documents</a></div>
+</div>
+<a name="ysh-design-goals"></a>
+<h2>YSH Design Goals</h2>
+<p>YSH is a graceful upgrade to shell, and the behavior of variables follows from
+that philosophy.</p>
+<ul>
+<li>OSH implements shell-compatible behavior.</li>
+<li>YSH enhances shell with <strong>new features</strong> like expressions over typed data,
+which will be familiar to Python and JavaScript programmers.</li>
+<li>It's a <strong>stricter</strong> language.
+<ul>
+<li>Procs (shell functions) are self-contained and modular.  They're
+understandable by reading their signature.</li>
+<li>We removed <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a>.  This mechanism isn't
+familiar to most programmers, and may cause accidental mutation (bugs).</li>
+<li>YSH has variable <strong>declarations</strong> like JavaScript, which can prevent
+trivial bugs.</li>
+</ul>
+</li>
+<li>Even though YSH is stricter, it should still be convenient to use
+interactively.</li>
+</ul>
+<a name="keywords-are-more-consistent-and-powerful-than-builtins"></a>
+<h2>Keywords Are More Consistent and Powerful Than Builtins</h2>
+<p>YSH has 5 keywords affect shell variables.  Unlike shell builtins, they're
+statically-parsed, and take dynamically-typed <strong>expressions</strong> on the right.</p>
+<a name="declare-with-var-and-const"></a>
+<h3>Declare With <code>var</code> and <code>const</code></h3>
+<p>It looks like JavaScript:</p>
+<pre><code>var name = 'Bob'
+const age = (20 + 1) * 2
+
+echo &quot;$name is $age years old&quot;  <span class="sh-comment"># Bob is 42 years old</span>
+</code></pre>
+<p>Note that <code>const</code> is enforced by a dynamic check.  It's meant to be used at the
+top level only, not within <code>proc</code> or <code>func</code>.</p>
+<pre><code>const age = 'other'  <span class="sh-comment"># Will fail because `readonly` bit is set</span>
+</code></pre>
+<a name="mutate-with-setvar-and-setglobal"></a>
+<h3>Mutate With <code>setvar</code> and <code>setglobal</code></h3>
+<pre><code>proc p {
+  var name = 'Bob'       <span class="sh-comment"># declare</span>
+  setvar name = 'Alice'  <span class="sh-comment"># mutate</span>
+
+  setglobal g = 42       <span class="sh-comment"># create or mutate a global variable</span>
+}
+</code></pre>
+<a name="return-by-mutating-a-place-advanced"></a>
+<h3>&quot;Return&quot; By Mutating a <code>Place</code> (advanced)</h3>
+<p>A <code>Place</code> is a more principled mechanism that &quot;replaces&quot; shell's dynamic scope.
+To use it:</p>
+<ol>
+<li>Create a place with the <code>&amp;</code> prefix operator</li>
+<li>Pass the place around as you would any other value.</li>
+<li>Assign to the place with its <code>setValue(x)</code> method.</li>
+</ol>
+<p>Example:</p>
+<pre><code>proc p (s; out) {  <span class="sh-comment"># place is a typed param</span>
+  <span class="sh-comment"># mutate the place</span>
+  call out-&gt;setValue(&quot;prefix-$s&quot;)
+}
+
+var x
+p ('foo', &amp;x)  <span class="sh-comment"># pass a place</span>
+echo x=$x  <span class="sh-comment"># =&gt; x=prefix-foo</span>
+</code></pre>
+<ul>
+<li><em>Style guideline</em>: In some situations, it's better to &quot;return&quot; a value on
+stdout, and use <code>$(myproc)</code> to retrieve it.</li>
+</ul>
+<a name="comparison-to-shell"></a>
+<h3>Comparison to Shell</h3>
+<p>Shell and <a href="/cross-ref.html?tag=bash#bash">bash</a> have grown many mechanisms for &quot;declaring&quot; and mutating
+variables:</p>
+<ul>
+<li>&quot;bare&quot; assignments like <code>x=foo</code></li>
+<li><strong>builtins</strong> like <code>declare</code>, <code>local</code>, and <code>readonly</code></li>
+<li>The <code>-n</code> &quot;nameref&quot; flag</li>
+</ul>
+<p>Examples:</p>
+<pre><code>readonly name=World        <span class="sh-comment"># no spaces allowed around =</span>
+declare foo=&quot;Hello $name&quot;
+foo=$((42 + a[2]))
+declare -n ref=foo         <span class="sh-comment"># $foo can be written through $ref</span>
+</code></pre>
+<p>These constructs are all discouraged in YSH code.</p>
+<a name="keywords-behave-differently-at-the-top-level-like-javascript"></a>
+<h2>Keywords Behave Differently at the Top Level (Like JavaScript)</h2>
+<p>The &quot;top-level&quot; of the interpreter is used in two situations:</p>
+<ol>
+<li>When using YSH <strong>interactively</strong>.</li>
+<li>As the <strong>global</strong> scope of a batch program.</li>
+</ol>
+<p>Experienced YSH users may notice that <code>var</code> and <code>setvar</code> behave differently in
+the top-level scope vs. <code>proc</code> scope.  This is caused by the tension between
+the interactive shell and the strictness of YSH.</p>
+<p>In particular, the <code>source</code> builtin is dynamic, so YSH can't know all the names
+defined at the top level.</p>
+<p>For reference, JavaScript's modern <code>let</code> keyword has similar behavior.</p>
+<a name="usage-guidelines"></a>
+<h3>Usage Guidelines</h3>
+<p>Before going into detail on keyword behavior, here are some practical
+guidelines:</p>
+<ul>
+<li><strong>Interactive</strong> sessions: Use shell's <code>x=y</code>, or YSH <code>setvar</code>.  You can think
+of <code>setvar</code> like Python's assignment operator: it creates or mutates a
+variable.
+<ul>
+<li><strong>Short scripts</strong> (~20 lines) can also use this style.</li>
+</ul>
+</li>
+<li><strong>Long programs</strong>: Refactor them into composable &quot;functions&quot;, i.e. <code>proc</code>.
+<ul>
+<li>First wrap the <strong>whole program</strong> into <code>proc main { }</code>.</li>
+<li>The top level should only have <code>const</code> declarations.  (You can use <code>var</code>,
+but it has special rules, explained below.)</li>
+<li>The body of <code>proc</code> and <code>func</code> should have variables declared with <code>var</code>.</li>
+<li>Inside these code blocks, use <code>setvar</code> to mutate <strong>local</strong> variables, and
+<code>setglobal</code> to mutate <strong>globals</strong>.</li>
+</ul>
+</li>
+</ul>
+<p>That's all you need to remember.  The following sections explain the rationale
+for these guidelines.</p>
+<a name="the-top-level-scope-has-only-dynamic-checks"></a>
+<h3>The Top-Level Scope Has Only Dynamic Checks</h3>
+<p>The lack of static checks affects the recommended usage for both interactive
+sessions and batch scripts.</p>
+<a name="interactive-use-setvar-only"></a>
+<h4>Interactive Use: <code>setvar</code> only</h4>
+<p>As mentioned, you only need the <code>setvar</code> keyword in an interactive shell:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">setvar x = 42 </span>  <span class="sh-comment"># create variable 'x'</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">setvar x = 43 </span>  <span class="sh-comment"># mutate it</span>
+</code></pre>
+<p>Details on top-level behavior:</p>
+<ul>
+<li><code>var</code> behaves like <code>setvar</code>: It creates or mutates a variable.  In other
+words, a <code>var</code> definition can be <strong>redefined</strong> at the top-level.</li>
+<li>A <code>const</code> can also redefine a <code>var</code>.</li>
+<li>A <code>var</code> can't redefine a <code>const</code> because there's a <strong>dynamic</strong> check that
+disallows mutation (like shell's <code>readonly</code>).</li>
+</ul>
+<a name="batch-use-const-only"></a>
+<h4>Batch Use: <code>const</code> only</h4>
+<p>It's simpler to use only constants at the top level.</p>
+<pre><code>const USER = 'bob'
+const HOST = 'example.com'
+
+proc p {
+  ssh $USER@$HOST ls -l
+}
+</code></pre>
+<p>This is so you don't have to worry about a <code>var</code> being redefined by a statement
+like <code>source mylib.sh</code>.  A <code>const</code> can't be redefined because it can't be
+mutated.</p>
+<p>It may be useful to put mutable globals in a constant dictionary, as it will
+prevent them from being redefined:</p>
+<pre><code>const G = { mystate = 0 }
+
+proc p {
+  setglobal G.mystate = 1
+}
+</code></pre>
+<a name="proc-and-func-scope-have-static-checks"></a>
+<h3><code>proc</code> and <code>func</code> Scope Have Static Checks</h3>
+<p>These YSH code units have additional <strong>static checks</strong> (parse errors):</p>
+<ul>
+<li>Every variable must be declared once and only once with <code>var</code>.  A duplicate
+declaration is a parse error.</li>
+<li><code>setvar</code> of an undeclared variable is a parse error.</li>
+</ul>
+<a name="procs-dont-use-dynamic-scope"></a>
+<h2>Procs Don't Use &quot;Dynamic Scope&quot;</h2>
+<p>Procs are designed to be encapsulated and composable like processes.  But the
+<a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a> rule that Bourne shell functions use
+breaks encapsulation.</p>
+<p>Dynamic scope means that a function can <strong>read and mutate</strong> the locals of its
+caller, its caller's caller, and so forth.  Example:</p>
+<pre><code>g() {
+  echo &quot;f_var is $f_var&quot;  <span class="sh-comment"># g can see f's local variables</span>
+}
+
+f() {
+  local f_var=42 g
+}
+
+f
+</code></pre>
+<p>YSH code should use <code>proc</code> instead.  Inside a proc call, the <code>dynamic_scope</code>
+option is implicitly disabled (equivalent to <code>shopt --unset dynamic_scope</code>).</p>
+<a name="reading-variables"></a>
+<h3>Reading Variables</h3>
+<p>This means that adding the <code>proc</code> keyword to the definition of <code>g</code> changes its
+behavior:</p>
+<pre><code>proc g() {
+  echo &quot;f_var is $f_var&quot;  <span class="sh-comment"># Undefined!</span>
+}
+</code></pre>
+<p>This affects all kinds of variable references:</p>
+<pre><code>proc p {
+  echo $foo         <span class="sh-comment"># look up foo in command mode</span>
+  var y = foo + 42  <span class="sh-comment"># look up foo in expression mode</span>
+}
+</code></pre>
+<p>As in Python and JavaScript, a local <code>foo</code> can <em>shadow</em> a global <code>foo</code>.  Using
+<code>CAPS</code> for globals is a common style that avoids confusion.  Remember that
+globals should usually be constants in YSH.</p>
+<a name="shell-language-constructs-that-write-variables"></a>
+<h3>Shell Language Constructs That Write Variables</h3>
+<p>In shell, these language constructs assign to variables using dynamic
+scope.  In YSH, they only mutate the <strong>local</strong> scope:</p>
+<ul>
+<li><code>x=val</code>
+<ul>
+<li>And variants <code>x+=val</code>, <code>a[i]=val</code>, <code>a[i]+=val</code></li>
+</ul>
+</li>
+<li><code>export x=val</code> and <code>readonly x=val</code></li>
+<li><code>${x=default}</code></li>
+<li><code>mycmd {x}&gt;out</code> (stores a file descriptor in <code>$x</code>)</li>
+<li><code>(( x = 42 + y ))</code></li>
+</ul>
+<a name="builtins-that-write-variables"></a>
+<h3>Builtins That Write Variables</h3>
+<p>These builtins are also &quot;isolated&quot; inside procs, using local scope:</p>
+<ul>
+<li><a href="ref/chap-builtin-cmd.html#read">read</a> (<code>$REPLY</code>)</li>
+<li><a href="ref/chap-builtin-cmd.html#readarray">readarray</a> aka <code>mapfile</code></li>
+<li><a href="ref/chap-builtin-cmd.html#getopts">getopts</a> (<code>$OPTIND</code>, <code>$OPTARG</code>, etc.)</li>
+<li><a href="ref/chap-builtin-cmd.html#printf">printf</a> -v</li>
+<li><a href="ref/chap-osh-assign.html#unset">unset</a></li>
+</ul>
+<p>YSH Builtins:</p>
+<ul>
+<li><a href="ref/chap-builtin-cmd.html#compadjust">compadjust</a></li>
+<li><a href="ref/chap-builtin-cmd.html#try">try</a> and <code>_error</code></li>
+</ul>
+
+<a name="reminder-proc-scope-is-flat"></a>
+<h3>Reminder: Proc Scope is Flat</h3>
+<p>All local variables in shell functions and procs live in the same scope.  This
+includes variables declared in conditional blocks (<code>if</code> and <code>case</code>) and loops
+(<code>for</code> and <code>while</code>).</p>
+<pre><code>proc p {  
+  for i in 1 2 3 {
+    echo $i
+  }
+  echo $i  <span class="sh-comment"># i is still 3</span>
+}
+</code></pre>
+<p>This includes first-class YSH blocks:</p>
+<pre><code>proc p {
+  var x = 42
+  cd /tmp {
+    var x = 0  <span class="sh-comment"># ERROR: x is already declared</span>
+  }
+}
+</code></pre>
+<a name="more-details"></a>
+<h2>More Details</h2>
+<a name="examples-of-place-mutation"></a>
+<h3>Examples of Place Mutation</h3>
+<p>The expression to the left of <code>=</code> is called a <strong>place</strong>.  These are basically
+Python or JavaScript expressions, except that you add the <code>setvar</code> or
+<code>setglobal</code> keyword.</p>
+<pre><code>setvar x[1] = 2                 <span class="sh-comment"># array element</span>
+setvar d['key'] = 3             <span class="sh-comment"># dict element</span>
+setvar d.key = 3                <span class="sh-comment"># syntactic sugar for the above</span>
+setvar x, y = y, x              <span class="sh-comment"># swap</span>
+</code></pre>
+<a name="bare-assignment"></a>
+<h3>Bare Assignment</h3>
+<p><a href="hay.html">Hay</a> allows <code>const</code> declarations without the keyword:</p>
+<pre><code>hay define Package
+
+Package cpython {
+  version = '3.12'  <span class="sh-comment"># like const version = ...</span>
+}
+</code></pre>
+<a name="temp-bindings"></a>
+<h3>Temp Bindings</h3>
+<p>Temp bindings precede a simple command:</p>
+<pre><code>PYTHONPATH=. mycmd
+</code></pre>
+<p>They create a new namespace on the stack where each cell has the <code>export</code> flag
+set (<code>declare -x</code>).</p>
+<p>In YSH, the lack of dynamic scope means that they can't be read inside a
+<code>proc</code>.  So they're only useful for setting environment variables, and can be
+replaced with:</p>
+<pre><code>env PYTHONPATH=. mycmd
+env PYTHONPATH=. $0 myproc  <span class="sh-comment"># using the ARGV dispatch pattern</span>
+</code></pre>
+<a name="appendix-a-more-on-shell-vs-ysh"></a>
+<h2>Appendix A: More on Shell vs. YSH</h2>
+<p>This section may help experienced shell users understand YSH.</p>
+<p>Shell:</p>
+<pre><code>g=G                         <span class="sh-comment"># global variable</span>
+readonly c=C                <span class="sh-comment"># global constant</span>
+
+myfunc() {
+  local x=X                 <span class="sh-comment"># local variable</span>
+  readonly y=Y              <span class="sh-comment"># local constant</span>
+
+  x=mutated                 <span class="sh-comment"># mutate local</span>
+  g=mutated                 <span class="sh-comment"># mutate global</span>
+  newglobal=G               <span class="sh-comment"># create new global</span>
+
+  caller_var=mutated        <span class="sh-comment"># dynamic scope (YSH doesn't have this)</span>
+}
+</code></pre>
+<p>YSH:</p>
+<pre><code>var g = 'G'                 <span class="sh-comment"># global variable (discouraged)</span>
+const c = 'C'               <span class="sh-comment"># global constant</span>
+
+proc myproc {
+  var x = 'L'               <span class="sh-comment"># local variable</span>
+
+  setvar x = 'mutated'      <span class="sh-comment"># mutate local</span>
+  setglobal g = 'mutated'   <span class="sh-comment"># mutate global</span>
+  setglobal newglobal = 'G' # create new global
+}
+</code></pre>
+<a name="appendix-b-problems-with-top-level-scope-in-other-languages"></a>
+<h2>Appendix B: Problems With Top-Level Scope In Other Languages</h2>
+<ul>
+<li>Julia 1.5 (August 2020): <a href="https://julialang.org/blog/2020/08/julia-1.5-highlights/#the_return_of_soft_scope_in_the_repl">The return of &quot;soft scope&quot; in the
+REPL</a>.
+<ul>
+<li>In contrast to Julia, YSH behaves the same in batch mode vs. interactive
+mode, and doesn't print warnings.  However, it behaves differently at the
+top level.  For this reason, we recommend using only <code>setvar</code> in
+interactive shells, and only <code>const</code> in the global scope of programs.</li>
+</ul>
+</li>
+<li>Racket: <a href="https://gist.github.com/samth/3083053">The Top Level is Hopeless</a>
+<ul>
+<li>From <a href="https://2020.splashcon.org/details/splash-2020-Onward-papers/5/A-principled-approach-to-REPL-interpreters">A Principled Approach to REPL Interpreters</a>
+(Onward 2020).  Thanks to Michael Greenberg (of Smoosh) for this reference.</li>
+<li>The behavior of <code>var</code> at the top level was partly inspired by this
+paper.  It's consistent with bash's <code>declare</code>, and similar to JavaScript's
+<code>let</code>.</li>
+</ul>
+</li>
+</ul>
+<a name="related-documents"></a>
+<h2>Related Documents</h2>
+<ul>
+<li><a href="interpreter-state.html">Interpreter State</a>
+<ul>
+<li>The shell has a stack of namespaces.</li>
+<li>Each namespace contains {variable name -&gt; cell} bindings.</li>
+<li>Cells have a tagged value (string, array, etc.) and 3 flags (readonly,
+export, nameref).</li>
+</ul>
+</li>
+<li><a href="proc-func.html">Guide to Procs and Funcs</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 21 Jun 2025 19:05:35 -0400</i>
+    </div>
+  </body>
+</html>

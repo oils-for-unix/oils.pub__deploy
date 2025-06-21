@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Special Variables (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-special-var.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.31.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>Special Variables</strong></p>
+</div>
+<p>This chapter describes special variables for OSH and YSH.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#YSH-Vars">YSH Vars</a> <br/>
+  <a class="dense-toc-h3" href="#ARGV">ARGV</a> <br/>
+  <a class="dense-toc-h3" href="#ENV">ENV</a> <br/>
+  <a class="dense-toc-h3" href="#__defaults__"><code>__defaults__</code></a> <br/>
+  <a class="dense-toc-h3" href="#__builtins__"><code>__builtins__</code></a> <br/>
+  <a class="dense-toc-h3" href="#__sh_function__"><code>__sh_function__</code></a> <br/>
+  <a class="dense-toc-h3" href="#_this_dir"><code>_this_dir</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Status">YSH Status</a> <br/>
+  <a class="dense-toc-h3" href="#_status"><code>_status</code></a> <br/>
+  <a class="dense-toc-h3" href="#_error"><code>_error</code></a> <br/>
+  <a class="dense-toc-h3" href="#_pipeline_status"><code>_pipeline_status</code></a> <br/>
+  <a class="dense-toc-h3" href="#_process_sub_status"><code>_process_sub_status</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Tracing">YSH Tracing</a> <br/>
+  <a class="dense-toc-h3" href="#SHX_indent">SHX_indent</a> <br/>
+  <a class="dense-toc-h3" href="#SHX_punct">SHX_punct</a> <br/>
+  <a class="dense-toc-h3" href="#SHX_pid_str">SHX_pid_str</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Read">YSH Read</a> <br/>
+  <a class="dense-toc-h3" href="#_reply">_reply</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Oils-VM">Oils VM</a> <br/>
+  <a class="dense-toc-h3" href="#OILS_VERSION"><code>OILS_VERSION</code></a> <br/>
+  <a class="dense-toc-h3" href="#LIB_OSH"><code>LIB_OSH</code></a> <br/>
+  <a class="dense-toc-h3" href="#LIB_YSH"><code>LIB_YSH</code></a> <br/>
+  <a class="dense-toc-h3" href="#OILS_GC_THRESHOLD"><code>OILS_GC_THRESHOLD</code></a> <br/>
+  <a class="dense-toc-h3" href="#OILS_GC_ON_EXIT"><code>OILS_GC_ON_EXIT</code></a> <br/>
+  <a class="dense-toc-h3" href="#OILS_GC_STATS"><code>OILS_GC_STATS</code></a> <br/>
+  <a class="dense-toc-h3" href="#OILS_GC_STATS_FD"><code>OILS_GC_STATS_FD</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Float">Float</a> <br/>
+  <a class="dense-toc-h3" href="#NAN">NAN</a> <br/>
+  <a class="dense-toc-h3" href="#INFINITY">INFINITY</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Module">Module</a> <br/>
+  <a class="dense-toc-h3" href="#__provide__"><code>__provide__</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#POSIX-Special">POSIX Special</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Shell-Vars">Shell Vars</a> <br/>
+  <a class="dense-toc-h3" href="#IFS">IFS</a> <br/>
+  <a class="dense-toc-h3" href="#LANG">LANG</a> <br/>
+  <a class="dense-toc-h3" href="#GLOBIGNORE">GLOBIGNORE</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Shell-Options">Shell Options</a> <br/>
+  <a class="dense-toc-h3" href="#SHELLOPTS">SHELLOPTS</a> <br/>
+  <a class="dense-toc-h3" href="#BASHOPTS">BASHOPTS</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Other-Env">Other Env</a> <br/>
+  <a class="dense-toc-h3" href="#HOME">HOME</a> <br/>
+  <a class="dense-toc-h3" href="#PATH">PATH</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Other-Special">Other Special</a> <br/>
+  <a class="dense-toc-h3" href="#BASH_REMATCH">BASH_REMATCH</a> <br/>
+  <a class="dense-toc-h3" href="#PIPESTATUS">PIPESTATUS</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Platform">Platform</a> <br/>
+  <a class="dense-toc-h3" href="#HOSTNAME">HOSTNAME</a> <br/>
+  <a class="dense-toc-h3" href="#OSTYPE">OSTYPE</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Call-Stack">Call Stack</a> <br/>
+  <a class="dense-toc-h3" href="#BASH_SOURCE">BASH_SOURCE</a> <br/>
+  <a class="dense-toc-h3" href="#FUNCNAME">FUNCNAME</a> <br/>
+  <a class="dense-toc-h3" href="#BASH_LINENO">BASH_LINENO</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Tracing">Tracing</a> <br/>
+  <a class="dense-toc-h3" href="#LINENO">LINENO</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Process-State">Process State</a> <br/>
+  <a class="dense-toc-h3" href="#BASHPID">BASHPID</a> <br/>
+  <a class="dense-toc-h3" href="#PPID">PPID</a> <br/>
+  <a class="dense-toc-h3" href="#UID">UID</a> <br/>
+  <a class="dense-toc-h3" href="#EUID">EUID</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Process-Stack">Process Stack</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Shell-State">Shell State</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Completion">Completion</a> <br/>
+  <a class="dense-toc-h3" href="#COMP_WORDS">COMP_WORDS</a> <br/>
+  <a class="dense-toc-h3" href="#COMP_CWORD">COMP_CWORD</a> <br/>
+  <a class="dense-toc-h3" href="#COMP_LINE">COMP_LINE</a> <br/>
+  <a class="dense-toc-h3" href="#COMP_POINT">COMP_POINT</a> <br/>
+  <a class="dense-toc-h3" href="#COMP_WORDBREAKS">COMP_WORDBREAKS</a> <br/>
+  <a class="dense-toc-h3" href="#COMPREPLY">COMPREPLY</a> <br/>
+  <a class="dense-toc-h3" href="#COMP_ARGV">COMP_ARGV</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#History">History</a> <br/>
+  <a class="dense-toc-h3" href="#HISTFILE">HISTFILE</a> <br/>
+  <a class="dense-toc-h3" href="#YSH_HISTFILE">YSH_HISTFILE</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Interactive">Interactive</a> <br/>
+  <a class="dense-toc-h3" href="#OILS_COMP_UI">OILS_COMP_UI</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#cd">cd</a> <br/>
+  <a class="dense-toc-h3" href="#PWD">PWD</a> <br/>
+  <a class="dense-toc-h3" href="#OLDPWD">OLDPWD</a> <br/>
+  <a class="dense-toc-h3" href="#CDPATH">CDPATH</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#getopts">getopts</a> <br/>
+  <a class="dense-toc-h3" href="#OPTIND">OPTIND</a> <br/>
+  <a class="dense-toc-h3" href="#OPTARG">OPTARG</a> <br/>
+  <a class="dense-toc-h3" href="#OPTERR">OPTERR</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#read">read</a> <br/>
+  <a class="dense-toc-h3" href="#REPLY">REPLY</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Functions">Functions</a> <br/>
+  <a class="dense-toc-h3" href="#RANDOM">RANDOM</a> <br/>
+  <a class="dense-toc-h3" href="#SECONDS">SECONDS</a> <br/>
+</div>
+</div>
+</div>
+<a name="YSH-Vars"></a>
+<h2>YSH Vars</h2>
+<a name="ARGV"></a>
+<h3>ARGV</h3>
+<p>ARGV is List of strings contaning an argument array.  This is the YSH
+replacement for shell's <code>&quot;$@&quot;</code>.</p>
+<ul>
+<li>At the top level, it contains the arguments passed to the shell.</li>
+<li>Inside an <strong>open</strong> <a href="chap-ysh-cmd.html#proc">proc</a>, it contains the arguments passed to the proc.</li>
+</ul>
+<p>For example:</p>
+<pre><code>proc p {    <span class="sh-comment"># open proc, ARGV is swithout signature</span>
+  echo @ARGV
+}
+p a b c  <span class="sh-comment"># =&gt; a b c</span>
+</code></pre>
+<p>In contrast, inside a closed proc, <code>ARGV</code> is empty.</p>
+<pre><code>proc p () {  <span class="sh-comment"># closed proc</span>
+  echo @ARGV
+}
+</code></pre>
+<a name="ENV"></a>
+<h3>ENV</h3>
+<p>An <code>Obj</code> that's populated with environment variables.  Example usage:</p>
+<pre><code>var x = ENV.PYTHONPATH
+echo $[ENV.SSH_AUTH_SOCK]
+setglobal ENV.PYTHONPATH = '.'
+</code></pre>
+<p>It's initialized exactly <strong>once</strong> per process, in any of these situations:</p>
+<ol>
+<li>At shell startup, if <code>shopt --set env_obj</code> is on.  This is true when invoking
+<code>bin/ysh</code>.</li>
+<li>When running <code>bin/osh -o ysh:upgrade</code> or <code>ysh:all</code>.</li>
+<li>When running <code>shopt --set ysh:upgrade</code> or <code>ysh:all</code>.</li>
+</ol>
+<p>Related: <a href="chap-builtin-cmd.html#ysh-shopt">ysh-shopt</a>, <a href="chap-front-end.html#osh-usage">osh-usage</a></p>
+<hr />
+<p>When launching an external command, the shell creates a Unix <code>environ</code> from the
+<code>ENV</code> Obj.  This means that mutating it affects all subsequent processes:</p>
+<pre><code>setglobal ENV.PYTHONPATH = '.'
+./foo.py
+./bar.py
+</code></pre>
+<p>You can also limit the change to a single process, without <code>ENV</code>:</p>
+<pre><code>PYTHONPATH=. ./foo.py
+./bar.py               <span class="sh-comment"># unaffected</span>
+</code></pre>
+<hr />
+<p>YSH reads these ENV variables:</p>
+<ul>
+<li><code>PATH</code> - where to look for executables</li>
+<li><code>PS1</code> - how to print the prompt</li>
+<li>TODO: <code>PS4</code> - how to show execution traces</li>
+<li><code>YSH_HISTFILE</code> (<code>HISTFILE</code> in OSH) - where to read/write command history</li>
+<li><code>HOME</code> - for tilde substitution (<a href="chap-word-lang.html#tilde-sub">tilde-sub</a>)</li>
+</ul>
+<a name="__defaults__"></a>
+<h3><code>__defaults__</code></h3>
+<p>The shell puts some default settings in this <code>Dict</code>.  In certain situations, it
+consults <code>__defaults__</code> after consulting <code>ENV</code>.  For example:</p>
+<ul>
+<li>if <code>ENV.PATH</code> is not set, consult <code>__defaults__.PATH</code></li>
+<li>if <code>ENV.PS1</code> is not set, consult <code>__defaults__.PS1</code></li>
+</ul>
+
+<a name="__builtins__"></a>
+<h3><code>__builtins__</code></h3>
+<p>An object that contains names visible in every module.</p>
+<p>If a name is not visible in the local scope, or module global scope, then it's
+looked up in <code>__builtins__</code>.</p>
+<a name="__sh_function__"></a>
+<h3><code>__sh_function__</code></h3>
+<p>A Dict that reflects the shell functions defined in the Oils interpreter.</p>
+<pre><code>= keys(__sh_function__)        <span class="sh-comment"># enumerate all shell functions</span>
+
+= get(__sh_function__, 'f')    <span class="sh-comment"># get a value of type Proc</span>
+
+= __sh_function__ =&gt; get('f')  <span class="sh-comment"># synonym for the above</span>
+</code></pre>
+<p>You can reflect on <a href="chap-front-end.html#doc-comment">doc comments</a> by calling the <a href="chap-type-method.html#docComment">docComment</a>
+method on a value of type <a href="chap-ysh-cmd.html#proc">Proc</a>.</p>
+<a name="_this_dir"></a>
+<h3><code>_this_dir</code></h3>
+<p>The directory the current script resides in.  This knows about 3 situations:</p>
+<ul>
+<li>The location of <code>oshrc</code> in an interactive shell</li>
+<li>The location of the main script, e.g. in <code>osh myscript.sh</code></li>
+<li>The location of script loaded with the <code>source</code> builtin</li>
+</ul>
+<p>It's useful for &quot;relative imports&quot;.</p>
+<a name="YSH-Status"></a>
+<h2>YSH Status</h2>
+<a name="_status"></a>
+<h3><code>_status</code></h3>
+<p>DEPRECATED: Use <code>_error.code</code> instead.</p>
+<a name="_error"></a>
+<h3><code>_error</code></h3>
+<p>A <code>Dict</code> that's set by the <code>try</code> builtin.</p>
+<p>The integer <code>_error.code</code> is always present:</p>
+<pre><code>try {
+  ls /tmp
+}
+echo &quot;status is $[_error.code]&quot;
+</code></pre>
+<p>Some errors also have a <code>message</code> field, like JSON/J8 encoding/decoding errors,
+and user errors from the <a href="chap-builtin-cmd.html#error">error</a> builtin.</p>
+<pre><code>try {
+  echo $[toJson( /d+/ )]  <span class="sh-comment"># invalid Eggex type</span>
+}
+echo &quot;failed: $[_error.message]&quot;  <span class="sh-comment"># =&gt; failed: Can't serialize ...</span>
+</code></pre>
+<a name="_pipeline_status"></a>
+<h3><code>_pipeline_status</code></h3>
+<p>After a pipeline of processes is executed, this array contains the exit code of
+each process.</p>
+<p>Each exit code is an <a href="chap-type-method.html#Int">Int</a>.  Compare with
+<a href="#PIPESTATUS"><code>PIPESTATUS</code></a>.</p>
+<a name="_process_sub_status"></a>
+<h3><code>_process_sub_status</code></h3>
+<p>The exit status of all the process subs in the last command.</p>
+<a name="YSH-Tracing"></a>
+<h2>YSH Tracing</h2>
+<a name="SHX_indent"></a>
+<h3>SHX_indent</h3>
+<a name="SHX_punct"></a>
+<h3>SHX_punct</h3>
+<a name="SHX_pid_str"></a>
+<h3>SHX_pid_str</h3>
+<a name="YSH-Read"></a>
+<h2>YSH Read</h2>
+<a name="_reply"></a>
+<h3>_reply</h3>
+<p>Builtins that <code>read</code> set this variable:</p>
+<pre><code>read --all &lt; foo.txt
+= _reply  <span class="sh-comment"># =&gt; 'contents of file'</span>
+
+json read &lt; foo.json
+= _reply  <span class="sh-comment"># =&gt; (Dict)  {}</span>
+</code></pre>
+<a name="Oils-VM"></a>
+<h2>Oils VM</h2>
+<a name="OILS_VERSION"></a>
+<h3><code>OILS_VERSION</code></h3>
+<p>The version of Oils that's being run, e.g. <code>0.23.0</code>.</p>
+
+<a name="LIB_OSH"></a>
+<h3><code>LIB_OSH</code></h3>
+<p>The string <code>///osh</code>, which you can use with the <a href="chap-builtin-cmd.html#source">source</a> builtin.</p>
+<pre><code>source $LIB_OSH/two.sh    
+</code></pre>
+<a name="LIB_YSH"></a>
+<h3><code>LIB_YSH</code></h3>
+<p>The string <code>///ysh</code>, which you can use with the <a href="chap-builtin-cmd.html#source">source</a> builtin.</p>
+<pre><code>source $LIB_YSH/yblocks.ysh
+</code></pre>
+<a name="OILS_GC_THRESHOLD"></a>
+<h3><code>OILS_GC_THRESHOLD</code></h3>
+<p>At a GC point, if there are more than this number of live objects, collect
+garbage.</p>
+<a name="OILS_GC_ON_EXIT"></a>
+<h3><code>OILS_GC_ON_EXIT</code></h3>
+<p>Set <code>OILS_GC_ON_EXIT=1</code> to explicitly collect and <code>free()</code> before the process
+exits.  By default, we let the OS clean up.</p>
+<p>Useful for ASAN testing.</p>
+<a name="OILS_GC_STATS"></a>
+<h3><code>OILS_GC_STATS</code></h3>
+<p>When the shell process exists, print GC stats to stderr.</p>
+<a name="OILS_GC_STATS_FD"></a>
+<h3><code>OILS_GC_STATS_FD</code></h3>
+<p>When the shell process exists, print GC stats to this file descriptor.</p>
+<a name="Float"></a>
+<h2>Float</h2>
+<a name="NAN"></a>
+<h3>NAN</h3>
+<p>The float value for &quot;not a number&quot;.</p>
+<p>(The name is consistent with the C language.)</p>
+<a name="INFINITY"></a>
+<h3>INFINITY</h3>
+<p>The float value for &quot;infinity&quot;.  You can negate it to get &quot;negative infinity&quot;.</p>
+<p>(The name is consistent with the C language.)</p>
+<a name="Module"></a>
+<h2>Module</h2>
+<a name="__provide__"></a>
+<h3><code>__provide__</code></h3>
+<p>A module is evaluated upon <code>use</code>.  After evaluation, the names in the
+<code>__provide__</code> <code>List</code> are put in the resulting module <code>Obj</code> instance.</p>
+
+<a name="POSIX-Special"></a>
+<h2>POSIX Special</h2>
+<pre><code> $@  $*            all arguments
+ $0 ... $9 ${10}   each argument
+ $#                the number of arguments
+ $?                last exit status
+ $-
+ $$                PID of shell (does not change when shell forks)
+ $!                ID of last job started, with &amp; or bg
+</code></pre>
+<p>Details on <code>$!</code>:</p>
+<ul>
+<li>It's either
+<ul>
+<li>the PID of a process</li>
+<li>the PID of the <em>last</em> part of the pipeline.  (In contrast, the PGID of the
+pipeline is the PID of the first part.)</li>
+</ul>
+</li>
+<li>The <a href="chap-builtin-cmd.html#wait"><code>wait</code></a> builtin knows how to find a
+background pipeline job, given this ID.</li>
+<li>It's set by:
+<ul>
+<li><a href="chap-cmd-lang.html#ampersand"><code>ampersand &amp;</code></a></li>
+<li><a href="chap-builtin-cmd.html#bg"><code>bg</code></a></li>
+<li>In particular, it's not set after Ctrl-Z, only after <code>bg</code>.</li>
+</ul>
+</li>
+</ul>
+<a name="Shell-Vars"></a>
+<h2>Shell Vars</h2>
+<a name="IFS"></a>
+<h3>IFS</h3>
+<p>Used for word splitting.  And the builtin <code>shSplit()</code> function.</p>
+<a name="LANG"></a>
+<h3>LANG</h3>
+<p>TODO: bash compat</p>
+<a name="GLOBIGNORE"></a>
+<h3>GLOBIGNORE</h3>
+<p>TODO: bash compat</p>
+<a name="Shell-Options"></a>
+<h2>Shell Options</h2>
+<a name="SHELLOPTS"></a>
+<h3>SHELLOPTS</h3>
+<p>bash compat: serialized options for the <code>set</code> builtin.</p>
+<a name="BASHOPTS"></a>
+<h3>BASHOPTS</h3>
+<p>bash compat: serialized options for the <code>shopt</code> builtin.</p>
+<p>(Not implemented.)</p>
+<a name="Other-Env"></a>
+<h2>Other Env</h2>
+<a name="HOME"></a>
+<h3>HOME</h3>
+<p>The <code>$HOME</code> env var is read by the shell, for:</p>
+<ol>
+<li><code>~</code> expansion</li>
+<li><code>~</code> abbreviation in the UI (the dirs builtin, <code>\W</code> in <code>$PS1</code>).</li>
+</ol>
+<p>The shell does not set $HOME.  According to POSIX, the program that invokes the
+login shell should set it, based on <code>/etc/passwd</code>.</p>
+<a name="PATH"></a>
+<h3>PATH</h3>
+<p>A colon-separated string that's used to find executables to run.</p>
+<p>In YSH, it's <code>ENV.PATH</code>.</p>
+<a name="Other-Special"></a>
+<h2>Other Special</h2>
+<a name="BASH_REMATCH"></a>
+<h3>BASH_REMATCH</h3>
+<p>Result of regex evaluation <code>[[ $x =~ $pat ]]</code>.</p>
+<a name="PIPESTATUS"></a>
+<h3>PIPESTATUS</h3>
+<p>After a pipeline of processes is executed, this array contains the exit code of
+each process.</p>
+<p>Each exit code is a <a href="chap-type-method.html#Str">Str</a>.  Compare with
+<a href="#_pipeline_status"><code>_pipeline_status</code></a>.</p>
+<a name="Platform"></a>
+<h2>Platform</h2>
+<a name="HOSTNAME"></a>
+<h3>HOSTNAME</h3>
+<p>The name of the &quot;host&quot; or machine that Oils is running on, determined by
+<code>gethostname()</code>.</p>
+<a name="OSTYPE"></a>
+<h3>OSTYPE</h3>
+<p>The operating system that Oils is running on, determined by <code>uname()</code>.</p>
+<p>Examples: <code>linux darwin ...</code></p>
+<a name="Call-Stack"></a>
+<h2>Call Stack</h2>
+<a name="BASH_SOURCE"></a>
+<h3>BASH_SOURCE</h3>
+<a name="FUNCNAME"></a>
+<h3>FUNCNAME</h3>
+<a name="BASH_LINENO"></a>
+<h3>BASH_LINENO</h3>
+<a name="Tracing"></a>
+<h2>Tracing</h2>
+<a name="LINENO"></a>
+<h3>LINENO</h3>
+<a name="Process-State"></a>
+<h2>Process State</h2>
+<a name="BASHPID"></a>
+<h3>BASHPID</h3>
+<p>TODO</p>
+<a name="PPID"></a>
+<h3>PPID</h3>
+<p>TODO</p>
+<a name="UID"></a>
+<h3>UID</h3>
+<a name="EUID"></a>
+<h3>EUID</h3>
+<a name="Process-Stack"></a>
+<h2>Process Stack</h2>
+<a name="Shell-State"></a>
+<h2>Shell State</h2>
+<a name="Completion"></a>
+<h2>Completion</h2>
+<a name="COMP_WORDS"></a>
+<h3>COMP_WORDS</h3>
+<p>An array of words, split by : and = for compatibility with bash.  New
+completion scripts should use COMP_ARGV instead.</p>
+<a name="COMP_CWORD"></a>
+<h3>COMP_CWORD</h3>
+<p>Discouraged; for compatibility with bash.</p>
+<a name="COMP_LINE"></a>
+<h3>COMP_LINE</h3>
+<p>Discouraged; for compatibility with bash.</p>
+<a name="COMP_POINT"></a>
+<h3>COMP_POINT</h3>
+<p>Discouraged; for compatibility with bash.</p>
+<a name="COMP_WORDBREAKS"></a>
+<h3>COMP_WORDBREAKS</h3>
+<p>Discouraged; for compatibility with bash.</p>
+<a name="COMPREPLY"></a>
+<h3>COMPREPLY</h3>
+<p>User-defined completion functions should Fill this array with candidates.  It
+is cleared on every completion request.</p>
+<a name="COMP_ARGV"></a>
+<h3>COMP_ARGV</h3>
+<p>An array of partial command arguments to complete.  Preferred over COMP_WORDS.
+The compadjust builtin uses this variable.</p>
+<p>(An OSH extension to bash.)</p>
+<a name="History"></a>
+<h2>History</h2>
+<a name="HISTFILE"></a>
+<h3>HISTFILE</h3>
+<p>Override the default OSH history location.</p>
+<a name="YSH_HISTFILE"></a>
+<h3>YSH_HISTFILE</h3>
+<p>Override the default YSH history location.</p>
+<a name="Interactive"></a>
+<h2>Interactive</h2>
+<a name="OILS_COMP_UI"></a>
+<h3>OILS_COMP_UI</h3>
+<p>Set which completion UI to use. Defaults to <code>minimal</code>.</p>
+<ul>
+<li><code>minimal</code> - a UI that approximates the default behavior of GNU readline.</li>
+<li><code>nice</code> - a UI with a fancy pager and a prompt with horizontal scrolling instead of wrapping.</li>
+</ul>
+<p>This variable is currently only checked once during shell initialization.</p>
+<a name="cd"></a>
+<h2>cd</h2>
+<a name="PWD"></a>
+<h3>PWD</h3>
+<a name="OLDPWD"></a>
+<h3>OLDPWD</h3>
+<a name="CDPATH"></a>
+<h3>CDPATH</h3>
+<a name="getopts"></a>
+<h2>getopts</h2>
+<a name="OPTIND"></a>
+<h3>OPTIND</h3>
+<a name="OPTARG"></a>
+<h3>OPTARG</h3>
+<a name="OPTERR"></a>
+<h3>OPTERR</h3>
+<a name="read"></a>
+<h2>read</h2>
+<a name="REPLY"></a>
+<h3>REPLY</h3>
+<p>OSH read sets this:</p>
+<pre><code>read &lt; myfile
+</code></pre>
+<a name="Functions"></a>
+<h2>Functions</h2>
+<a name="RANDOM"></a>
+<h3>RANDOM</h3>
+<p>bash compat</p>
+<a name="SECONDS"></a>
+<h3>SECONDS</h3>
+<p>bash compat</p>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 21 Jun 2025 19:05:35 -0400</i>
+    </div>
+  </body>
+</html>

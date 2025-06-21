@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Build Help Mirror</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/_tmp/doc/help-mirror.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.31.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils Build <code>--help</code> Mirror</h1>
+<style>
+/* Similar to web/install.css */
+h1 { font-size: 1.5em; }
+h2 { font-size: 1.2em; }
+
+/* Exclude Markdown <pre><code> */
+code:not(pre code) {
+  color: green;
+}
+</style>
+<p>This doc mirrors the <code>--help</code> for the 3 shell tools in the build sytsem:</p>
+<ol>
+<li><code>configure</code> - Detect system features</li>
+<li><code>_build/oils.sh</code> - Compile <code>oils-for-unix</code> source into an executable</li>
+<li><code>install</code> - Install the executable, and symlinks to it</li>
+</ol>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#note-usage-is-different-than-autotools">Note: Usage is Different Than Autotools</a></div>
+  <div class="toclevel1"><a href="#configure">configure</a></div>
+  <div class="toclevel1"><a href="#_buildoilssh">_build/oils.sh</a></div>
+  <div class="toclevel1"><a href="#install">install</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+</div>
+<a name="note-usage-is-different-than-autotools"></a>
+<h2>Note: Usage is Different Than Autotools</h2>
+<p>To minimize build deps, all 3 of these tools are hand-written POSIX shell
+scripts.  So this build system does <strong>not</strong> use GNU autotools, and it does not
+use <code>make</code>.</p>
+<p>Keep these differences in mind:</p>
+<ul>
+<li>Settings are configured with <strong>either</strong> flags or env vars, as described
+below.
+<ul>
+<li>For example, use <code>./configure --cxx-for-configure mycc</code>, not <code>CXX=mycc configure</code>.</li>
+</ul>
+</li>
+<li>If you pass <code>./configure --cxx-for-configure mycc</code>, you should also pass
+<code>_build/oils.sh --cxx mycc</code>.  The flag value is not remembered.</li>
+</ul>
+<a name="configure"></a>
+<h2>configure</h2>
+<pre><code>Detect system features before a build of oils-for-unix.
+
+Usage:
+  ./configure FLAG*
+  ./configure --help
+
+Flags:
+
+  --cxx-for-configure CXX [default 'cc']
+    Use this compiler to detect system features
+
+Installation dirs:
+
+  --prefix PREFIX [default '/usr/local']
+    Prefix for the bin/ directory 
+
+  --datarootdir DATAROOTDIR [default $PREFIX/share]
+    Prefix for data files, including man page 
+
+Dependencies:
+
+  --with-readline          Fail unless readline is available
+  --without-readline       Don't compile with readline, even if it's available.
+                           The shell won't have any interactive features.
+  --readline DIR           An alternative readline installation to link against
+  --without-libc-features  Assume no FNM_EXTMATCH, GLOB_PERIOD, *pwent()
+  --with-systemtap-sdt     Fail unless systemtap-sdt is available
+  --without-systemtap-sdt  Don't compile with systemtap-sdt, even if it's available
+
+</code></pre>
+<a name="_buildoilssh"></a>
+<h2>_build/oils.sh</h2>
+<pre><code>Compile the oils-for-unix source into an executable.
+
+Usage:
+  _build/oils.sh FLAG* 
+  _build/oils.sh --help
+
+Flags:
+
+  --cxx CXX [default 'cxx']
+    The C++ compiler to use: 'cxx' for system compiler, 'clang', or custom
+    string
+  
+  --variant ARG [default 'opt']
+    The build variant, e.g. dbg, opt, asan, which adds compile and link flags.
+
+  --translator ARG [default 'mycpp']
+    Which bundle of translated source code to compile: mycpp, mycpp-souffle
+
+  --skip-rebuild
+    If the output exists, skip the build
+
+Env vars respected:
+
+  OILS_PARALLEL_BUILD= [default 1]
+    Set to 0 to disable parallel compilation.
+
+  OILS_CXX_VERBOSE=    [default '']
+    Set to 1 to show build details.
+
+Compile/link flags:
+
+  BASE_CXXFLAGS=       (defined in build/common.sh)
+    Override this to disable basic flags like -fno-omit-frame-pointer
+
+  CXXFLAGS=            [default ''] (defined in build/ninja-rules-cpp.sh)
+    Space-separated list of more compiler flags
+
+  LDFLAGS=             [default ''] (defined in build/ninja-rules-cpp.sh)
+    Space-separated list of more linker flags
+
+Compiler flags come from these sources:
+
+  1. The $BASE_CXXFLAGS var
+  2. -I $REPO_ROOT is hard-coded
+  3. The build --variant, e.g. 'asan' adds -fsanitizer=address and more
+  4. Flags detected by ./configure, e.g. for GNU readline
+  5. The $CXXFLAGS var
+
+Linker flags come from these sources:
+
+  1. The build --variant, e.g. 'asan' adds -fsanitizer=address
+  2. Flags detected by ./configure, like $STRIP_FLAGS and -lreadline for GNU
+     readline
+  3. The $LDFLAGS var
+
+</code></pre>
+<a name="install"></a>
+<h2>install</h2>
+<pre><code>Install the oils-for-unix binary, and symlinks to it, like osh.
+
+Usage:
+  ./install                                # install the stripped binary
+  ./install _bin/cxx-opt-sh/oils-for-unix  # or a given binary
+  ./install --help                         # show this help
+
+Env vars respected:
+
+  DESTDIR=/tmp/foo ./install
+
+The DESTDIR var allows staged installs.  This means that the installed files
+are placed in a temp dir first, NOT the dir they are run from on the target
+machine.
+
+    https://www.gnu.org/prep/standards/html_node/DESTDIR.html
+
+Package managers such as gentoo-portage used staged installs by default.
+
+    https://devmanual.gentoo.org/quickstart/index.html
+
+</code></pre>
+<a name="links"></a>
+<h2>Links</h2>
+<ul>
+<li><a href="INSTALL.html">INSTALL.html</a> - Quick guide for end users.</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Oils-Packaging-Guidelines">Oils Packaging Guidelines</a> wiki</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Oils-Packaging-Tips">Oils Packaging Tips</a> wiki - free free to edit this page.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 21 Jun 2025 19:05:35 -0400</i>
+    </div>
+  </body>
+</html>
