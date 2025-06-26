@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Types in the Oils Runtime - OSH and YSH</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/types.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Types in the Oils Runtime - OSH and YSH</h1>
+<p>Here are all types of values in the Oils runtime, organized for understanding.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#nine-atoms">Nine Atoms</a></div>
+  <div class="toclevel2"><a href="#serialiable">Serialiable</a></div>
+  <div class="toclevel2"><a href="#more">More</a></div>
+  <div class="toclevel1"><a href="#six-containers">Six Containers</a></div>
+  <div class="toclevel2"><a href="#obj-is-for-user-defined-types"><code>Obj</code> is for User-defined Types</a></div>
+  <div class="toclevel1"><a href="#five-units-of-code">Five Units of Code</a></div>
+  <div class="toclevel1"><a href="#four-types-for-reflection">Four Types for Reflection</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#the-json-data-model">The JSON Data Model</a></div>
+  <div class="toclevel2"><a href="#why-isnt-everything-an-object">Why Isn't Everything an Object?</a></div>
+  <div class="toclevel2"><a href="#implementation-details">Implementation Details</a></div>
+  <div class="toclevel2"><a href="#related">Related</a></div>
+</div> 
+<a name="nine-atoms"></a>
+<h2>Nine Atoms</h2>
+<p>Values of these types are immutable:</p>
+<a name="serialiable"></a>
+<h3>Serialiable</h3>
+<ul>
+<li><code>Null Bool</code></li>
+<li><code>Int Float</code></li>
+<li><code>Str</code>
+<ul>
+<li>The only type shared between OSH and YSH.</li>
+</ul>
+</li>
+</ul>
+<a name="more"></a>
+<h3>More</h3>
+<ul>
+<li><code>Eggex Match</code> - to match patterns</li>
+<li><code>Range</code> - to iterate over <code>3 .. 5</code></li>
+<li><code>Stdin</code> - to iterate over lines (has a singleton value)</li>
+</ul>
+
+
+<a name="six-containers"></a>
+<h2>Six Containers</h2>
+<ul>
+<li><code>List Dict</code> - YSH containers are arbitrarily recursive</li>
+<li><code>Place</code> is for &quot;out parmas&quot;
+<ul>
+<li>created with <code>&amp;myvar</code>, mutated with <code>call place-&gt;setValue(42)</code></li>
+</ul>
+</li>
+<li><code>BashArray BashAssoc</code> are for bash compatibility in OSH:</li>
+</ul>
+<a name="obj-is-for-user-defined-types"></a>
+<h3><code>Obj</code> is for User-defined Types</h3>
+<ul>
+<li><code>Obj</code> - has a prototype chain</li>
+</ul>
+<p>Objects allow <strong>polymorphism</strong>.  See <a href="objects.html">YSH Objects</a>.</p>
+<a name="examples-of-objects"></a>
+<h4>Examples of Objects</h4>
+<p>Modules and types are represented by <code>Obj</code> instances of a certain shape, not by
+primitive types.</p>
+<ol>
+<li>Modules are <code>Obj</code> instances with attributes, and an <code>__invoke__</code> method.</li>
+<li>Types are <code>Obj</code> instances with an <code>__index__</code> method, and are often compared
+for identity.</li>
+</ol>
+<p>In general, Objects are mutable.  Do not mutate modules or types!</p>
+<a name="five-units-of-code"></a>
+<h2>Five Units of Code</h2>
+<p>Values of these types are immutable:</p>
+<ul>
+<li><code>BoundFunc</code> (for methods)</li>
+<li><code>BuiltinFunc Func</code></li>
+<li><code>BuiltinProc Proc</code></li>
+</ul>
+<a name="four-types-for-reflection"></a>
+<h2>Four Types for Reflection</h2>
+<ul>
+<li><code>Command Expr</code> - custom evaluation of commands and expressions </li>
+<li><code>Frame</code> - a frame on the call stack (<code>proc</code> and <code>func</code>)</li>
+<li><code>DebugFrame</code> - to trace <code>eval()</code> calls, and more</li>
+</ul>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="the-json-data-model"></a>
+<h3>The JSON Data Model</h3>
+<p>These types can be serialized to and from JSON:</p>
+<ul>
+<li><code>Null Str Int Float List Dict</code></li>
+</ul>
+<a name="why-isnt-everything-an-object"></a>
+<h3>Why Isn't Everything an Object?</h3>
+<p>In YSH, the <code>Obj</code> type is used for <strong>polymorphism</strong> and reflection.</p>
+<p>Polymorphism is when you hide <strong>different</strong> kinds of data behind the <strong>same</strong>
+interface.</p>
+<p>But most shell scripts deal with <strong>concrete</strong> textual data, which may be
+JSON-like or TSV-like.  The data is <strong>not</strong> hidden or encapsulated, and
+shouldn't be.</p>
+<a name="implementation-details"></a>
+<h3>Implementation Details</h3>
+<p>These types used internally:</p>
+<ul>
+<li><code>value.Undef</code> - used when looking up a variable</li>
+<li><code>value.Interrupted</code> - for SIGINT</li>
+<li><code>value.Slice</code> - for a[1:2]</li>
+</ul>
+<a name="related"></a>
+<h3>Related</h3>
+<ul>
+<li><a href="ref/chap-type-method.html">Types and Methods</a> in the <a href="ref/index.html">Oils
+Reference</a></li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/core/value.asdl">core/value.asdl</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

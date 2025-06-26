@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FAQ on Documentation</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/faq-doc.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>FAQ on Documentation</h1>
+<p>Start here if you can't find something!</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#how-are-the-docs-organized">How are the docs organized?</a></div>
+  <div class="toclevel1"><a href="#where-do-i-find">Where do I find ...</a></div>
+  <div class="toclevel2"><a href="#a-list-of-all-shell-builtins">A list of all shell builtins?</a></div>
+  <div class="toclevel2"><a href="#a-list-of-all-ysh-functions">A list of all YSH functions?</a></div>
+  <div class="toclevel2"><a href="#a-list-of-all-operators">A list of all operators?</a></div>
+  <div class="toclevel1"><a href="#i-still-cant-find-what-im-looking-for">I still can't find what I'm looking for.</a></div>
+</div>
+<a name="how-are-the-docs-organized"></a>
+<h2>How are the docs organized?</h2>
+<p>Every release is published at <a href="../index.html">/release/$VERSION/</a>.  As of 2024,
+it links to 2 starting points:</p>
+<ol>
+<li><a href="published.html"><strong>Published Docs</strong></a> shows docs that are ready to read.
+Examples:
+<ul>
+<li><a href="simple-word-eval.html">Simple Word Evaluation in Unix Shell</a></li>
+<li><a href="error-handling.html">YSH Fixes Shell's Error Handling</a></li>
+</ul>
+</li>
+<li><a href="index.html"><strong>All Docs</strong></a> shows all docs.</li>
+</ol>
+<p>The <strong>Oils Reference</strong> at <a href="ref/index.html">/release/$VERSION/doc/ref/</a> is still
+in progress.</p>
+<p>Outside of the release tree:</p>
+<ul>
+<li><a href="https://www.oilshell.org/blog/">The blog</a> has useful background info.  Older
+posts are more likely to have incorrect information.</li>
+<li><a href="https://www.oilshell.org/">The home page</a> has links to docs for new users.</li>
+</ul>
+<a name="where-do-i-find"></a>
+<h2>Where do I find ...</h2>
+<a name="a-list-of-all-shell-builtins"></a>
+<h3>A list of all shell builtins?</h3>
+<p>See the <a href="ref/chap-builtin-cmd.html">Chapter on Builtin Commands</a> in the reference.</p>
+<a name="a-list-of-all-ysh-functions"></a>
+<h3>A list of all YSH functions?</h3>
+<p>See the <a href="ref/chap-builtin-func.html">Chapter on Builtin Functions</a> in the reference.</p>
+<a name="a-list-of-all-operators"></a>
+<h3>A list of all operators?</h3>
+<p>They are split between the &quot;sublanguages&quot; of OSH and YSH:</p>
+<ul>
+<li><a href="ref/chap-expr-lang.html">Expression Language</a> for the YSH expression
+language</li>
+<li><a href="ref/chap-word-lang.html">Word Language</a> for <code>${x}</code> and so forth</li>
+<li><a href="ref/chap-mini-lang.html">Mini Languages</a> for other shell sublanguages.</li>
+</ul>
+<a name="i-still-cant-find-what-im-looking-for"></a>
+<h2>I still can't find what I'm looking for.</h2>
+<p>Please send feedback on Github or Zulip: <a href="https://github.com/oilshell/oil/wiki/Where-To-Send-Feedback">Where To Send
+Feedback</a>.</p>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

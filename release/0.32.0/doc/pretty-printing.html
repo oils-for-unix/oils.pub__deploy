@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Up to 4 Pretty Printers?</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/pretty-printing.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Up to 4 Pretty Printers?</h1>
+<p><em>(March 2024)</em></p>
+<p>Oils <strong>parses</strong> a lot of text, and it's becoming apparent than we need a
+<strong>print</strong> a lot too!  The text should be nicely formatted because a shell is a
+user interface.</p>
+<p>This doc describes 4 possible pretty printers in Oils.  Traditional shells
+don't have appear to have any pretty printing.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#screenshots">Screenshots</a></div>
+  <div class="toclevel1"><a href="#background-go-fmt-style-versus-ppl-style">Background - <code>go fmt</code> style versus PPL style</a></div>
+  <div class="toclevel2"><a href="#why-ppl-style">Why PPL style?</a></div>
+  <div class="toclevel2"><a href="#warning">Warning</a></div>
+  <div class="toclevel1"><a href="#four-printers-what-and-why">Four Printers - What and Why?</a></div>
+  <div class="toclevel2"><a href="#print-ysh-data-types-in-a-json-like-format">Print YSH data types in a JSON-like format</a></div>
+  <div class="toclevel2"><a href="#replace-our-ad-hoc-zephyr-asdl-pretty-printer">Replace our ad hoc Zephyr ASDL pretty printer</a></div>
+  <div class="toclevel2"><a href="#osh-ysh-code-formatter">OSH-YSH Code Formatter</a></div>
+  <div class="toclevel2"><a href="#experimental-export-the-oils-syntax-graph-to-users-with-nil8">Experimental: Export the Oils &quot;Syntax Graph&quot; to Users with &quot;NIL8&quot;</a></div>
+  <div class="toclevel1"><a href="#implementation-notes">Implementation Notes</a></div>
+  <div class="toclevel2"><a href="#do-the-printers-depend-on-each-other">Do the printers depend on each other?</a></div>
+  <div class="toclevel2"><a href="#code-skeleton">Code Skeleton</a></div>
+  <div class="toclevel1"><a href="#design-questions">Design Questions</a></div>
+  <div class="toclevel2"><a href="#non-wrapping-printers-aka-indenters-same-ppl-ir">Non-Wrapping Printers aka &quot;Indenters&quot; - same PPL IR?</a></div>
+  <div class="toclevel2"><a href="#columnar-layouts-spending-more-time">Columnar Layouts (spending more time)</a></div>
+  <div class="toclevel2"><a href="#two-levels-of-coarse-parsing-for-ysh-not-at-first">Two Levels of Coarse Parsing for YSH?  (not at first)</a></div>
+  <div class="toclevel2"><a href="#nil8-uses-cases-for-both-code-and-data">NIL8 - Uses cases for both Code and Data</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+  <div class="toclevel2"><a href="#docs">Docs</a></div>
+  <div class="toclevel2"><a href="#fun-computer-science-problems-in-oils">Fun Computer Science Problems in Oils</a></div>
+  <div class="toclevel1"><a href="#appendix-older-notes">Appendix: Older Notes</a></div>
+  <div class="toclevel2"><a href="#dynamically-typed-ysh-data-value_t">Dynamically Typed YSH Data (<code>value_t</code>)</a></div>
+  <div class="toclevel2"><a href="#statically-typed-asdl-data">Statically Typed ASDL Data</a></div>
+</div> 
+<a name="screenshots"></a>
+<h2>Screenshots</h2>
+<p>Let's be concrete first, because there's a lot of brainstorming below.</p>
+<p><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> prints its JSON-like data structures with the <code>=</code> keyword, which
+takes a Python-like expression on the right:</p>
+<p><img src="https://app.oilshell.org/picdir/resize?name=14qke97__ysh-issues.png&amp;max-width=600" alt="ysh issues.json" /></p>
+<p>Right now, it looks bad on big data structures.  It should look something like
+<code>nodejs</code> or <code>jq</code>:</p>
+<p><img src="https://app.oilshell.org/picdir/resize?name=13b35jj__nodejs-issues.png&amp;max-width=600" alt="node.js issues.json" /></p>
+<p><img src="https://app.oilshell.org/picdir/resize?name=11wsgpm__jq-issues.png&amp;max-width=600" alt="jq issues.json" /></p>
+<p>We may want to omit the quotes, like <code>nodejs</code>.  (This syntax isn't meant to be
+parsed.  <a href="/cross-ref.html?tag=JSON8#JSON8">JSON8</a> may have unquoted dict keys, although it's not
+essential).</p>
+<a name="background-go-fmt-style-versus-ppl-style"></a>
+<h2>Background - <code>go fmt</code> style versus PPL style</h2>
+<p>To back up a bit, I'm writing this doc organize my thoughts, and to explain
+problems and requirements to contributors.</p>
+<p>There are at least two schools of thought on pretty printers, which
+this lobste.rs thread has a good discussion of:</p>
+<ul>
+<li><em>Why is Prettier Rock Solid?</em> <a href="https://lobste.rs/s/aevptj/why_is_prettier_rock_solid">https://lobste.rs/s/aevptj/why_is_prettier_rock_solid</a>
+<ul>
+<li>HN comments: <a href="https://news.ycombinator.com/item?id=39437424">https://news.ycombinator.com/item?id=39437424</a>.  Aside: a top
+comment shows why we don't want to take responsibility for <em>all</em> formatting
+decisions in our OSH-YSH printer!   Users are opinionated.  The JavaScript
+formatter Prettier is criticized for a bug, and for being <strong>slow</strong>.</li>
+</ul>
+</li>
+</ul>
+<p>More comments on a blog post by Justin Pombrio (which I circulated):</p>
+<ul>
+<li><em>A Twist on Wadler's Printer</em>
+<a href="https://lobste.rs/s/1r0aak/twist_on_wadler_s_printer">https://lobste.rs/s/1r0aak/twist_on_wadler_s_printer</a></li>
+</ul>
+<p>Let's call the two styles the &quot;<code>go fmt</code> style&quot; and the &quot;PPL style&quot; (functional
+pretty printing language).</p>
+<p>I was probably &quot;biased&quot; toward <code>go fmt</code>, because the two formatters we actually
+<strong>use</strong> in Oils are influenced by it:</p>
+<ol>
+<li><code>clang-format</code> for our C++ code.
+<ul>
+<li>This is the best formatter I've used.  It's fast, and e.g. does a good job
+on C macros.</li>
+</ul>
+</li>
+<li><code>yapf</code> for our Python code.
+<ul>
+<li>It's intentionally a &quot;clone&quot; for <code>clang-format</code>.  (It's slow, mostly due
+to being written in Python, and creating lots of tiny objects!)</li>
+</ul>
+</li>
+</ol>
+<p>(Details: they have line wrapping algorithms, while <code>go fmt</code> doesn't.  I'm not
+calling them &quot;graph search&quot; printers, because I think of line wrapping as a
+<strong>subproblem</strong> of pretty printing.)</p>
+
+<a name="why-ppl-style"></a>
+<h3>Why PPL style?</h3>
+<p>However, Justin's post helped me understand Wadler's printer, a popular example
+of the PPL style.  This style might have some advantages for Oils:</p>
+<ul>
+<li>There's no user-provided layout for data structures — either
+<a href="/cross-ref.html?tag=YSH#YSH">YSH</a> data or <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">Zephyr ASDL</a> data.  So we need to synthesize a
+layout from scratch.</li>
+<li>We have multiple languages to format, and the PPL style separates <strong>policy</strong>
+(language rules) and <strong>mechanism</strong> (line wrapping).  So we should try a more
+principled architecture, hopefully without sacrificing quality.</li>
+<li>The two styles may not be as distinct as they seem at first.  They may be
+complementary.
+<ul>
+<li>We can probably use a PPL for the <strong>expression subproblem</strong> of the OSH-YSH
+shell formatter.  The rest of the formatter will have rules that <strong>don't</strong>
+have to do with line wrapping (aligning EOL comments like <code>go fmt</code> does,
+etc.)</li>
+<li>I think a <strong>non-wrapping</strong> pretty printer — an &quot;indenter&quot; — can
+use something similar to the PPL IRs.  Notes below.</li>
+</ul>
+</li>
+<li>PPLs <em>could be</em> slower (asymptotically and in practice) than the custom
+algorithms, but I think that can be solved with a simple rule in practice:
+<ol>
+<li>Compute the total size of the data structure/doc up front.</li>
+<li>If it's small, spend extra time to make it look pretty, by using an
+<strong>expressive and slow</strong> PPL.  We can be quadratic or worse, perhaps.  We
+might want <code>node.js</code>-like columnar layout.</li>
+<li>If it's big, use a <strong>simple and fast</strong> PPL subset.</li>
+</ol>
+</li>
+</ul>
+<p>(Does that last idea work?)</p>
+<a name="warning"></a>
+<h3>Warning</h3>
+<p>Sometimes I pile on too many requirements, which I mentioned in the latest
+release announcement:</p>
+<ul>
+<li><a href="https://www.oilshell.org/blog/2024/02/release-0.20.0.html#zulip-why-am-i-working-on-json">Oils 0.20.0 &gt; Why I'm Working on JSON</a></li>
+</ul>
+<p>We should do the simplest things first, and I think the PPL approach will allow
+that.</p>
+<p>BTW there are many threads on <code>#data-languages</code> on <a href="/cross-ref.html?tag=Zulip#Zulip">Zulip</a> where I'm
+brainstorming and learning about pretty printing.</p>
+<a name="four-printers-what-and-why"></a>
+<h2>Four Printers - What and Why?</h2>
+<p>Here's a sketch of what I think we need.  It goes from <strong>concrete</strong> →
+<strong>experimental</strong> and research-y.</p>
+<a name="print-ysh-data-types-in-a-json-like-format"></a>
+<h3>Print YSH data types in a JSON-like format</h3>
+<p><strong>What is it?</strong>  This is the <code>=</code> keyword shown in the screenshots above.  (BTW,
+Lua uses the same syntax <code>=</code> to evaluate expressions.)</p>
+<p><strong>Motivation</strong>: We should look as good as <code>node.js</code> or <code>jq</code>.</p>
+<hr />
+<p>Currently we use our JSON printer with the options <code>SHOW_NON_DATA | SHOW_CYCLES</code>.</p>
+<ul>
+<li><code>SHOW_NOW_DATA</code> prints non-data objects, like <code>&lt;Func 0x123&gt;</code>.  This syntax
+can't be parsed.</li>
+<li><code>SHOW_CYCLES</code> prints cycles with <code>--&gt;</code>, instead of raising an error, like
+JSON does.</li>
+</ul>
+<p>Example:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">var d = {}</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">setvar d.eggex = /dot+/</span>  <span class="sh-comment"># Eggex object</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= d</span>
+(Dict 0x7feb87cb4050)   {&quot;eggex&quot;:&lt;Eggex 0x7feb87dbfd00&gt;}
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">setvar d.cycle = d</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= d</span>
+(Dict 0x7feb87cb4050)   {&quot;eggex&quot;:&lt;Eggex 0x7feb87dbfd00&gt;,&quot;cycle&quot;:{ --&gt; 0x7feb87cb4050 }}
+</code></pre>
+<p>We should <strong>replace</strong> this with a new pretty printer that wraps lines, and has
+<span style="color: darkcyan; font-weight: bold">COLOR</span>.</p>
+<a name="replace-our-ad-hoc-zephyr-asdl-pretty-printer"></a>
+<h3>Replace our ad hoc Zephyr ASDL pretty printer</h3>
+<p><strong>What is it?</strong>  <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">Zephyr ASDL</a> is the statically typed schema language we
+use to implement Oils.  It's &quot;one level down&quot; from the shell.</p>
+<p>We used it to define the syntax of shell with <strong>algebraic data types</strong>.  We
+create a <a href="/cross-ref.html?tag=LST#LST">lossless syntax tree</a>, which is also an <strong>IR</strong> for shell.</p>
+<p><strong>Motivation</strong>: We already wrote an ad hoc pretty printer, and it should be
+replaced!  It tries to fit records on a single line, and if that fails, it uses
+multiple lines.  I think it's slow.</p>
+<p>If we already have a YSH data printer, this printer should &quot;obviously&quot; be
+unified with it.  We should have a nice separation of policy and mechanism.</p>
+<hr />
+<p>Use <code>osh -n myscript.sh</code> to see what it does:</p>
+<p><img src="https://app.oilshell.org/picdir/resize?name=1lwb0bf__osh-n.png&amp;max-width=600" alt="osh -n" /></p>
+<p>Notes:</p>
+<ul>
+<li>The algorithm is in <a href="https://github.com/oils-for-unix/oils/blob/master/asdl/format.py">asdl/format.py</a>, and the &quot;homogeneous IR&quot; is
+in <a href="https://github.com/oils-for-unix/oils/blob/master/asdl/hnode.asdl">asdl/hnode.asdl</a>.
+<ul>
+<li>Each generated class definition has a <code>PrettyTree()</code> method, which converts
+the <strong>typed</strong> <code>self</code> or <code>this</code> to the homogeneous <code>hnode</code> tree.</li>
+<li><code>AbbreviatedTree()</code> is a bit like the <strong>modular</strong> printers discussed in the
+<code>lobste.rs</code> thread.  It makes certain common data structures more
+readable, with type-specific logic.  It's in Python only — can that
+logic also be in C++?</li>
+<li>The syntax tree is actually a <strong>graph</strong>, and I recently added logic to
+<strong>omit duplicate</strong> nodes.  This is unlike the JSON printer, which prints
+duplicate nodes, as Python and node.js do.</li>
+</ul>
+</li>
+<li>The slowness hasn't really mattered, because this format isn't exposed to
+users.  It's only for <strong>debugging</strong> Oils itself.  But it's useful, and we may
+want to expose it.</li>
+<li>Also used in <code>pp asdl (obj)</code>, another debugging feature.</li>
+<li>TODO: Add a simple benchmark?  The new printer will probably be faster than
+the old one.
+<ul>
+<li><code>osh -n benchmarks/testdata/configure-coreutils</code> tests a huge shell file</li>
+</ul>
+</li>
+</ul>
+
+<a name="osh-ysh-code-formatter"></a>
+<h3>OSH-YSH Code Formatter</h3>
+<p><strong>What is it?</strong> A formatter for shell code.  I think it's more essential to
+have a <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> formatter, but an <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> formatter is also possible.
+They both use the same <a href="/cross-ref.html?tag=LST#LST">lossless syntax tree</a>.</p>
+<p><strong>Motivation</strong> - Formatters make a new language easier to use, and there are
+many users who don't know shell well.</p>
+<p>For example, I don't know TypeScript well, and I had a good experience with
+<code>deno fmt</code>.  It reduced the <strong>mental load</strong> of adopting a new tool.</p>
+<hr />
+<p>Justin had a nice idea on on <code>lobste.rs</code> - we should create <strong>coarse tree</strong>
+with these elements:</p>
+<ul>
+<li><code>{ }</code> affect indentation in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>
+<ul>
+<li>In <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, we should also understand <code>then elif else fi</code>, <code>do done</code>,
+etc.</li>
+</ul>
+</li>
+<li><code>( )</code> in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> changes the lexer from <a href="command-vs-expression-mode.html">command mode to expression
+mode</a></li>
+<li><strong>Newlines</strong> can't appear in atomic <code>text()</code> / chunks</li>
+<li>Comments need to be preserved at the end of lines
+<ul>
+<li>They may also be aligned on consecutive lines (with heuristics)</li>
+</ul>
+</li>
+<li>Keywords like <code>while for if</code> begin blocks of code</li>
+</ul>
+<p>Why?  We don't don't want to take responsibility for every formatting decision!</p>
+<p>I actually think the command mode / statement formatter should be
+<strong>non-wrapping</strong>, while expressions can wrap.  Commands will likely be more
+common than expressions in most YSH code.</p>
+<hr />
+<p>The formatter will be invoked with <code>ysh --tool format myfile.ysh</code>.</p>
+<p>It can also be used with the output of <code>osh --tool ysh-ify</code>, which roughly
+translates <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> to <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> (doesn't preserve semantics).  This may
+help generate <strong>test data</strong>, since there's plenty of shell code in the wild,
+but not much <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> code.</p>
+<a name="experimental-export-the-oils-syntax-graph-to-users-with-nil8"></a>
+<h3>Experimental: Export the Oils &quot;Syntax Graph&quot; to Users with &quot;NIL8&quot;</h3>
+<p><strong>What is it?</strong> A more human AND machine-readable format for the syntax tree,
+which is actually a <strong>graph</strong>.</p>
+<p><strong>Motivation</strong>: The pretty-printed AST could be a <strong>parseable</strong> format.  Allow
+users to reuse all the hard work we did <a href="/blog/tags.html?tag=parsing-shell#parsing-shell">parsing
+shell</a>!</p>
+<hr />
+<p>Printing raw <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> data is useful, but it could be more readable with custom
+logic to print the natural <strong>layers</strong> of the graph.  There are 4 logical layers
+in <a href="https://github.com/oils-for-unix/oils/blob/master/frontend/syntax.asdl">frontend/syntax.asdl</a>:</p>
+<ol>
+<li><code>source_t</code> describes whether shell code comes from <code>foo.sh</code> or <code>ysh -c 'echo mycode'</code></li>
+<li><code>SourceLine</code> represents physical lines of code</li>
+<li><code>Token</code> refers to portions of lines</li>
+<li>The syntax tree of <code>command_t word_t word_part_t expr_t</code>.  The leaves are
+tokens.</li>
+</ol>
+<p>And instead of a pretty format meant for humans, we may want to print an
+s-expression-like format I'm calling <strong>&quot;NIL8&quot;</strong>.</p>
+<p>NIL8 can be parsed.  You may want to write tree-shaking code to deploy
+<a href="/cross-ref.html?tag=YSH#YSH">YSH</a> into containers.</p>
+<p>More on NIL8 below.  Again, it's experimental.</p>
+<a name="implementation-notes"></a>
+<h2>Implementation Notes</h2>
+<a name="do-the-printers-depend-on-each-other"></a>
+<h3>Do the printers depend on each other?</h3>
+<ul>
+<li>The <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> printer (1) naturally comes before the <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> printer (2).</li>
+<li>The code formatter (3) is concrete and useful to end users.</li>
+<li>The NIL8 printer (4) comes after the <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> printer (2), but it's experimental.
+<ul>
+<li>It depends on a bunch of other work in Oils/YSH.</li>
+</ul>
+</li>
+</ul>
+<p>Risks:</p>
+<ul>
+<li>No real risks for (1) and (2)
+<ul>
+<li>They're &quot;engineering&quot; — Justin's blog post is very close!  It could
+be ported almost literally to typed Python.  It will translate
+automatically to C++.  (And it would be interesting to compare our
+garbage-collected C++ with Rust's <code>Rc&lt;T&gt;</code>)</li>
+<li><a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> involves code generation in both Python and C++.  We have a custom
+build system for this (using Ninja for C++).</li>
+</ul>
+</li>
+<li>The OSH/YSH formatter has non-trivial decisions
+<ul>
+<li>End-of-line comments.  (Shell doesn't have block comments, which simplifies
+things.)</li>
+<li>Multi-line strings in YSH have a special rule -- the indentation of the
+closing <code>'''</code> is significant</li>
+<li>Shell here docs may be tricky</li>
+<li>This formatter probably requires the most &quot;elbow grease&quot;.  This is why I
+said that the statement formatter should initially be <strong>non-wrapping</strong> —
+it reduces the scope of the problem.</li>
+</ul>
+</li>
+</ul>
+<a name="code-skeleton"></a>
+<h3>Code Skeleton</h3>
+<p>I added some stubs in the code:</p>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/data_lang/pretty.asdl">data_lang/pretty.asdl</a> - How we would express the IR</li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/data_lang/pretty.py">data_lang/pretty.py</a> - YSH conversion.</li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/data_lang/pretty-benchmark.sh">data_lang/pretty-benchmark.sh</a> - Our naive ASDL pretty printer is
+slow.  It can take more than 3 seconds on a big file, vs. ~100ms to parse it.
+(It does print over 100 MB of text though.)</li>
+</ul>
+<p>To generate Python code from the ASDL schema, run <code>build/py.sh all</code>.
+Otherwise, Oils is a plain Python 2 program, with a few C extensions.</p>
+<p>C++ translation is a separate step, and it's now pretty polished.</p>
+<p>For new contributors:</p>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/Contributing">Contributing</a> on the wiki</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Where-Contributors-Have-Problems">Where Contributors Have Problems</a></li>
+</ul>
+<p>There is also a stub for the formatter:</p>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/tools/fmt.py">tools/fmt.py</a> - Stub file for the formatter.
+<ul>
+<li>Code copied from <a href="https://github.com/oils-for-unix/oils/blob/master/tools/ysh_ify.py">tools/ysh_ify.py</a>.</li>
+</ul>
+</li>
+</ul>
+<a name="design-questions"></a>
+<h2>Design Questions</h2>
+<p>This section has some less concrete thoughts.</p>
+<a name="non-wrapping-printers-aka-indenters-same-ppl-ir"></a>
+<h3>Non-Wrapping Printers aka &quot;Indenters&quot; - same PPL IR?</h3>
+<p>I think the PPL IRs are also useful if you're not line wrapping?  You can just
+fix indentation.</p>
+<a name="columnar-layouts-spending-more-time"></a>
+<h3>Columnar Layouts (spending more time)</h3>
+<p><code>nodejs</code> does this in its <code>console.log()</code>.</p>
+<p><img src="https://app.oilshell.org/picdir/resize?name=uscdu6__python-nodejs.png&amp;max-width=600" alt="python node.js" /></p>
+<p>Future work?  We should get the basic pretty printer working first.</p>
+<a name="two-levels-of-coarse-parsing-for-ysh-not-at-first"></a>
+<h3>Two Levels of Coarse Parsing for YSH?  (not at first)</h3>
+<p>Making the coarse tree has some similarity to syntax highlighting.  I wrote a
+simple syntax highlighter for 5+ languages called <code>micro-syntax</code>, and it should
+support <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> too.</p>
+<p>Sketch:</p>
+<ol>
+<li>First make the <strong>really coarse tree</strong>, something like: <code>Comment | Code | StringLiteral</code></li>
+<li>Then make a <strong>less coarse</strong> tree for pretty printing:
+<ul>
+<li>Lex code into <code>{} ()</code></li>
+<li>Categorize comments into <code>EndLineComment</code> | <code>BeginLineComment</code></li>
+</ul>
+</li>
+</ol>
+<p>Then do a trivial linear pass to fix up indentation.  The <code>{ }</code> or <code>do done</code>
+tokens determine indentation.</p>
+<hr />
+<p>Though honestly it's probably better to just <strong>reuse</strong> our elaborate parser at
+first.  I like to &quot;compress&quot; different algorithms together, but it may not be
+worth it here.</p>
+<a name="nil8-uses-cases-for-both-code-and-data"></a>
+<h3>NIL8 - Uses cases for both Code and Data</h3>
+<p>What is &quot;NIL8&quot;?  We don't know if it's a good idea yet, but it may be part of
+<a href="j8-notation.html">J8 Notation</a>.</p>
+<p>Think:</p>
+<ul>
+<li>A mash-up of <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> and S-expressions
+<ul>
+<li><em>NIL8 Isn't Lisp</em></li>
+<li><em>Narrow Intermediate Language</em></li>
+</ul>
+</li>
+<li>WebAssembly text format
+<ul>
+<li>An IR for an <strong>imperative</strong> language, with a Lisp-y syntax.</li>
+</ul>
+</li>
+<li>An <strong>exterior</strong> S-expression format
+<ul>
+<li>Blog: <a href="https://www.oilshell.org/blog/2023/06/ysh-design.html">Oils is Exterior-First</a></li>
+<li>I posted POSE (portable s-expressions) on lobste.rs for this reason:
+<a href="https://lobste.rs/s/lwf4jv/pose_portable_s_expressions_pose_spec">https://lobste.rs/s/lwf4jv/pose_portable_s_expressions_pose_spec</a> (no
+comments)</li>
+</ul>
+</li>
+</ul>
+<p>If NIL8 can represent both the <a href="/cross-ref.html?tag=LST#LST">lossless syntax tree</a> and a new IR
+for a <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a> rewrite (&quot;yaks&quot;), that's a good test of the design.</p>
+<p>Note that the AST is a <strong>statically typed</strong> data structure, which means we may
+also want to export the <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> <strong>schema</strong> as NIL8!</p>
+<p>Links:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/stream/403584-data-languages/topic/NIL8.20Infix.20Rule">#data-languages &gt; NIL8 Infix Rule</a></li>
+<li><a href="https://github.com/oilshell/oil/commit/b9cecf88838d4c89ce1dbd8f4bcdd8e92e10d442">Commit describing infix rule</a></li>
+</ul>
+<p>At a high level, we're trying to nudge users toward a <strong>small</strong> set of syntaxes
+for shell-like programming, rather than inventing ad hoc syntax every time.
+String literals are a pain point: people often implement them badly, or not at
+all.</p>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>I think we should have shared infrastructure for 3 printers:</p>
+<ol>
+<li><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> data structures</li>
+<li><a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> data structures</li>
+<li><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> code</li>
+</ol>
+<p>And then there's this idea of &quot;replacing&quot; or rationalizing the <a href="/cross-ref.html?tag=zephyr-asdl#zephyr-asdl">ASDL</a> syntax
+tree with &quot;NIL8&quot;:</p>
+<ul>
+<li>It can be parsed, not just printed.
+<ul>
+<li>To parse, you can reuse an existing <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> string lexer.  IMO, this
+is the fiddliest part of parsing.</li>
+</ul>
+</li>
+<li>It can export a graph shape, in natural &quot;layers&quot;.</li>
+</ul>
+<a name="related"></a>
+<h2>Related</h2>
+<a name="docs"></a>
+<h3>Docs</h3>
+<ul>
+<li><a href="parser-architecture.html">Parser Architecture</a> - describes issues like the
+<strong>&quot;lossless invariant&quot;</strong>, which is affected by <em>re-parsing</em>.
+<ul>
+<li>I recently updated it, and tested the invariant with
+<a href="https://github.com/oils-for-unix/oils/blob/master/test/lossless.sh">test/lossless.sh</a>.</li>
+</ul>
+</li>
+<li>The repo <a href="//oils.pub/release/latest/doc/oils-repo/README.html">README</a> has an overview of the
+code.</li>
+</ul>
+<a name="fun-computer-science-problems-in-oils"></a>
+<h3>Fun Computer Science Problems in Oils</h3>
+<p>Pretty printing is adjacent to other fun problems in Oils, like GC performance,
+&quot;boxless&quot; optimization, etc.</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/stream/417617-help-wanted/topic/Fun.20Computer.20Science.20Problems">#help-wanted &gt; Fun Computer Science Problems</a></li>
+</ul>
+<p>Things to think about:</p>
+<p>(1) Unified Code Representation for Oils</p>
+<p>We want to pack all these tools into Oils:</p>
+<ul>
+<li>The interpreter, for <strong>execution</strong>
+<ul>
+<li>prints precise errors, ignores comment tokens</li>
+</ul>
+</li>
+<li><code>ysh-ify</code> - a VERY rough <strong>translation</strong> of <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> to <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>
+<ul>
+<li>doesn't respect semantics, because you really need static types for that</li>
+<li>uses &quot;span ID&quot;</li>
+</ul>
+</li>
+<li><strong>Pretty Printing</strong> (this doc)
+<ul>
+<li>will also use &quot;span ID&quot; to detect comment positions, I think</li>
+</ul>
+</li>
+<li>Syntax <strong>highlighting</strong>
+<ul>
+<li>Interactive highlighting will help users learn the language</li>
+<li>It's <strong>recursive</strong>, because sublanguages are mutually recursive: string
+literals, commands, expressions</li>
+</ul>
+</li>
+</ul>
+<p>Related: Retrospective on the Go <code>ast</code> package.</p>
+<p>(2) Yaks - <em>mycpp from the bottom up</em></p>
+<p>NIL8 leads into <strong>&quot;Yaks&quot;</strong>, which is an IR for garbage collected C++.</p>
+<ul>
+<li>Yaks is of course a big yak shave, but it's <strong>concrete</strong> because we recently
+<strong>completed</strong> the translation with <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a>.  (mycpp is a crappy
+program which produces good results!)</li>
+</ul>
+<p>(3) Pretty printing will cause many small <strong>allocations</strong>.</p>
+<p>I think that naive implementations should be fast enough.  If not, any slowness
+may be due to allocation, not necessarily the pretty printing algorithm itself.</p>
+<p>Some solutions:</p>
+<ul>
+<li>We want to move towards a <strong>tagged pointer</strong> runtime, an ambitious
+transformation of the entire interpreter.
+<ul>
+<li>But we'll do it in steps.  First step: Small String Optimization.</li>
+<li>Yaks goes along with a tagged pointer runtime.  Yaks also has a principled
+IR, which may be represented with many small objects.</li>
+</ul>
+</li>
+<li>GC rooting optimization should give a speed boost</li>
+</ul>
+<a name="appendix-older-notes"></a>
+<h2>Appendix: Older Notes</h2>
+<p>This is about ref counting for printing <strong>graph-shaped</strong> data.</p>
+<p>I no longer think this is as important.  I think we should <strong>manually</strong>
+construct 4 layers of the graph, as described in the section on formatter (4).</p>
+<a name="dynamically-typed-ysh-data-value_t"></a>
+<h3>Dynamically Typed YSH Data (<code>value_t</code>)</h3>
+<p>Similar to JSON / JSON8 printing, except we</p>
+<ol>
+<li>count references, and then print <code>...</code> instead of repeating</li>
+<li>line wrap</li>
+<li>assign colors
+<ul>
+<li>for atoms, and possibly for balanced parens, to make it more readable</li>
+</ul>
+</li>
+</ol>
+<a name="step-1-count-references"></a>
+<h4>Step 1: Count References</h4>
+<p>This is a global pass that computes a Dict[int, int]</p>
+<pre><code>object ID -&gt; number of times referenced in the graph
+</code></pre>
+<p>The graph is specified by single root node, e.g. the argument to</p>
+<pre><code>pp value (obj)
+</code></pre>
+<p>Pass this dict into the second step.</p>
+<a name="step-2-convert-to-homogeneous-representation"></a>
+<h4>Step 2: Convert To Homogeneous Representation</h4>
+<pre><code>value.List   -&gt; hnode.Compound with []
+value.Dict   -&gt; hnode.Compound with {}
+
+null, true, false -&gt; Atom
+Cycle detected -&gt; Atom, with { --&gt; 4beef2 }
+                             [ --&gt; 4beef2 ]
+</code></pre>
+<p>Repetition:</p>
+<pre><code>{ key: { ... 4beef2 }, key2: { ... 4beef2 }
+</code></pre>
+<p>Or maybe omit the type, since strings don't have that:</p>
+<pre><code>{ key: ... 4beef2, key2: ... 4beef2 }
+</code></pre>
+<a name="hnode-schema"></a>
+<h4>hnode Schema</h4>
+<p>The schema looks like this now?</p>
+<pre><code>hnode = 
+  Atom(str s, color color) - # External objects can use this?
+| Compound(hnode* items)
+</code></pre>
+<p>The length of 'str s' is the input to line wrapping.</p>
+<a name="step-3-figure-out-whats-on-each-line"></a>
+<h4>Step 3: Figure out what's on each line</h4>
+<p>TODO: what's the heuristic here?  Is it global?</p>
+<p>Dynamic programming?</p>
+<p>do we insert hnode.Newline() or something?</p>
+<a name="statically-typed-asdl-data"></a>
+<h3>Statically Typed ASDL Data</h3>
+<p>Reduce it to the case above.</p>
+<a name="step-1-ref-counting-cycle-detection"></a>
+<h4>Step 1 - Ref Counting / Cycle Detection?</h4>
+<p>We do this all at once?</p>
+<p>Because to convert to value.Record, you have to do cycle detection anyway.</p>
+<p>And that's similar to ref counting.</p>
+<a name="step-2-asdl-records-valuerecord"></a>
+<h4>Step 2 - ASDL records -&gt; value.Record</h4>
+<pre><code>value = 
+    ...
+  | Record(str type_name, Dict[str, value_t] fields)
+</code></pre>
+<p>The special &quot;-&quot; key can be used for JSON:</p>
+<pre><code>{&quot;-&quot;: &quot;command.Simple, &quot;name&quot;: &quot;hi&quot;}
+</code></pre>
+<p>Though this loses some information, and it doesn't solve the problem with
+shared references.  We would need Packle for that.</p>
+<a name="step-2a-optional-abbreviation"></a>
+<h4>Step 2a: Optional Abbreviation?</h4>
+<p>Is this separate?  Or part of step 2.</p>
+<p>We need something between value.Record and hnode.Compound
+to do ABBREVIATION:</p>
+<ul>
+<li>Abbreviate type name, or omit it</li>
+<li>Omit some field names (requires schema to record it)</li>
+<li>Change () to &lt;&gt;</li>
+</ul>
+<p>Also need nodes for</p>
+<ul>
+<li><code>...</code> means already printed</li>
+<li><code>---</code> means CANNOT print, because it's a cycle</li>
+<li><code>@1f23</code> - ID if already printed, or in a cycle</li>
+</ul>
+<a name="steps-3-and-4-homogeneous-representation-line-wrapping"></a>
+<h4>Steps 3 and 4 - Homogeneous Representation, Line Wrapping</h4>
+<p>Identical to the dynamically typed case above.</p>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

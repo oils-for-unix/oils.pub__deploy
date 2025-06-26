@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OSH Quirks</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/quirks.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.33.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>OSH Quirks</h1>
+<p>This document describes corner cases in OSH.</p>
+<p>Related: <a href="known-differences.html">Known Differences</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#for-bash-compatibility">For Bash Compatibility</a></div>
+  <div class="toclevel2"><a href="#the-meaning-of-on-the-rhs">The meaning of <code>()</code> on the RHS</a></div>
+  <div class="toclevel1"><a href="#interactive-shell">Interactive Shell</a></div>
+  <div class="toclevel2"><a href="#with-job-control-the-debug-trap-is-disabled-for-the-last-part-of-a-pipeline">With job control, the DEBUG trap is disabled for the last part of a pipeline</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="for-bash-compatibility"></a>
+<h2>For Bash Compatibility</h2>
+<a name="the-meaning-of-on-the-rhs"></a>
+<h3>The meaning of <code>()</code> on the RHS</h3>
+<p>In Oils, <strong>values</strong> are tagged with types like <code>Str</code> and <code>AssocArray</code>, as
+opposed to the <em>locations</em> of values (cells).  The construct <code>()</code> on the RHS
+generates an instance of a distinct type <code>InitializerList</code>, which modifies the
+content of the LHS that it is assigned to.</p>
+<p>This statement binds an empty indexed array to the name <code>x</code>:</p>
+<pre><code>x=()  <span class="sh-comment"># indexed by integers</span>
+</code></pre>
+<p>This clears the content of the associative array.</p>
+<pre><code>declare -A x=()  <span class="sh-comment"># indexed by strings, because of -A</span>
+</code></pre>
+<p>These assign elements.</p>
+<pre><code>declare -a x=(one two)  <span class="sh-comment"># set elements</span>
+declare -a x=(['k']=v)  <span class="sh-comment"># set an element to the index $((k))</span>
+declare -A x=(['k']=v)  <span class="sh-comment"># set an element to the key 'k'</span>
+</code></pre>
+<p>This is not supported:</p>
+<pre><code>declare -A x=(key value)  <span class="sh-comment"># Error in osh</span>
+</code></pre>
+<p>When the variable does not exist and a type is not specified, the assignment
+creates an indexed array and applies the <code>InitializerList</code> to the created
+array.</p>
+<pre><code>declare x=(one two)  <span class="sh-comment"># creates an indexed array</span>
+declare x=(['k']=v)  <span class="sh-comment"># creates an indexed array</span>
+</code></pre>
+<p><strong>Quirk (osh &lt;= 0.27.0)</strong>: The construct <code>()</code> had an ambiguous type, which was
+either <code>BashArray</code> or <code>BashAssoc</code> depending on its content and the context.
+When it's clear from the context, <code>()</code> meant an empty <strong>associative</strong> array:</p>
+<pre><code>declare -A x=()  <span class="sh-comment"># indexed by strings, because of -A</span>
+</code></pre>
+<p>This was only applied when the array is empty.  Otherwise the type was
+determined by the literal:</p>
+<pre><code>declare x=(one two)  <span class="sh-comment"># indexed array</span>
+declare x=(['k']=v)  <span class="sh-comment"># associative array</span>
+</code></pre>
+<p>These were redundant but OK:</p>
+<pre><code>declare -a x=(one two)  <span class="sh-comment"># indexed array</span>
+declare -A x=(['k']=v)  <span class="sh-comment"># associative array</span>
+</code></pre>
+<p>These produced errors:</p>
+<pre><code>declare -A x=(one two)  <span class="sh-comment"># inconsistent</span>
+declare -a x=(['k']=v)  <span class="sh-comment"># inconsistent</span>
+</code></pre>
+<a name="interactive-shell"></a>
+<h2>Interactive Shell</h2>
+<a name="with-job-control-the-debug-trap-is-disabled-for-the-last-part-of-a-pipeline"></a>
+<h3>With job control, the DEBUG trap is disabled for the last part of a pipeline</h3>
+<p>First, some background.  These two shell features are fundamentally
+incompatible:</p>
+<ul>
+<li>Job control: e.g. putting a pipeline in a process group, so it can be
+suspended and cancelled all at once.</li>
+<li><code>shopt -s lastpipe</code> semantics: the last part of a pipeline can (sometimes) be
+run in the current shell.
+<ul>
+<li><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> uses it by default because it makes <code>echo hi | read myvar</code> work.  So
+<a href="/cross-ref.html?tag=OSH#OSH">OSH</a> is like <a href="/cross-ref.html?tag=zsh#zsh">zsh</a>, but unlike <a href="xref">bash</a>.</li>
+</ul>
+</li>
+</ul>
+<p>As evidence of this incompatibility, note that:</p>
+<ul>
+<li><a href="/cross-ref.html?tag=bash#bash">bash</a> simply ignores the <code>shopt -s lastpipe</code> setting in job control
+shells</li>
+<li><a href="/cross-ref.html?tag=zsh#zsh">zsh</a> doesn't allow you to suspend some pipelines</li>
+</ul>
+<hr />
+<p>Now that we have that background, note that there's is a <strong>third</strong> feature that
+interacts: the <code>DEBUG</code> trap.</p>
+<p><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> emulates the <a href="/cross-ref.html?tag=bash#bash">bash</a> <code>DEBUG</code> trap, which runs before &quot;leaf&quot;
+commands like <code>echo hi</code>, <code>a=b</code>, etc.</p>
+<p>If we run this trap before the last part of a pipeline, <strong>and</strong> that part is
+run in the current shell (<code>lastpipe</code>), then the DEBUG trap makes an existing
+race condition worse.</p>
+<p>For example, in</p>
+<pre><code>echo hi | cat
+</code></pre>
+<p>there's nothing stopping <code>echo hi</code> from finishing before <code>cat</code> is even started,
+which means that <code>cat</code> can't join the process group of the leader.</p>
+<p>So we simply disable the <code>DEBUG</code> trap for the last part of the pipeline, but
+<strong>only</strong> when job control is enabled.  This won't affect debugging batch
+programs.</p>
+<p>Related issues in other shells:</p>
+<ul>
+<li>bash: <a href="https://superuser.com/questions/1084406/chained-pipes-in-bash-throws-operation-not-permitted">https://superuser.com/questions/1084406/chained-pipes-in-bash-throws-operation-not-permitted</a></li>
+<li>fish: <a href="https://github.com/fish-shell/fish-shell/issues/7474">https://github.com/fish-shell/fish-shell/issues/7474</a></li>
+</ul>
+
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li>The doc on <a href="warts.html">warts</a> relates to YSH.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 25 Jun 2025 20:31:31 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH vs. Shell</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-vs-shell.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH vs. Shell</h1>
+<p>This doc may help shell users understand YSH.  If you don't want to read a
+comparison, see <a href="ysh-tour.html">A Tour of YSH</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#ysh-is-stricter-at-parse-time-and-runtime">YSH is Stricter at Parse Time, and Runtime</a></div>
+  <div class="toclevel1"><a href="#three-core-sublanguages-instead-of-4">Three Core Sublanguages, Instead of 4</a></div>
+  <div class="toclevel2"><a href="#python-like-expressions-replace-arith-and-bool">Python-like Expressions Replace Arith and Bool</a></div>
+  <div class="toclevel2"><a href="#command-sublanguage">Command Sublanguage</a></div>
+  <div class="toclevel2"><a href="#word-sublanguage">Word Sublanguage</a></div>
+  <div class="toclevel1"><a href="#runtime">Runtime</a></div>
+  <div class="toclevel2"><a href="#builtin-commands-and-functions">Builtin Commands and Functions</a></div>
+  <div class="toclevel2"><a href="#shell-options-shvar-registers">Shell Options, <code>shvar</code>, Registers</a></div>
+  <div class="toclevel2"><a href="#data-languages-not-ad-hoc-parsing">Data Languages, Not Ad Hoc Parsing</a></div>
+  <div class="toclevel1"><a href="#shell-features-retained">Shell Features Retained</a></div>
+  <div class="toclevel1"><a href="#related-links">Related Links</a></div>
+</div>
+<a name="ysh-is-stricter-at-parse-time-and-runtime"></a>
+<h2>YSH is Stricter at Parse Time, and Runtime</h2>
+<p>OSH and YSH both prefer <a href="https://www.oilshell.org/blog/2016/10/22.html">static
+parsing</a>, so you get syntax
+errors up front.  In shell, syntax errors can occur at runtime.</p>
+<p>At runtime, we have <code>strict_*</code> shell options that handle edge cases.  YSH
+generally fails faster than shell.  They're in the <a href="options.html">option group</a>
+<code>strict:all</code>.</p>
+<a name="three-core-sublanguages-instead-of-4"></a>
+<h2>Three Core Sublanguages, Instead of 4</h2>
+<ul>
+<li>Sublanguages in Bash: Command, Word, Arith, Bool</li>
+<li>Sublanguages in YSH: Command, Word, <strong>Expression</strong></li>
+</ul>
+<p>See the <a href="https://www.oilshell.org/blog/2019/02/07.html#list-of-sublanguages">List of
+Sublanguages</a>
+on the blog.</p>
+<a name="python-like-expressions-replace-arith-and-bool"></a>
+<h3>Python-like Expressions Replace Arith and Bool</h3>
+<p>This means that all these constructs are discouraged in favor of YSH
+expressions:</p>
+<pre><code>[[ $x =~ $pat ]]
+
+x=$(( x + 1 ))
+(( x = x + 1 ))
+let x=x+1
+
+declare -A assoc=(['k1']=v1 ['k2']=v2)
+</code></pre>
+<p>See <a href="idioms.html">YSH vs. Shell Idioms</a> for more rewrites.</p>
+<a name="command-sublanguage"></a>
+<h3>Command Sublanguage</h3>
+<p>Notable differences:</p>
+<p><strong>Curly Braces</strong> <code>{ }</code>, instead of <code>then fi</code> and <code>do done</code>.</p>
+<p><strong>Keywords for Variable Assignment</strong> like <code>var</code>, <code>const</code>, <code>setvar</code>, instead of
+builtins like <code>local</code>, <code>readonly</code>, <code>myvar=foo</code>, etc.</p>
+<p>Array literals like <code>var a = :| ale bean |</code> instead of <code>local a=(ale bean)</code></p>
+<p><strong><a href="proc-func.html">Procs, Funcs, and Blocks</a></strong> for modularity:</p>
+<ul>
+<li>Shell functions are &quot;upgraded&quot; into procs, with typed and named parameters.
+<ul>
+<li>Procs have truly local variables, like Python and JavaScript.  There's no
+<a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a> rule, as with shell functions.</li>
+</ul>
+</li>
+<li>Python-like pure funcs compute on &quot;interior&quot; data.</li>
+<li>Ruby-like blocks enable reflection and metaprogramming.
+<ul>
+<li>Including declarative <a href="hay.html">Hay</a> blocks</li>
+</ul>
+</li>
+</ul>
+<p><strong>Multiline strings</strong> replace here docs.</p>
+<p><code>fork</code> and <code>forkwait</code> <strong>builtins</strong>, instead of <code>&amp;</code> and <code>()</code></p>
+<p>Parentheses are instead used for Python-like expressions, e.g.</p>
+<pre><code>if (x &gt; 0) {
+  echo 'positive'
+}
+</code></pre>
+<a name="word-sublanguage"></a>
+<h3>Word Sublanguage</h3>
+<p>Notable differences:</p>
+<p><a href="simple-word-eval.html">Simple Word Evaluation</a> replaces implicit word
+splitting, and dynamic parsing/evaluation of globs.  It adds splicing of Lists
+into <code>argv</code> arrays.</p>
+<p><strong>Expression substitution</strong> like <code>echo $[42 + a[i]]</code>.</p>
+<p>This includes function calls: <code>echo $[join(['pea', nut'])]</code></p>
+<p>Raw strings can have an <code>r</code> prefix, like <code>echo r'C:\Program Files\'</code>.</p>
+<a name="runtime"></a>
+<h2>Runtime</h2>
+<a name="builtin-commands-and-functions"></a>
+<h3>Builtin Commands and Functions</h3>
+<ul>
+<li>YSH adds long flags to builtin commands, like <code>read --all</code>.</li>
+<li>YSH has builtin functions like <code>join()</code>.</li>
+</ul>
+<a name="shell-options-shvar-registers"></a>
+<h3>Shell Options, <code>shvar</code>, Registers</h3>
+<p>We upgrade bash's <code>shopt</code> mechanism with more options, like <code>shopt --set parse_brace</code>.  These global options are controlled with scope</p>
+<pre><code>shopt --unset errexit {
+  rm /tmp/*
+  rm /etc/*
+}
+</code></pre>
+<p>A <code>shvar</code> is similar to a <code>shopt</code>, but it has a string value, like <code>$IFS</code> and
+<code>$PATH</code>.</p>
+<pre><code>shvar PATH=. {
+  my-command /tmp
+}
+</code></pre>
+<p><strong>Registers</strong> are special variables set by the interpreter, beginning with <code>_</code>:</p>
+<ul>
+<li><code>try</code> sets <code>_error</code> (<code>_error.code</code> preferred over <code>$?</code>)</li>
+<li><code>_pipeline_status</code>, <code>_group()</code>, etc.</li>
+</ul>
+
+<a name="data-languages-not-ad-hoc-parsing"></a>
+<h3>Data Languages, Not Ad Hoc Parsing</h3>
+<p>YSH programs are encouraged to use our JSON-like data languages to serialize
+data.</p>
+<p>For example, using an encoded array like <code>[&quot;one\n&quot;, &quot;two \t three&quot;]</code> results in
+more obviously correct code than using ad hoc delimiters like spaces, commas,
+or colons.</p>
+<a name="shell-features-retained"></a>
+<h2>Shell Features Retained</h2>
+<p>These bash features are still idiomatic in YSH:</p>
+<ul>
+<li>Brace expansion like <code>{alice,bob}@example.com</code></li>
+<li>Process Substitution like <code>diff &lt;(sort left.txt) &lt;(sort right.txt)</code></li>
+</ul>
+<a name="related-links"></a>
+<h2>Related Links</h2>
+<ul>
+<li><a href="idioms.html">YSH vs. Shell Idioms</a> shows example of YSH and shell side by
+side.</li>
+<li><a href="upgrade-breakage.html">What Breaks When You Upgrade to YSH</a>.  These are
+breaking changes.</li>
+<li><a href="ysh-vs-python.html">YSH Expressions vs. Python</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>What Breaks When You Upgrade to YSH</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/upgrade-breakage.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.33.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>What Breaks When You Upgrade to YSH</h1>
+<p>Only a few things break when you put this at the top of a shell script:</p>
+<pre><code>shopt --set ysh:upgrade
+</code></pre>
+<p>This doc enumerates and explains them.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#reasons-for-upgrading">Reasons for Upgrading</a></div>
+  <div class="toclevel1"><a href="#syntax-changes">Syntax Changes</a></div>
+  <div class="toclevel2"><a href="#if-and-while-take-expressions-not-subshell-commands"><code>if ( )</code> and <code>while ( )</code> take expressions, not subshell commands</a></div>
+  <div class="toclevel2"><a href="#is-spliced-command-sub-not-extended-glob"><code>@()</code> is spliced command sub, not extended glob</a></div>
+  <div class="toclevel2"><a href="#rcusers-is-a-raw-string-not-joined-strings"><code>r'c:\Users\'</code> is a raw string, not joined strings</a></div>
+  <div class="toclevel2"><a href="#globs-cant-start-with">globs can't start with <code>[</code></a></div>
+  <div class="toclevel1"><a href="#unsupported">Unsupported</a></div>
+  <div class="toclevel2"><a href="#extended-globs-in-word-evaluation">Extended Globs in Word Evaluation</a></div>
+  <div class="toclevel1"><a href="#more-quotes-may-be-needed">More Quotes May Be Needed</a></div>
+  <div class="toclevel2"><a href="#with-yshupgrade-options">With <code>ysh:upgrade</code> Options</a></div>
+  <div class="toclevel2"><a href="#unconditionally">Unconditionally</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#shell-functions-vs-procs">Shell Functions vs. Procs</a></div>
+  <div class="toclevel2"><a href="#editor-vs-enveditor">$EDITOR vs. ENV.EDITOR</a></div>
+  <div class="toclevel2"><a href="#acknowledgments">Acknowledgments</a></div>
+</div>
+<a name="reasons-for-upgrading"></a>
+<h2>Reasons for Upgrading</h2>
+<p>First, let's emphasize the <strong>good</strong> things that happen when you upgrade:</p>
+<ul>
+<li>You can write <code>if (x &gt; 0)</code> instead of <code>if [ &quot;$x&quot; -gt 0 ]</code>.</li>
+<li>You can pass blocks to commands, like <code>cd /tmp { echo $PWD }</code></li>
+<li><a href="simple-word-eval.html">Simple Word Evaluation</a>: You can write <code>$var</code> instead
+of <code>&quot;$var&quot;</code>, and splice arrays with <code>@myarray</code>.</li>
+<li><a href="error-handling.html">Reliable Error Handling</a> becomes the default.</li>
+<li>... and more</li>
+</ul>
+<p>You can also use <code>bin/osh</code> indefinitely, in which case you don't need to read
+this doc.  <a href="/cross-ref.html?tag=osh-language#osh-language">OSH</a> is a highly compatible Unix shell.</p>
+<a name="syntax-changes"></a>
+<h2>Syntax Changes</h2>
+<p>Now onto the breakages.  Most of them are <strong>unlikely</strong>, but worth noting.</p>
+<a name="if-and-while-take-expressions-not-subshell-commands"></a>
+<h3><code>if ( )</code> and <code>while ( )</code> take expressions, not subshell commands</h3>
+<p>Code like <code>if ( ls /tmp )</code> is valid shell, but it's almost always a misuse of
+the language.  Parentheses mean <strong>subshell</strong>, not grouping as in C or Python.</p>
+<p>In YSH:</p>
+<ul>
+<li>Use <code>if (x &gt; 0)</code> for true/false expressions</li>
+<li>Use the <code>forkwait</code> builtin for subshells, which are uncommon.  (It's like
+invoking the <code>fork</code> builtin, then the <code>wait</code> builtin.)</li>
+</ul>
+<p>No:</p>
+<pre><code>( cd /tmp; rm *.sh )
+</code></pre>
+<p>Yes:</p>
+<pre><code>forkwait {
+  cd /tmp
+  rm *.sh
+}
+</code></pre>
+<p>Better:</p>
+<pre><code>cd /tmp {  <span class="sh-comment"># no process created</span>
+  rm *.sh
+}
+echo $PWD  <span class="sh-comment"># restored</span>
+</code></pre>
+<p>(Option <code>parse_paren</code> is part of group <code>ysh:upgrade</code>.)</p>
+<a name="is-spliced-command-sub-not-extended-glob"></a>
+<h3><code>@()</code> is spliced command sub, not extended glob</h3>
+<p>YSH doesn't have implicit word splitting, so we want <code>@(seq 3)</code> to be
+consistent with <code>$(hostname)</code>.  They're related in the same way that <code>@myarray</code>
+and <code>$mystr</code> are.</p>
+<p>This means that <code>@()</code> is no longer extended glob, and <code>,()</code> is an alias.</p>
+<p>No:</p>
+<pre><code>echo @(*.cc|*.h)
+</code></pre>
+<p>Use this YSH alias instead:</p>
+<pre><code>echo ,(*.cc|*.h)
+</code></pre>
+<p>(Option <code>parse_at</code> is part of group <code>ysh:upgrade</code>.)</p>
+<a name="rcusers-is-a-raw-string-not-joined-strings"></a>
+<h3><code>r'c:\Users\'</code> is a raw string, not joined strings</h3>
+<p>The meaning of <code>\</code> within string literals can be confusing, so YSH
+distinguishes them like this:</p>
+<ul>
+<li><code>$'foo\n'</code>
+<ul>
+<li>The <code>$</code> prefix means that C-style backslash escapes are respected.</li>
+</ul>
+</li>
+<li><code>r'c:\Users\'</code>
+<ul>
+<li>The <code>r</code> prefix means the backslashes are literal.</li>
+<li>In shell this is written <code>'c:\Users\'</code>.  YSH accepts this in command mode
+for compatibility, but not expression mode.</li>
+</ul>
+</li>
+</ul>
+<p>The prefix <strong>changes</strong> the meaning of commands like:</p>
+<pre><code>echo r'foo'
+<span class="sh-comment"># =&gt; foo in YSH</span>
+<span class="sh-comment"># =&gt; rfoo in shell, because of implicit joining</span>
+</code></pre>
+<p>Instead, write <code>'rfoo'</code> if that's what you mean.</p>
+<p>(Option <code>parse_raw_string</code> is part of group <code>ysh:upgrade</code>.)</p>
+<a name="globs-cant-start-with"></a>
+<h3>globs can't start with <code>[</code></h3>
+<p>In a command, the <code>[</code> character starts a lazy arg list:</p>
+<pre><code>assert [42 === x]
+</code></pre>
+<p>In shell, <code>[</code> is part of the glob syntax:</p>
+<pre><code>echo [ch]  <span class="sh-comment"># extremely rare pattern matching c or h</span>
+</code></pre>
+<p>This is more common, and still works:</p>
+<pre><code>echo *.[ch]
+</code></pre>
+<p>You can still express the former by explicitly invoking <code>glob('[ch]')</code>.</p>
+<p>(Option <code>parse_bracket</code> is part of group <code>ysh:upgrade</code>.)</p>
+<a name="unsupported"></a>
+<h2>Unsupported</h2>
+<a name="extended-globs-in-word-evaluation"></a>
+<h3>Extended Globs in Word Evaluation</h3>
+<p>Like regular globs, the extended glob syntax is used in two ways:</p>
+<ol>
+<li>Pattern matching
+<ul>
+<li><code>case</code></li>
+<li>Bash boolean expressions like <code>[[ x == !(*.cc|*.h) ]]</code></li>
+</ul>
+</li>
+<li>Word Evaluation
+<ul>
+<li>commands like <code>cp !(*.cc|*.h) /tmp</code></li>
+<li>arrays like <code>local -a myarray=( !(*.cc|*.h) )</code></li>
+<li>Shell-style <code>for</code> loops</li>
+</ul>
+</li>
+</ol>
+<p>Extended globs are <strong>not</strong> supported in <a href="simple-word-eval.html">Simple Word
+Evaluation</a>, so you can't use them in the second way
+after upgrading.</p>
+<p>You may want to use the <code>find</code> command or <a href="eggex.html">Egg expressions</a>
+instead.</p>
+<p>(Option <code>simple_word_eval</code> is part of group <code>ysh:upgrade</code>.)</p>
+<a name="more-quotes-may-be-needed"></a>
+<h2>More Quotes May Be Needed</h2>
+<a name="with-yshupgrade-options"></a>
+<h3>With <code>ysh:upgrade</code> Options</h3>
+<p>Option <code>parse_at</code>.  In YSH, <code>@</code> is used to splice arrays.  To pass a string
+<code>@foo</code> to a command, quote it like <code>'@foo'</code>.</p>
+<p>Option <code>parse_brace</code>.  Braces after commands start block arguments.  To change
+to a directory named <code>{</code>, quote it like <code>cd '{'</code>.</p>
+<p>Option <code>parse_equals</code>.  A statement like <code>x = 42</code> is a &quot;bare assignment&quot; or
+attribute.  To pass <code>=</code> to a command <code>x</code>, quote it like <code>x '='</code>.</p>
+<a name="unconditionally"></a>
+<h3>Unconditionally</h3>
+<ul>
+<li>To avoid confusion with YSH's <code>=</code> operator, a word like <code>=x</code> can't be the first word in a command.
+To invoke such commands, quote them like <code>'=x'</code>.</li>
+<li>YSH has new keywords like <code>proc</code>, <code>const</code>, <code>var</code>, and <code>setvar</code>.  To use them
+as command names, quote them like <code>'proc'</code>.</li>
+</ul>
+<p>There is very little reason to use commands like <code>'=x'</code> and <code>'proc'</code>, so you
+will likely never run into this!</p>
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>This concludes the list of features that's broken when you upgrade from OSH to
+YSH.  We tried to keep this list as small as possible.</p>
+<p>There are other features that are <strong>discouraged</strong>, like <code>$(( x + 1 ))</code>, <code>(( i++ ))</code>, <code>[[ $s =~ $pat ]]</code>, and <code>${s%%prefix}</code>.  These have better alternatives in
+the YSH expression language, but they can still be used.  See <a href="idioms.html">YSH vs. Shell
+Idioms</a>.</p>
+<p>Also related: <a href="known-differences.html">Known Differences Between OSH and Other
+Shells</a>.</p>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<p>Here are some notable <strong>non-breaking</strong> changes.</p>
+<a name="shell-functions-vs-procs"></a>
+<h3>Shell Functions vs. Procs</h3>
+<p>Procs have truly local variables like Python and JavaScript.  There's no
+<a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a> rule, as with shell functions.</p>
+<p>This is something to be aware of, but isn't technically a breakage because
+shell functions still work the same way in YSH.</p>
+<a name="editor-vs-enveditor"></a>
+<h3>$EDITOR vs. ENV.EDITOR</h3>
+<p>In YSH, env vars live in the <a href="ref/chap-special-var.html#ENV">ENV</a> dict.  So instead of <code>$EDITOR</code>, you should
+use <code>$[ENV.EDITOR]</code>.</p>
+<p>But doesn't break when you <code>shopt --set ysh:upgrade</code>, only when you use
+<code>bin/ysh</code>.</p>
+<a name="acknowledgments"></a>
+<h3>Acknowledgments</h3>
+<p>Thank you to <code>ca2013</code> for reviewing this doc.</p>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 25 Jun 2025 20:31:31 -0400</i>
+    </div>
+  </body>
+</html>

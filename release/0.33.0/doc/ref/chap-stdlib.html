@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Builtin Commands (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-stdlib.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.33.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> — Chapter <strong>Standard Library</strong></p>
+</div>
+<p>This chapter in the <a href="index.html">Oils Reference</a> describes the standard library
+for OSH and YSH.</p>
+<p>(These functions are implemented in OSH or YSH, not C++ or Python.)</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#two">two</a> <br/>
+  <a class="dense-toc-h3" href="#log">log</a> <br/>
+  <a class="dense-toc-h3" href="#die">die</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#no-quotes">no-quotes</a> <br/>
+  <a class="dense-toc-h3" href="#nq-assert">nq-assert</a> <br/>
+  <a class="dense-toc-h3" href="#nq-run">nq-run</a> <br/>
+  <a class="dense-toc-h3" href="#nq-capture">nq-capture</a> <br/>
+  <a class="dense-toc-h3" href="#nq-capture-2">nq-capture-2</a> <br/>
+  <a class="dense-toc-h3" href="#nq-redir">nq-redir</a> <br/>
+  <a class="dense-toc-h3" href="#nq-redir-2">nq-redir-2</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#task-five">task-five</a> <br/>
+  <a class="dense-toc-h3" href="#task-five">task-five</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#math">math</a> <br/>
+  <a class="dense-toc-h3" href="#abs">abs()</a> <br/>
+  <a class="dense-toc-h3" href="#max">max()</a> <br/>
+  <a class="dense-toc-h3" href="#min">min()</a> <br/>
+  <a class="dense-toc-h3" href="#round">round()</a> <br/>
+  <a class="dense-toc-h3" href="#sum">sum()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#list">list</a> <br/>
+  <a class="dense-toc-h3" href="#all">all()</a> <br/>
+  <a class="dense-toc-h3" href="#any">any()</a> <br/>
+  <a class="dense-toc-h3" href="#repeat">repeat()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#yblocks">yblocks</a> <br/>
+  <a class="dense-toc-h3" href="#yb-capture">yb-capture</a> <br/>
+  <a class="dense-toc-h3" href="#yb-capture-2">yb-capture-2</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#args">args</a> <br/>
+  <a class="dense-toc-h3" href="#parser">parser</a> <br/>
+  <a class="dense-toc-h3" href="#flag">flag</a> <br/>
+  <a class="dense-toc-h3" href="#arg">arg</a> <br/>
+  <a class="dense-toc-h3" href="#rest">rest</a> <br/>
+  <a class="dense-toc-h3" href="#parseArgs">parseArgs()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#binascii">binascii</a> <br/>
+  <a class="dense-toc-h3" href="#toBase16">toBase16</a> <br/>
+  <a class="dense-toc-h3" href="#fromBase16">fromBase16</a> <br/>
+  <a class="dense-toc-h3" href="#toBase64">toBase64</a> <br/>
+  <a class="dense-toc-h3" href="#fromBase64">fromBase64</a> <br/>
+</div>
+</div>
+</div>
+<a name="two"></a>
+<h2>two</h2>
+<p>These functions are in <code>two.sh</code></p>
+<pre><code>source $OSH_LIB/two.sh
+</code></pre>
+<a name="log"></a>
+<h3>log</h3>
+<p>Write a message to stderr:</p>
+<pre><code>log &quot;hi $x&quot;
+log '---'
+</code></pre>
+<a name="die"></a>
+<h3>die</h3>
+<p>Write an error message with the script name, and exit with status 1.</p>
+<pre><code>die 'Expected a number'
+</code></pre>
+<a name="no-quotes"></a>
+<h2>no-quotes</h2>
+<a name="nq-assert"></a>
+<h3>nq-assert</h3>
+<p>Use the syntax of the <a href="chap-builtin-cmd.html#test">test</a> builtin to assert a condition is true.</p>
+<pre><code>nq-assert 99 = &quot;$status&quot;
+nq-assert &quot;$status&quot; -lt 2
+</code></pre>
+<a name="nq-run"></a>
+<h3>nq-run</h3>
+<p>Run a command and &quot;return&quot; its status with nameref variables.</p>
+<pre><code>test-foo() {
+  local status
+
+  nq-run status \
+    false
+  nq-assert 1 = &quot;$status&quot;
+}
+</code></pre>
+<a name="nq-capture"></a>
+<h3>nq-capture</h3>
+<p>Run a command and return its status and stdout.</p>
+<a name="nq-capture-2"></a>
+<h3>nq-capture-2</h3>
+<p>Run a command and return its status and stderr.</p>
+<a name="nq-redir"></a>
+<h3>nq-redir</h3>
+<p>Run a command and return its status and a file with its stdout, so you can diff
+it.</p>
+<a name="nq-redir-2"></a>
+<h3>nq-redir-2</h3>
+<p>Run a command and return its status and a file with its stderr, so you can diff
+it.</p>
+<a name="task-five"></a>
+<h2>task-five</h2>
+<a name="task-five"></a>
+<h3>task-five</h3>
+<p>Dispatch to shell functions, and provide BYO test enumeration.</p>
+<p>OSH:</p>
+<pre><code>task-five &quot;$@&quot;
+</code></pre>
+<p>YSH:</p>
+<pre><code>task-five @ARGV
+</code></pre>
+<a name="math"></a>
+<h2>math</h2>
+<a name="abs"></a>
+<h3>abs()</h3>
+<p>Compute the absolute (positive) value of a number (float or int).</p>
+<pre><code>= abs(-1)  <span class="sh-comment"># =&gt; 1</span>
+= abs(0)   <span class="sh-comment"># =&gt; 0</span>
+= abs(1)   <span class="sh-comment"># =&gt; 1</span>
+</code></pre>
+<p>Note, you will need to <code>source $LIB_YSH/math.ysh</code> to use this function.</p>
+<a name="max"></a>
+<h3>max()</h3>
+<p>Compute the maximum of 2 or more values.</p>
+<p><code>max</code> takes two different signatures:</p>
+<ol>
+<li><code>max(a, b)</code> to return the maximum of <code>a</code>, <code>b</code></li>
+<li><code>max(list)</code> to return the greatest item in the <code>list</code></li>
+</ol>
+<p>For example:</p>
+<pre><code>  = max(1, 2)  <span class="sh-comment"># =&gt; 2</span>
+  = max([1, 2, 3])  <span class="sh-comment"># =&gt; 3</span>
+</code></pre>
+<p>Note, you will need to <code>source $LIB_YSH/math.ysh</code> to use this function.</p>
+<a name="min"></a>
+<h3>min()</h3>
+<p>Compute the minimum of 2 or more values.</p>
+<p><code>min</code> takes two different signatures:</p>
+<ol>
+<li><code>min(a, b)</code> to return the minimum of <code>a</code>, <code>b</code></li>
+<li><code>min(list)</code> to return the least item in the <code>list</code></li>
+</ol>
+<p>For example:</p>
+<pre><code>= min(2, 3)  <span class="sh-comment"># =&gt; 2</span>
+= max([1, 2, 3])  <span class="sh-comment"># =&gt; 1</span>
+</code></pre>
+<p>Note, you will need to <code>source $LIB_YSH/math.ysh</code> to use this function.</p>
+<a name="round"></a>
+<h3>round()</h3>
+<p>TODO</p>
+<a name="sum"></a>
+<h3>sum()</h3>
+<p>Computes the sum of all elements in the list.</p>
+<p>Returns 0 for an empty list.</p>
+<pre><code>= sum([])  <span class="sh-comment"># =&gt; 0</span>
+= sum([0])  <span class="sh-comment"># =&gt; 0</span>
+= sum([1, 2, 3])  <span class="sh-comment"># =&gt; 6</span>
+</code></pre>
+<p>Note, you will need to <code>source $LIB_YSH/list.ysh</code> to use this function.</p>
+<a name="list"></a>
+<h2>list</h2>
+<a name="all"></a>
+<h3>all()</h3>
+<p>Returns true if all values in the list are truthy (<code>x</code> is truthy if <code>Bool(x)</code>
+returns true).</p>
+<p>If the list is empty, return true.</p>
+<pre><code>= all([])  <span class="sh-comment"># =&gt; true (all of zero)</span>
+= all([true, true])  <span class="sh-comment"># =&gt; true</span>
+= all([false, true])  <span class="sh-comment"># =&gt; false</span>
+= all([&quot;foo&quot;, true, true])  <span class="sh-comment"># =&gt; true</span>
+</code></pre>
+<p>Note, you will need to <code>source $LIB_YSH/list.ysh</code> to use this function.</p>
+<a name="any"></a>
+<h3>any()</h3>
+<p>Returns true if any value in the list is truthy (<code>x</code> is truthy if <code>Bool(x)</code>
+returns true).</p>
+<p>If the list is empty, return false.</p>
+<pre><code>= any([])  <span class="sh-comment"># =&gt; false</span>
+= any([true, false])  <span class="sh-comment"># =&gt; true</span>
+= any([false, false])  <span class="sh-comment"># =&gt; false</span>
+= any([false, &quot;foo&quot;, false])  <span class="sh-comment"># =&gt; true</span>
+</code></pre>
+<p>Note, you will need to <code>source $LIB_YSH/list.ysh</code> to use this function.</p>
+<a name="repeat"></a>
+<h3>repeat()</h3>
+<p>Repeat a string or a list:</p>
+<pre><code>= repeat('foo', 3)           <span class="sh-comment"># =&gt; 'foofoofoo'</span>
+= repeat(['foo', 'bar'], 2)  <span class="sh-comment"># =&gt; ['foo', 'bar', 'foo', 'bar']</span>
+</code></pre>
+<p>Negative repetitions are equivalent to zero:</p>
+<pre><code>= repeat('foo', -5)           <span class="sh-comment"># =&gt; ''</span>
+= repeat(['foo', 'bar'], -5)  <span class="sh-comment"># =&gt; []</span>
+</code></pre>
+<p>Note that the <code>repeat()</code> function is modeled after these Python expressions:</p>
+<pre><code>&gt;&gt;&gt; 'a' * 3
+'aaa'
+&gt;&gt;&gt; ['a'] * 3
+['a', 'a', 'a']
+</code></pre>
+<a name="yblocks"></a>
+<h2>yblocks</h2>
+<p>Helpers to assert the status and output of commands.</p>
+<a name="yb-capture"></a>
+<h3>yb-capture</h3>
+<p>Capture the status and stdout of a command block:</p>
+<pre><code>yb-capture (&amp;r) {
+  echo hi
+}
+assert [0 === r.status]
+assert [u'hi\n' === r.stdout]
+</code></pre>
+<a name="yb-capture-2"></a>
+<h3>yb-capture-2</h3>
+<p>Capture the status and stderr of a command block:</p>
+<pre><code>yb-capture-2 (&amp;r) {
+  echo hi &gt;&amp; 2
+}
+assert [0 === r.status]
+assert [u'hi\n' === r.stderr]
+</code></pre>
+<a name="args"></a>
+<h2>args</h2>
+<p>YSH includes a command-line argument parsing utility called <code>parseArgs</code>. This
+is intended to be used for command-line interfaces to YSH programs.</p>
+<p>To use it, first import <code>args.ysh</code>:</p>
+<pre><code>source $LIB_YSH/args.ysh
+</code></pre>
+<p>Then, create an argument parser <strong>spec</strong>ification:</p>
+<pre><code>parser (&amp;spec) {
+  flag -v --verbose (help=&quot;Verbosely&quot;)  <span class="sh-comment"># default is Bool, false</span>
+
+  flag -P --max-procs (Int, default=-1, help='''
+    Run at most P processes at a time
+    ''')
+
+  flag -i --invert (Bool, default=true, help='''
+    Long multiline
+    Description
+    ''')
+
+  arg src (help='Source')
+  arg dest (help='Dest')
+
+  rest files
+}
+</code></pre>
+<p>Finally, parse <code>ARGV</code> (or any other array of strings) with:</p>
+<pre><code>var args = parseArgs(spec, ARGV)
+</code></pre>
+<p>The returned <code>args</code> is a <code>Dict</code> containing key-value pairs with the parsed
+values (or defaults) for each flag and argument. For example, given
+<code>ARGV = :| mysrc -P 12 mydest a b c |</code>, <code>args</code> would be:</p>
+<pre><code>{
+    &quot;verbose&quot;: false,
+    &quot;max-procs&quot;: 12,
+    &quot;invert&quot;: true,
+    &quot;src&quot;: &quot;mysrc&quot;,
+    &quot;dest&quot;: &quot;mydest&quot;,
+    &quot;files&quot;: [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]
+}
+</code></pre>
+<a name="parser"></a>
+<h3>parser</h3>
+<p><code>parseArgs()</code> requires a parser specification to indicate how to parse the
+<code>ARGV</code> array. This specification should be constructed using the <code>parser</code> proc.</p>
+<pre><code>parser (&amp;spec) {
+  flag -f --my-flag
+  arg myarg
+  rest otherArgs
+}
+</code></pre>
+<p>In the above example, <code>parser</code> takes in a place <code>&amp;spec</code>, which will store the
+resulting specification and a block which is evaluated to build that
+specification.</p>
+<p>Inside of a <code>parser</code> block, you should call the following procs:</p>
+<ul>
+<li><code>flag</code> to add <code>--flag</code> options</li>
+<li><code>arg</code> to add positional arguments</li>
+<li><code>rest</code> to capture remaining positional arguments into a list</li>
+</ul>
+<p><code>parser</code> will validate the parser specification for errors such as duplicate
+flag or argument names.</p>
+<pre><code>parser (&amp;spec) {
+  flag -n --name
+  flag -n --name  <span class="sh-comment"># Duplicate!</span>
+}
+
+<span class="sh-comment"># =&gt; raises &quot;Duplicate flag/arg name 'name' in spec&quot; (status = 3)</span>
+</code></pre>
+<a name="flag"></a>
+<h3>flag</h3>
+<p><code>flag</code> should be called within a <code>parser</code> block.</p>
+<pre><code>parser (&amp;spec) {
+  flag -v --verbose
+}
+</code></pre>
+<p>The above example declares a flag &quot;--verbose&quot; and a short alias &quot;-v&quot;.
+<code>parseArgs()</code> will then store a boolean value under <code>args.verbose</code>:</p>
+<ul>
+<li><code>true</code> if the flag was passed at least once</li>
+<li><code>false</code> otherwise</li>
+</ul>
+<p>Flags can also accept values. For example, if you wanted to accept an integer count:</p>
+<pre><code>parser (&amp;spec) {
+  flag -N --count (Int)
+}
+</code></pre>
+<p>Calling <code>parseArgs</code> with <code>ARGV = :| -N 5 |</code> or <code>ARGV = :| --count 5 |</code> will
+store the integer <code>5</code> under <code>args.count</code>. If the user passes in a non-integer
+value like <code>ARGV = :| --count abc |</code>, <code>parseArgs</code> will raise an error.</p>
+<p>The supported flag types are <code>Bool</code>, <code>Int</code>, <code>List[Int]</code>, <code>Float</code>, <code>List[Float]</code>,
+<code>Str</code>, and <code>List[Str]</code>.</p>
+<p>Flags with a <code>List</code> type may be provided multiple times. For example, if you
+wanted to accept a list of strings:</p>
+<pre><code>parser (&amp;spec) {
+    flag -f --file (List[Str])
+}
+</code></pre>
+<p>Calling <code>parseArgs</code> with <code>ARGV = :| -f a --file b -f c |</code> will store the value
+<code>['a', 'b', 'c']</code> under <code>args.file</code>.</p>
+<p>Default values for an argument can be set with the <code>default</code> named argument.</p>
+<pre><code>parser (&amp;spec) {
+  flag -N --count (Int, default=2)
+
+  <span class="sh-comment"># Boolean flags can be given default values too</span>
+  flag -O --optimize (Bool, default=true)
+}
+
+var args = parseArgs(spec, :| -n 3 |)
+<span class="sh-comment"># =&gt; args.count = 2</span>
+<span class="sh-comment"># =&gt; args.optimize = true</span>
+</code></pre>
+<p>Each name passed to <code>flag</code> must be unique to that specific <code>parser</code>. Calling
+<code>flag</code> with the same name twice will raise an error inside of <code>parser</code>.</p>
+
+
+<a name="arg"></a>
+<h3>arg</h3>
+<p><code>arg</code> should be called within a <code>parser</code> block.</p>
+<pre><code>parser (&amp;spec) {
+  arg query
+  arg path
+}
+</code></pre>
+<p>The above example declares two positional arguments called &quot;query&quot; and &quot;path&quot;.
+<code>parseArgs()</code> will then store strings under <code>args.query</code> and <code>args.path</code>. Order
+matters, so the first positional argument will be stored to <code>query</code> and the
+second to <code>path</code>. If not enough positional arguments are passed, then
+<code>parseArgs</code> will raise an error.</p>
+<p>Similar to <code>flag</code>, each <code>arg</code> name must be unique. Calling <code>arg</code> with the same
+name twice will cause <code>parser</code> to raise an error.</p>
+<a name="rest"></a>
+<h3>rest</h3>
+<p><code>rest</code> should be called within a <code>parser</code> block.</p>
+<pre><code>parser (&amp;spec) {
+  arg query
+  rest files
+}
+</code></pre>
+<p>Capture zero or more positional arguments not already captured by <code>arg</code>. So,
+for <code>ARGV = :| hello file.txt message.txt README.md |</code>, we would have
+<code>args.query = &quot;file.txt&quot;</code> and <code>args.files = [&quot;file.txt&quot;, &quot;message.txt&quot;, &quot;README.md&quot;]</code>.</p>
+<p>Without rest, passing extraneous arguments will raise an error in
+<code>parseArgs()</code>.</p>
+<p><code>rest</code> can only be called <em>once</em> within a <code>parser</code>. Calling it multiple times
+will raise an error in <code>parser</code>.</p>
+<a name="parseArgs"></a>
+<h3>parseArgs()</h3>
+<p>Given a parser specification <code>spec</code> produced by <code>parser</code>, parse a list of
+strings (usually <code>ARGV</code>.)</p>
+<pre><code>var args = parseArgs(spec, ARGV)
+</code></pre>
+<p>The returned <code>args</code> is a dictionary mapping the names of each <code>arg</code>, <code>flag</code> and
+<code>rest</code> to their captured values. (See the example at the <a href="#Args-Parser">start of this
+topic</a>.)</p>
+<p><code>parseArgs</code> will raise an error if the <code>ARGV</code> is invalid per the parser
+specification. For example, if it's missing a required positional argument:</p>
+<pre><code>parser (&amp;spec) {
+  arg path
+}
+
+var args = parseArgs(spec, [])
+<span class="sh-comment"># =&gt; raises an error about the missing 'path' (status = 2)</span>
+</code></pre>
+
+<a name="binascii"></a>
+<h2>binascii</h2>
+
+<a name="toBase16"></a>
+<h3>toBase16</h3>
+<p>TODO</p>
+<a name="fromBase16"></a>
+<h3>fromBase16</h3>
+<p>TODO</p>
+<a name="toBase64"></a>
+<h3>toBase64</h3>
+<p>TODO</p>
+<a name="fromBase64"></a>
+<h3>fromBase64</h3>
+<p>TODO</p>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 25 Jun 2025 20:31:31 -0400</i>
+    </div>
+  </body>
+</html>

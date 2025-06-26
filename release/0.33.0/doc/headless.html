@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Headless Mode: For Alternative UIs</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/headless.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.33.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils Headless Mode: For Alternative UIs</h1>
+<p>A GUI or <a href="https://en.wikipedia.org/wiki/Text-based_user_interface">TUI</a> process can start Oils like this:</p>
+<pre><code>osh --headless
+</code></pre>
+<p>and send messages to it over a Unix domain socket.  In this mode, the language
+and shell state are <strong>decoupled</strong> from the user interface.</p>
+<p>This is a unique feature that other shells don't have!</p>
+<p>Note: This doc is <strong>in progress</strong>.  Join the <code>#shell-gui</code> channel on
+<a href="/cross-ref.html?tag=zulip#zulip">Zulip</a> for current information.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#the-general-idea">The General Idea</a></div>
+  <div class="toclevel1"><a href="#how-to-write-a-client-for-a-headless-shell">How to Write a Client for a Headless Shell</a></div>
+  <div class="toclevel2"><a href="#implement-the-fanos-protocol">Implement the FANOS Protocol</a></div>
+  <div class="toclevel2"><a href="#send-commands-and-file-descriptors-to-the-server">Send Commands and File Descriptors to the &quot;Server&quot;</a></div>
+  <div class="toclevel2"><a href="#query-shell-state-and-render-it-in-the-ui">Query Shell State and Render it in the UI</a></div>
+  <div class="toclevel2"><a href="#example-code">Example Code</a></div>
+  <div class="toclevel1"><a href="#related-links">Related Links</a></div>
+</div>
+<a name="the-general-idea"></a>
+<h2>The General Idea</h2>
+<p>The UI process should handle these things:</p>
+<ul>
+<li>Auto-completion.  It should use Oils for parsing, and not try to parse shell
+itself!</li>
+<li>History: Allow the user to retrieve commands typed in the past.</li>
+<li>Cancelling commands in progress.</li>
+<li>Optional: multiplexing among multiple headless shells.</li>
+</ul>
+<p>The shell process handles these things:</p>
+<ul>
+<li>Parsing and evaluating the language</li>
+<li>Maintaining state (shell options, variables, etc.)</li>
+</ul>
+<a name="how-to-write-a-client-for-a-headless-shell"></a>
+<h2>How to Write a Client for a Headless Shell</h2>
+<a name="implement-the-fanos-protocol"></a>
+<h3>Implement the FANOS Protocol</h3>
+<p>FANOS stands for <em>File descriptors and Netstrings Over Sockets</em>.  It's a
+<strong>control</strong> protocol that already has 2 implementations, which are very small:</p>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/client/py_fanos.py">client/py_fanos.py</a>: 102 lines of code</li>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/cpp/fanos_shared.c">cpp/fanos_shared.c</a>: 215 lines of code</li>
+</ul>
+<a name="send-commands-and-file-descriptors-to-the-server"></a>
+<h3>Send Commands and File Descriptors to the &quot;Server&quot;</h3>
+<p>List of commands:</p>
+<ul>
+<li><code>EVAL</code>.  Parse and evaluate a shell command.  The logic is similar to the
+<code>eval</code> and <code>source</code> builtins.
+<ul>
+<li>It can be used for both user-entered commands and &quot;behind the scenes&quot;
+functions for the shell UI.</li>
+<li>The stdin, stdout, and stderr of <strong>the shell and its child processes</strong> will
+be redirected to the descriptors you pass.</li>
+<li>There's no history expansion for now.  The UI can implement this itself,
+and Oils may be able to help.</li>
+</ul>
+</li>
+</ul>
+<p>TODO: More commands.</p>
+<a name="query-shell-state-and-render-it-in-the-ui"></a>
+<h3>Query Shell State and Render it in the UI</h3>
+<p>You may want to use commands like these to draw the UI:</p>
+<ul>
+<li><code>echo ${PS1@P}</code> -- render the prompt</li>
+<li><code>echo $PWD $_</code> -- get the current directory and current status</li>
+</ul>
+<p>You can redirect them to a pipe, rather than displaying them in the terminal.</p>
+<p>Remember that a fundamental difference between a REPL and a GUI is that a GUI
+<strong>shows state</strong> explicitly.  This is a good thing and you should take advantage
+of it!</p>
+<a name="example-code"></a>
+<h3>Example Code</h3>
+<p>See <a href="https://github.com/oils-for-unix/oils/blob/master/client/headless_demo.py">client/headless_demo.py</a>.  This is pure Python code that's
+divorced from the rest of Oils.</p>
+<a name="related-links"></a>
+<h2>Related Links</h2>
+<p>Feel free to edit these pages:</p>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/Headless-Mode">Headless Mode</a> on the wiki.  We want there to be a rich ecosystem of
+interactive shells built upon Oils.</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Interactive-Shell">Interactive Shell</a> on the wiki.  Be inspired by these nice projects, many
+of which have screenshots!</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 25 Jun 2025 20:31:31 -0400</i>
+    </div>
+  </body>
+</html>

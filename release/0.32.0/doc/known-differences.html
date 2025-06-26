@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Known Differences Between OSH and Other Shells</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/known-differences.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Known Differences Between OSH and Other Shells</h1>
+<p>This document is for <strong>sophisticated shell users</strong>.</p>
+<p>You're unlikely to encounter these incompatibilities in everyday shell usage.
+If you do, there's almost always a <strong>simple workaround</strong>, like adding a space
+or a backslash.</p>
+<p>OSH is meant to run all POSIX shell programs, and most bash programs.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#numbers-and-arithmetic">Numbers and Arithmetic</a></div>
+  <div class="toclevel2"><a href="#printf-d-and-other-numeric-formats-require-a-valid-integer">printf '%d' and other numeric formats require a valid integer</a></div>
+  <div class="toclevel2"><a href="#dynamically-parsed-command-subs-disallowed-unless-shopt-s-eval_unsafe_arith">Dynamically parsed command subs disallowed unless <code>shopt -s eval_unsafe_arith</code></a></div>
+  <div class="toclevel1"><a href="#static-parsing-differences">Static Parsing Differences</a></div>
+  <div class="toclevel2"><a href="#strings-vs-bare-words-in-array-indices">Strings vs. Bare words in array indices</a></div>
+  <div class="toclevel2"><a href="#subshell-in-command-sub-versus">Subshell in command sub - <code>$((</code> versus <code>$( (</code></a></div>
+  <div class="toclevel2"><a href="#nested-subshells-versus">Nested Subshells - <code>((</code> versus <code>( (</code></a></div>
+  <div class="toclevel2"><a href="#extended-glob-vs-negation-of-boolean-expression">Extended glob vs. Negation of boolean expression</a></div>
+  <div class="toclevel2"><a href="#here-doc-terminators-must-be-on-their-own-line">Here doc terminators must be on their own line</a></div>
+  <div class="toclevel2"><a href="#spaces-arent-allowed-in-lhs-indices">Spaces aren't allowed in LHS indices</a></div>
+  <div class="toclevel2"><a href="#break-continue-return-are-keywords-not-builtins">break / continue / return are keywords, not builtins</a></div>
+  <div class="toclevel2"><a href="#osh-has-more-builtins-which-shadow-external-commands">OSH has more builtins, which shadow external commands</a></div>
+  <div class="toclevel2"><a href="#osh-has-more-keywords-which-shadow-builtins-functions-and-commands">OSH has more keywords, which shadow builtins, functions, and commands</a></div>
+  <div class="toclevel1"><a href="#later-parsing-differences">Later Parsing Differences</a></div>
+  <div class="toclevel2"><a href="#brace-expansion-is-all-or-nothing">Brace expansion is all or nothing</a></div>
+  <div class="toclevel2"><a href="#brackets-should-be-escaped-within-character-classes">Brackets should be escaped within Character Classes</a></div>
+  <div class="toclevel2"><a href="#v-var-doesnt-allow-expressions">[[ -v var ]] doesn't allow expressions</a></div>
+  <div class="toclevel1"><a href="#data-structures">Data Structures</a></div>
+  <div class="toclevel2"><a href="#arrays-arent-split-inside">Arrays aren't split inside ${}</a></div>
+  <div class="toclevel2"><a href="#values-are-tagged-with-types-not-locations-declare-i-a-a">Values are tagged with types, not locations (<code>declare -i -a -A</code>)</a></div>
+  <div class="toclevel2"><a href="#indexed-and-associative-arrays-are-distinct">Indexed and Associative arrays are distinct</a></div>
+  <div class="toclevel1"><a href="#assignment-builtins">Assignment builtins</a></div>
+  <div class="toclevel2"><a href="#builtin-declare-xy-is-a-runtime-error"><code>builtin declare x=$y</code> is a runtime error</a></div>
+  <div class="toclevel2"><a href="#args-arent-split-or-globbed">Args aren't split or globbed</a></div>
+  <div class="toclevel1"><a href="#pipelines">Pipelines</a></div>
+  <div class="toclevel2"><a href="#last-pipeline-part-may-run-in-shell-process-zsh-bash-shopt-s-lastpipe">Last pipeline part may run in shell process (zsh, bash <code>shopt -s lastpipe</code>)</a></div>
+  <div class="toclevel2"><a href="#pipelines-cant-be-suspended-with-ctrl-z">Pipelines can't be suspended with Ctrl-Z</a></div>
+  <div class="toclevel2"><a href="#pipestatus-is-only-set-after-an-actual-pipeline"><code>${PIPESTATUS[@]}</code> is only set after an actual pipeline</a></div>
+  <div class="toclevel1"><a href="#more-differences-at-runtime">More Differences at Runtime</a></div>
+  <div class="toclevel2"><a href="#alias-expansion">Alias expansion</a></div>
+  <div class="toclevel2"><a href="#extended-globs-are-more-static-like-mksh-and-have-other-differences">Extended globs are more static like <code>mksh</code>, and have other differences</a></div>
+  <div class="toclevel2"><a href="#completion">Completion</a></div>
+  <div class="toclevel1"><a href="#interactive-features">Interactive Features</a></div>
+  <div class="toclevel2"><a href="#history-substitution-language">History Substitution Language</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+</div>
+
+<a name="numbers-and-arithmetic"></a>
+<h2>Numbers and Arithmetic</h2>
+<a name="printf-d-and-other-numeric-formats-require-a-valid-integer"></a>
+<h3>printf '%d' and other numeric formats require a valid integer</h3>
+<p>In other shells, <code>printf %d invalid_integer</code> prints <code>0</code> and a warning.  OSH
+gives you a runtime error.</p>
+
+<a name="dynamically-parsed-command-subs-disallowed-unless-shopt-s-eval_unsafe_arith"></a>
+<h3>Dynamically parsed command subs disallowed unless <code>shopt -s eval_unsafe_arith</code></h3>
+<p>In shell, array locations are often dynamically parsed, and the index can have
+command subs, which execute arbitrary code.</p>
+<p>For example, if you have <code>code='a[$(echo 42 | tee PWNED)]'</code>, shells will parse
+this data and execute it in many situations:</p>
+<pre><code>echo $(( code ))  <span class="sh-comment"># dynamic parsing and evaluation in bash, mksh, zsh</span>
+
+unset $code
+
+printf -v $code hi
+
+echo ${!code}
+</code></pre>
+<p>OSH disallows this by default.  If you want this behavior, you can turn on
+<code>shopt -s eval_unsafe_arith</code>.</p>
+<p>Related: <a href="https://www.oilshell.org/blog/2019/01/18.html#a-story-about-a-30-year-old-security-problem">A 30-year-old security problem</a></p>
+<a name="static-parsing-differences"></a>
+<h2>Static Parsing Differences</h2>
+<p>This section describes differences related to <a href="http://www.oilshell.org/blog/2016/10/22.html">static
+parsing</a>.  OSH avoids the
+dynamic parsing of most shells.</p>
+<p>(Note: This section should encompass all the failures from the <a href="http://oilshell.org/cross-ref.html?tag=wild-test#wild-test">wild
+tests</a> and <a href="http://oilshell.org/cross-ref.html?tag=spec-test#spec-test">spec
+tests</a>.</p>
+<a name="strings-vs-bare-words-in-array-indices"></a>
+<h3>Strings vs. Bare words in array indices</h3>
+<p>Strings should be quoted inside array indices:</p>
+<p>No:</p>
+<pre><code>&quot;${SETUP_STATE[$err.cmd]}&quot;
+</code></pre>
+<p>Yes:</p>
+<pre><code>&quot;${SETUP_STATE[&quot;$err.cmd&quot;]}&quot;
+</code></pre>
+<p>When unquoted, the period causes an ambiguity with respect to regular arrays
+vs. associative arrays.  See <a href="https://www.oilshell.org/blog/2016/10/20.html">Parsing Bash is
+Undecidable</a> (2016).</p>
+<ul>
+<li><a href="error-catalog.html#oils-err-101">OILS-ERR-101</a> explains more ways to fix
+this.</li>
+</ul>
+<a name="subshell-in-command-sub-versus"></a>
+<h3>Subshell in command sub - <code>$((</code> versus <code>$( (</code></h3>
+<p>You can have a subshell <code>(</code> in a command sub <code>$(</code>, but it usually doesn't make
+sense.</p>
+<p>In OSH you need a space after <code>$(</code>, so it would be <code>$( (</code>.</p>
+<p>characters <code>$((</code> always start an arith sub.</p>
+<p>No:</p>
+<pre><code>$((cd / &amp;&amp; ls))
+</code></pre>
+<p>Yes:</p>
+<pre><code>$( (cd / &amp;&amp; ls) )   <span class="sh-comment"># Valid but usually doesn't make sense.</span>
+$({ cd / &amp;&amp; ls; })  <span class="sh-comment"># Use {} for grouping, not ().  Note trailing ;</span>
+$(cd / &amp;&amp; ls)       <span class="sh-comment"># Even better</span>
+</code></pre>
+<a name="nested-subshells-versus"></a>
+<h3>Nested Subshells - <code>((</code> versus <code>( (</code></h3>
+<p>You should never need nested subshells with <code>((</code> in Bourne shell or Oils.</p>
+<p>If you do, you should add a space with <code>( (</code> instead of <code>((</code>, similar to the
+issue above.</p>
+<p>In OSH, <code>((</code> always starts bash-style arithmetic.</p>
+<hr />
+<p>The only place I see <code>((</code> arise is when shell users try to use <code>( )</code> to mean
+<strong>grouping</strong>, because they are used to C or Python.</p>
+<p>But it means <strong>subshell</strong>, not grouping.  In shell, <code>{ }</code> is the way to group
+commands.</p>
+<p>No:</p>
+<pre><code>if ((test -f a || test -f b) &amp;&amp; grep foo c); then
+  echo ok
+fi
+</code></pre>
+<p>Allowed, but not what you want:</p>
+<pre><code>if ( (test -f a || test -f b) &amp;&amp; grep foo c); then
+  echo ok
+fi
+</code></pre>
+<p>Yes:</p>
+<pre><code>if { test -f a || test -f b; } &amp;&amp; grep foo c; then
+  echo ok
+fi
+</code></pre>
+<a name="extended-glob-vs-negation-of-boolean-expression"></a>
+<h3>Extended glob vs. Negation of boolean expression</h3>
+<p>The OSH parser distinguishes these two constructs with a space:</p>
+<ul>
+<li><code>[[ !(a == a) ]]</code> is an extended glob.</li>
+<li><code>[[ ! (a == a) ]]</code> is the negation of an equality test.</li>
+</ul>
+<p>In bash, the parsing of such expressions depends on <code>shopt -s extglob</code>.  In
+OSH, <code>shopt -s extglob</code> is accepted, but doesn't affect parsing.</p>
+<a name="here-doc-terminators-must-be-on-their-own-line"></a>
+<h3>Here doc terminators must be on their own line</h3>
+<p>Lines like <code>EOF]</code> or <code>EOF)</code> don't end here docs.  The delimiter must be on its
+own line.</p>
+<p>No:</p>
+<pre><code>a=$(cat &lt;&lt;EOF
+abc
+EOF)
+
+a=$(cat &lt;&lt;EOF
+abc
+EOF  <span class="sh-comment"># this is not a comment; it makes the EOF delimiter invalid</span>
+)
+</code></pre>
+<p>Yes:</p>
+<pre><code>a=$(cat &lt;&lt;EOF
+abc
+EOF
+)  <span class="sh-comment"># this is actually a comment</span>
+</code></pre>
+<a name="spaces-arent-allowed-in-lhs-indices"></a>
+<h3>Spaces aren't allowed in LHS indices</h3>
+<p>Bash allows:</p>
+<pre><code>a[1 + 2 * 3]=value
+</code></pre>
+<p>OSH only allows:</p>
+<pre><code>a[1+2*3]=value
+</code></pre>
+<p>because it parses with limited lookahead.  The first line would result in the
+execution of a command named <code>a[1</code>.</p>
+<a name="break-continue-return-are-keywords-not-builtins"></a>
+<h3>break / continue / return are keywords, not builtins</h3>
+<p>This means that they aren't &quot;dynamic&quot;:</p>
+<pre><code>b=break
+while true; do
+  $b  <span class="sh-comment"># doesn't break in OSH</span>
+done
+</code></pre>
+<p>Static control flow will allow static analysis of shell scripts.</p>
+<p>(Test cases are in <a href="../test/spec.wwz/loop.html">spec/loop</a>).</p>
+<a name="osh-has-more-builtins-which-shadow-external-commands"></a>
+<h3>OSH has more builtins, which shadow external commands</h3>
+<p>For example, <code>append</code> is a builtin in OSH, but not in <code>bash</code>.  Use <code>env append</code>
+or <code>/path/to/append</code> if you want to run an external command.</p>
+<p>(Note that a user-defined proc <code>append</code> takes priority over the builtin
+<code>append</code>.)</p>
+<a name="osh-has-more-keywords-which-shadow-builtins-functions-and-commands"></a>
+<h3>OSH has more keywords, which shadow builtins, functions, and commands</h3>
+<p>In contrast with builtins, <strong>keywords</strong> affect shell parsing.</p>
+<p>For example, <code>func</code> is a keyword in OSH, but not in <code>bash</code>.  To run a command
+named <code>func</code>, use <code>command func arg1</code>.</p>
+<p>Note that all shells have extensions that cause this issue.  For example, <code>[[</code>
+is a keyword in <code>bash</code> but not in POSIX shell.</p>
+<a name="later-parsing-differences"></a>
+<h2>Later Parsing Differences</h2>
+<p>These differences occur in subsequent stages of parsing, or in runtime parsing.</p>
+<a name="brace-expansion-is-all-or-nothing"></a>
+<h3>Brace expansion is all or nothing</h3>
+<p>No:</p>
+<pre><code>{a,b}{        <span class="sh-comment"># what does the second { mean?</span>
+{a,b}{1...3}  <span class="sh-comment"># 3 dots instead of 2</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>{a,b}\{
+{a,b}\{1...3\}
+</code></pre>
+<p>bash will do a <strong>partial expansion</strong> in the former cases, giving you <code>a{ b{</code>
+and <code>a{1...3} b{1...3}</code>.</p>
+<p>OSH considers them syntax errors and aborts all brace expansion, giving you
+the same thing back: <code>{a,b}{</code> and <code>{a,b}{1...3}</code>.</p>
+<a name="brackets-should-be-escaped-within-character-classes"></a>
+<h3>Brackets should be escaped within Character Classes</h3>
+<p>Don't use ambiguous syntax for a character class consisting of a single bracket
+character.</p>
+<p>No:</p>
+<pre><code>echo [[]
+echo []]
+</code></pre>
+<p>Yes:</p>
+<pre><code>echo [\[]
+echo [\]]
+</code></pre>
+<p>The ambiguous syntax is allowed when we pass globs through to <code>libc</code>, but it's
+good practice to be explicit.</p>
+<a name="v-var-doesnt-allow-expressions"></a>
+<h3>[[ -v var ]] doesn't allow expressions</h3>
+<p>In bash, you can use <code>[[</code> with <code>-v</code> to test whether an array contains an entry:</p>
+<pre><code>declare -a array=('' foo)
+if [[ -v array[1] ]]; then
+  echo 'exists'
+fi  <span class="sh-comment"># =&gt; exists</span>
+</code></pre>
+<p>Likewise for an associative array:</p>
+<pre><code>declare -A assoc=([key]=value)
+if [[ -v assoc['key'] ]]
+  echo 'exists'
+fi  <span class="sh-comment"># =&gt; exists</span>
+</code></pre>
+<p>OSH currently treats these expressions as a string, which means the status will
+be 1 (<code>false</code>).</p>
+<p>Workaround:</p>
+<pre><code>if [[ &quot;${assoc['key']:+exists}&quot; ]]; then
+  echo 'exists'
+fi  <span class="sh-comment"># =&gt; exists</span>
+</code></pre>
+<p>In ysh, you can use:</p>
+<pre><code>var d = { key: 42 }
+if ('key' in d) {
+  echo 'exists'
+}  <span class="sh-comment"># =&gt; exists</span>
+</code></pre>
+<a name="data-structures"></a>
+<h2>Data Structures</h2>
+<a name="arrays-arent-split-inside"></a>
+<h3>Arrays aren't split inside ${}</h3>
+<p>Most shells split the entries of arrays like <code>&quot;$@&quot;</code> and <code>&quot;${a[@]}&quot;</code> here:</p>
+<pre><code>echo ${undef:-&quot;$@&quot;}
+</code></pre>
+<p>In OSH, omit the quotes if you want splitting:</p>
+<pre><code>echo ${undef:-$@}
+</code></pre>
+<p>I think OSH is more consistent, but it disagrees with other shells.</p>
+<a name="values-are-tagged-with-types-not-locations-declare-i-a-a"></a>
+<h3>Values are tagged with types, not locations (<code>declare -i -a -A</code>)</h3>
+<p>Even though there's a large common subset, OSH and bash have a different model
+for typed data.</p>
+<ul>
+<li>In OSH, <strong>values</strong> are tagged with types, which is how Python and JavaScript
+work.</li>
+<li>In bash, <strong>cells</strong> (locations for values) are tagged with types.  Everything
+is a string, but in certain contexts, strings are treated as integers or as
+structured data.</li>
+</ul>
+<p>In particular,</p>
+<ul>
+<li>The <code>-i</code> flag is a no-op in OSH.  See <a href="shell-idioms.html#remove-dynamic-parsing">Shell Idioms &gt; Remove Dynamic
+Parsing</a> for alternatives to <code>-i</code>.</li>
+<li>The <code>-a</code> and <code>-A</code> flags behave differently.  They pertain to the value, not
+the location.</li>
+</ul>
+<p>For example, these two statements are different in bash, but the same in OSH:</p>
+<pre><code>declare -A assoc     <span class="sh-comment"># unset cell that will LATER be an assoc array</span>
+declare -A assoc=()  <span class="sh-comment"># empty associative array</span>
+</code></pre>
+<p>In bash, you can tell the difference with <code>set -u</code>, but there's no difference
+in OSH.</p>
+<a name="indexed-and-associative-arrays-are-distinct"></a>
+<h3>Indexed and Associative arrays are distinct</h3>
+<p>Here is how you can create arrays in OSH, in a bash-compatible way:</p>
+<pre><code>local indexed=(foo bar)
+local -a indexed=(foo bar)            <span class="sh-comment"># -a is redundant</span>
+echo ${indexed[1]}                    <span class="sh-comment"># bar</span>
+
+local -A assoc=(['one']=1 ['two']=2)  <span class="sh-comment"># -A is necessary</span>
+echo ${assoc['one']}                  <span class="sh-comment"># 1</span>
+</code></pre>
+<p>In bash, the distinction between the two is blurry, with cases like this:</p>
+<pre><code>local -A x=(foo bar)                  <span class="sh-comment"># -A disagrees with literal</span>
+local -a y=(['one']=1 ['two']=2)      <span class="sh-comment"># -a disagrees with literal</span>
+</code></pre>
+<p>The latter was disallowed in OSH, but <code>osh &gt;= 0.28.0</code> has started to support
+it.</p>
+<p>Notes:</p>
+<ul>
+<li>The <code>=</code> keyword is useful for gaining an understanding of the data model.</li>
+<li>See the <a href="quirks.html">Quirks</a> doc for details on how OSH uses this cleaner
+model while staying compatible with bash.</li>
+</ul>
+<a name="assignment-builtins"></a>
+<h2>Assignment builtins</h2>
+<p>The assignment builtins are <code>export</code>, <code>readonly</code>, <code>local</code>, and
+<code>declare</code>/<code>typeset</code>.  They're parsed in 2 ways:</p>
+<ul>
+<li>Statically: to avoid word splitting in <code>declare x=$y</code> when <code>$y</code> contains
+spaces.  bash and other shells behave this way.</li>
+<li>Dynamically: to handle expressions like <code>declare $1</code> where <code>$1</code> is <code>a=b</code></li>
+</ul>
+<a name="builtin-declare-xy-is-a-runtime-error"></a>
+<h3><code>builtin declare x=$y</code> is a runtime error</h3>
+<p>This is because the special parsing of <code>x=$y</code> depends on the first word
+<code>declare</code>.</p>
+<a name="args-arent-split-or-globbed"></a>
+<h3>Args aren't split or globbed</h3>
+<p>In bash, you can do unusual things with args to assignment builtins:</p>
+<pre><code>vars='a=b x=y'
+touch foo=bar.py spam=eggs.py
+
+declare $vars *.py       <span class="sh-comment"># assigns at least 4 variables</span>
+echo $a       <span class="sh-comment"># b</span>
+echo $x       <span class="sh-comment"># y</span>
+echo $foo     <span class="sh-comment"># bar.py</span>
+echo $spam    <span class="sh-comment"># eggs.py</span>
+</code></pre>
+<p>In contrast, OSH doesn't split or glob args to assignment builtins.  This is
+more like the behavior of zsh.</p>
+<a name="pipelines"></a>
+<h2>Pipelines</h2>
+<a name="last-pipeline-part-may-run-in-shell-process-zsh-bash-shopt-s-lastpipe"></a>
+<h3>Last pipeline part may run in shell process (zsh, bash <code>shopt -s lastpipe</code>)</h3>
+<p>In this pipeline, the builtin <code>read</code> is run in the shell process, not a child
+process:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo hi | read x</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo x=$x</span>
+x=hi  <span class="sh-comment"># empty in bash unless shopt -s lastpipe</span>
+</code></pre>
+<p>If the last part is an external command, there is no difference:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">ls | wc -l</span>
+42
+</code></pre>
+<p>This is how zsh behaves, and how bash (sometimes) behaves with <code>shopt -s lastpipe</code>.</p>
+<a name="pipelines-cant-be-suspended-with-ctrl-z"></a>
+<h3>Pipelines can't be suspended with Ctrl-Z</h3>
+<p>Because the last part may be the current shell process, the entire pipeline
+can't be suspended.</p>
+<p>OSH and zsh share this consequence of the <code>lastpipe</code> semantics.</p>
+<p>In contrast, bash's <code>shopt -s lastpipe</code> is ignored in interactive shells.</p>
+<a name="pipestatus-is-only-set-after-an-actual-pipeline"></a>
+<h3><code>${PIPESTATUS[@]}</code> is only set after an actual pipeline</h3>
+<p>This makes it easier to check compound status codes without worrying about them
+being &quot;clobbered&quot;.</p>
+<p>Bash will set <code>${PIPESTATUS[@]}</code> on every command, regardless of whether its a
+pipeline.</p>
+<a name="more-differences-at-runtime"></a>
+<h2>More Differences at Runtime</h2>
+<a name="alias-expansion"></a>
+<h3>Alias expansion</h3>
+<p>Almost all &quot;real&quot; aliases should work in OSH.  But these don't work:</p>
+<pre><code>alias left='{'
+left echo hi; }
+</code></pre>
+<p>(cases #33-#34 in <a href="../test/spec.wwz/alias.html">spec/alias</a>)</p>
+<p>or</p>
+<pre><code>alias a=
+a (( var = 0 ))
+</code></pre>
+<p>Details on the OSH parsing model:</p>
+<ol>
+<li>Your code is statically parsed into an abstract syntax tree, which contains
+many types of nodes.</li>
+<li><code>SimpleCommand</code> are the only ones that are further alias-expanded.</li>
+</ol>
+<p>For example, these result in <code>SimpleCommand</code> nodes:</p>
+<ul>
+<li><code>ls -l</code></li>
+<li><code>read -n 1</code> (normally a builtin)</li>
+<li><code>myfunc foo</code></li>
+</ul>
+<p>These don't:</p>
+<ul>
+<li><code>x=42</code></li>
+<li><code>declare -r x=42</code></li>
+<li><code>break</code>, <code>continue</code>, <code>return</code>, <code>exit</code> — as explained above, these are
+keywords and not builtins.</li>
+<li><code>{ echo one; echo two; }</code></li>
+<li><code>for</code>, <code>while</code>, <code>case</code>, functions, etc.</li>
+</ul>
+<a name="extended-globs-are-more-static-like-mksh-and-have-other-differences"></a>
+<h3>Extended globs are more static like <code>mksh</code>, and have other differences</h3>
+<p>That is, in OSH and mksh, something like <code>echo *.@(cc|h)</code> is an extended glob.
+But <code>echo $x</code>, where <code>$x</code> contains the pattern, is not.</p>
+<p>For more details and differences, see the <a href="word-language.html#extended-glob">Extended Glob
+section</a> of the Word Language doc.</p>
+<a name="completion"></a>
+<h3>Completion</h3>
+<p>The OSH completion API is mostly compatible with the bash completion API,
+except that it moves the <strong>responsibility for quoting</strong> out of plugins and onto
+the shell itself.  Plugins should return candidates as <code>argv</code> entries, not
+shell words.</p>
+<p>See the <a href="completion.html">completion doc</a> for details.</p>
+<a name="interactive-features"></a>
+<h2>Interactive Features</h2>
+<a name="history-substitution-language"></a>
+<h3>History Substitution Language</h3>
+<p>The rules for history substitution like <code>!echo</code> are simpler.  There are no
+special cases to avoid clashes with <code>${!indirect}</code> and so forth.</p>
+<p>TODO: Link to the history lexer.</p>
+
+<a name="links"></a>
+<h2>Links</h2>
+<ul>
+<li><a href="../test/spec.wwz/survey/osh.html">OSH Spec Tests</a> run shell snippets with OSH and other
+shells to compare their behavior.</li>
+</ul>
+<p>External:</p>
+<ul>
+<li>This list may seem long, but compare the list of differences in <a href="https://www.gnu.org/software/bash/manual/html_node/Bash-POSIX-Mode.html">Bash POSIX
+Mode</a>.
+That page tells you what <code>set -o posix</code> does in bash.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

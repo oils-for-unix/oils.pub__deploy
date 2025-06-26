@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Errors (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-errors.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>Errors</strong></p>
+</div>
+<p>This chapter describes <strong>errors</strong> for data languages.  An error checklist is
+often a nice, concise way to describe a language.</p>
+<p>Related: <a href="../error-catalog.html">Oils Error Catalog, With Hints</a> describes
+errors in code.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#UTF8">UTF8</a> <br/>
+  <a class="dense-toc-h3" href="#err-utf8-encode">err-utf8-encode</a> <br/>
+  <a class="dense-toc-h3" href="#err-utf8-decode">err-utf8-decode</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#J8-String">J8 String</a> <br/>
+  <a class="dense-toc-h3" href="#err-j8-str-encode">err-j8-str-encode</a> <br/>
+  <a class="dense-toc-h3" href="#err-j8-str-decode">err-j8-str-decode</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#J8-Lines">J8 Lines</a> <br/>
+  <a class="dense-toc-h3" href="#err-j8-lines-encode">err-j8-lines-encode</a> <br/>
+  <a class="dense-toc-h3" href="#err-j8-lines-decode">err-j8-lines-decode</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#JSON">JSON</a> <br/>
+  <a class="dense-toc-h3" href="#err-json-encode">err-json-encode</a> <br/>
+  <a class="dense-toc-h3" href="#err-json-decode">err-json-decode</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#JSON8">JSON8</a> <br/>
+  <a class="dense-toc-h3" href="#err-json8-encode">err-json8-encode</a> <br/>
+  <a class="dense-toc-h3" href="#err-json8-decode">err-json8-decode</a> <br/>
+</div>
+</div>
+</div>
+<a name="UTF8"></a>
+<h2>UTF8</h2>
+<p>J8 Notation is built on UTF-8, so let's summarize UTF-8 errors.</p>
+<a name="err-utf8-encode"></a>
+<h3>err-utf8-encode</h3>
+<p>Oils stores strings as UTF-8 in memory, so it doesn't encode UTF-8 often.</p>
+<p>But it may have a function to encode UTF-8 from a <code>List[Int]</code>.  These errors
+would be handled:</p>
+<ol>
+<li>Integer greater than max code point</li>
+<li>Code point in the surrogate range</li>
+</ol>
+<a name="err-utf8-decode"></a>
+<h3>err-utf8-decode</h3>
+<p>A UTF-8 decoder should handle these errors:</p>
+<ol>
+<li>Overlong encoding.  In UTF-8, each code point should be represented with the
+fewest possible bytes.
+<ul>
+<li>Overlong encodings are the equivalent of writing the integer <code>42</code> as
+<code>042</code>, <code>0042</code>, <code>00042</code>, etc.  This is not allowed.</li>
+</ul>
+</li>
+<li>Surrogate code point.  The sequence decodes to a code point in the surrogate
+range, which is used only for the UTF-16 encoding, not for string data.</li>
+<li>Exceeds max code point.  The sequence decodes to an integer that's larger
+than the maximum code point.</li>
+<li>Bad encoding.  A byte is not encoded like a UTF-8 start byte or a
+continuation byte.</li>
+<li>Incomplete sequence.  Too few continuation bytes appeared after the start
+byte.</li>
+</ol>
+<a name="J8-String"></a>
+<h2>J8 String</h2>
+<p>J8 strings extend <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> strings, and are a primary building block of J8
+Notation.</p>
+<a name="err-j8-str-encode"></a>
+<h3>err-j8-str-encode</h3>
+<p>J8 strings can represent any string — bytes or unicode — so there
+are <strong>no encoding errors</strong>.</p>
+<a name="err-j8-str-decode"></a>
+<h3>err-j8-str-decode</h3>
+<ol>
+<li>Escape sequence like <code>\u{dc00}</code> should not be in the surrogate range.
+<ul>
+<li>This means it doesn't represent a real character.  Byte escapes like
+<code>\yff</code> should be used instead.</li>
+</ul>
+</li>
+<li>Escape sequence like <code>\u{110000}</code> is greater than the maximum Unicode code
+point.</li>
+<li>Byte escapes like <code>\yff</code> should not be in <code>u''</code> string.
+<ul>
+<li>By design, they're only valid in <code>b''</code> strings.</li>
+</ul>
+</li>
+</ol>
+<p>Implementation-defined limit:</p>
+<ol start="4">
+<li>Max string length (NYI)
+<ul>
+<li>e.g. more than 4 billion bytes could overflow a length field, in some
+implementations</li>
+</ul>
+</li>
+</ol>
+<a name="J8-Lines"></a>
+<h2>J8 Lines</h2>
+<p>Roughly speaking, J8 Lines are an encoding for a stream of J8 strings.  In
+<a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, it's used by <code>@(split command sub)</code>.</p>
+<a name="err-j8-lines-encode"></a>
+<h3>err-j8-lines-encode</h3>
+<p>Like J8 strings, J8 Lines have no encoding errors by design.</p>
+<a name="err-j8-lines-decode"></a>
+<h3>err-j8-lines-decode</h3>
+<ol>
+<li>Any error in a J8 quoted string.
+<ul>
+<li>e.g. no closing quote, invalid UTF-8, invalid backslash escape, ...</li>
+</ul>
+</li>
+<li>A line with a quoted string has extra text after it.
+<ul>
+<li>e.g. <code>&quot;mystr&quot; extra</code>.</li>
+</ul>
+</li>
+<li>An unquoted line is not valid UTF-8.</li>
+</ol>
+<a name="JSON"></a>
+<h2>JSON</h2>
+<a name="err-json-encode"></a>
+<h3>err-json-encode</h3>
+<p>JSON encoding has these errors:</p>
+<ol>
+<li>Object of this type can't be serialized.
+<ul>
+<li>For example, <code>Str List Dict</code> are Oils objects can be serialized, but
+<code>Eggex Func Range</code> can't.</li>
+</ul>
+</li>
+<li>Circular reference.
+<ul>
+<li>e.g. a Dict that points to itself, a List that points to itself, and other
+permutations</li>
+</ul>
+</li>
+<li>Float values of NaN, Inf, and -Inf can't be encoded.
+<ul>
+<li>(These encode to <code>null</code> in Oils, following JavaScript.)</li>
+</ul>
+</li>
+</ol>
+<p>Note that invalid UTF-8 bytes like <code>0xfe</code> produce a Unicode replacement
+character, not a hard error.</p>
+<a name="err-json-decode"></a>
+<h3>err-json-decode</h3>
+<ol>
+<li>The encoded message itself is not valid UTF-8.
+<ul>
+<li>(Typically, you need to check the unescaped bytes in string literals
+<code>&quot;abc\n&quot;</code>).</li>
+</ul>
+</li>
+<li>Lexical error, like
+<ul>
+<li>the message <code>+</code></li>
+<li>an invalid escape <code>&quot;\z&quot;</code> or a truncated escape <code>&quot;\u1&quot;</code></li>
+<li>A single quoted string like <code>u''</code></li>
+</ul>
+</li>
+<li>Grammatical error
+<ul>
+<li>like the message <code>}{</code></li>
+</ul>
+</li>
+<li>Unexpected trailing input
+<ul>
+<li>like the message <code>42]</code> or <code>{}]</code></li>
+</ul>
+</li>
+</ol>
+<p>Implementation-defined limits, i.e. outside the grammar:</p>
+<ol start="5">
+<li>Integer too big
+<ul>
+<li>implementations may decode to a 64-bit integer</li>
+</ul>
+</li>
+<li>Floats that are too big
+<ul>
+<li>may decode to <code>Inf</code></li>
+</ul>
+</li>
+<li>Max array length (NYI)
+<ul>
+<li>e.g. more than 4 billion objects in an array could overflow a length
+field, in some implementations</li>
+</ul>
+</li>
+<li>Max object length (NYI)</li>
+<li>Max depth for arrays and objects (NYI)
+<ul>
+<li>to avoid a recursive parser blowing the stack</li>
+</ul>
+</li>
+</ol>
+<a name="JSON8"></a>
+<h2>JSON8</h2>
+<a name="err-json8-encode"></a>
+<h3>err-json8-encode</h3>
+<p>JSON8 has the same encoding errors as JSON.</p>
+<p>However, the encoding is lossless by design.  Instead of invalid UTF-8 being
+turned into a Unicode replacement character, it can use J8 strings with byte
+escapes like <code>b'byte \yfe\yff'</code>.</p>
+<a name="err-json8-decode"></a>
+<h3>err-json8-decode</h3>
+<p>JSON8 has the same decoding errors as JSON, plus J8 string decoding errors.</p>
+<p>See <a href="#err-j8-str-decode">err-j8-str-decode</a>.</p>
+
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>How We Build Oils Documentation</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/doc-toolchain.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>How We Build Oils Documentation</h1>
+<ol>
+<li>Write Markdown by hand, with optional &quot;front matter&quot;.</li>
+<li>Render Markdown to HTML, and run the result through our own HTML filters.</li>
+<li>Publish static HTML to <a href="https://www.oilshell.org/">https://www.oilshell.org/</a>.</li>
+</ol>
+<p>The code is in the <a href="https://github.com/oils-for-unix/oils/blob/master/doctools/">doctools/</a> directory, which uses the
+<a href="https://github.com/oils-for-unix/oils/blob/master/lazylex/">lazylex/</a>  library.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#quick-start">Quick Start</a></div>
+  <div class="toclevel1"><a href="#front-matter-and-title">Front Matter and Title</a></div>
+  <div class="toclevel1"><a href="#plugins-that-transform-html">Plugins That Transform HTML</a></div>
+  <div class="toclevel2"><a href="#table-of-contents">Table of Contents</a></div>
+  <div class="toclevel2"><a href="#link-shortcuts-eg-xref">Link Shortcuts, e.g. <code>$xref</code></a></div>
+  <div class="toclevel2"><a href="#syntax-highlighting-of-code-blocks">Syntax Highlighting of Code Blocks</a></div>
+  <div class="toclevel1"><a href="#convenient-tables-with-ul-table">Convenient Tables with <code>ul-table</code></a></div>
+  <div class="toclevel1"><a href="#code-location">Code Location</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="quick-start"></a>
+<h2>Quick Start</h2>
+<p>To build and preview this doc, run:</p>
+<pre><code>build/doc.sh split-and-render doc/doc-toolchain.md
+</code></pre>
+<p>Open the path in prints in your browser
+(<code>_release/VERSION/doc/doc-toolchain.html</code>).</p>
+<a name="front-matter-and-title"></a>
+<h2>Front Matter and Title</h2>
+<p>Most docs start with something like this:</p>
+<pre><code>---
+in_progress: yes
+default_highlighter: oils-sh
+---
+
+My Title
+========
+
+Hello
+</code></pre>
+<p>The &quot;front matter&quot; between <code>---</code> lines is metadata for rendering the doc.
+Github's web UI understands and renders it.</p>
+<a name="plugins-that-transform-html"></a>
+<h2>Plugins That Transform HTML</h2>
+<p>We have some HTML plugins that make writing <strong>markdown</strong> easier.
+Note that <a href="https://www.oilshell.org/blog/2018/02/14.html">CommonMark</a> tightens up the rules for embedding HTML in Markdown,
+and that is very useful.</p>
+<a name="table-of-contents"></a>
+<h3>Table of Contents</h3>
+<p>Insert this into the doc</p>
+<pre><code>&lt;div id=&quot;toc&quot;&gt;
+&lt;/div&gt;
+</code></pre>
+<p>and it will be expanded into a table of contents derived from <code>h2</code> and <code>h3</code>
+tags.</p>
+<a name="link-shortcuts-eg-xref"></a>
+<h3>Link Shortcuts, e.g. <code>$xref</code></h3>
+<p>Markdown:</p>
+<pre><code>The [GNU bash shell]($xref:bash)
+</code></pre>
+<p>After <a href="https://www.oilshell.org/blog/2018/02/14.html">CommonMark</a>:</p>
+<pre><code>The &lt;a href=&quot;$xref:bash&quot;&gt;GNU bash shell&lt;/a&gt;
+</code></pre>
+<p>After our <code>$xref:</code> plugin:</p>
+<pre><code>The &lt;a href=&quot;/cross-ref.html#bash&quot;&gt;GNU bash shell&lt;/a&gt;
+</code></pre>
+<p>Example: The <a href="/cross-ref.html?tag=bash#bash">GNU bash shell</a></p>
+<hr />
+<p>If the argument is omitted, then the <strong>anchor text</strong> is used.  So you can just write:</p>
+<pre><code>[bash][]
+</code></pre>
+<p>and it will become:</p>
+<pre><code>The &lt;a href=&quot;/cross-ref.html#bash&quot;&gt;bash&lt;/a&gt;
+</code></pre>
+<p>Example: <a href="/cross-ref.html?tag=bash#bash">bash</a></p>
+<p>List of plugins:</p>
+<ul>
+<li><code>$xref:bash</code> expands to <code>/cross-ref.html#bash</code> (shown above)</li>
+<li><code>$blog-tag:oil-release</code> expands to <code>/blog/tags.html#oil-release</code></li>
+<li><code>$oils-src</code></li>
+</ul>
+<p>See the raw and rendered versions of this doc for more:</p>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/doc/doc-plugins.md">doc-plugins.md</a></li>
+<li><a href="doc-plugins.html">doc-plugins.html</a></li>
+</ul>
+<a name="syntax-highlighting-of-code-blocks"></a>
+<h3>Syntax Highlighting of Code Blocks</h3>
+<p>Use Markdown's fenced code blocks like this:</p>
+<pre><code>```oil-sh
+ysh$ var x = 'hello world'
+ysh$ echo $x
+hello world
+```
+</code></pre>
+<p>Example:</p>
+<pre><code class="language-oil-sh"><span class="sh-prompt">ysh$</span> <span class="sh-command">var x = 'hello world'</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">echo $x</span>
+hello world
+</code></pre>
+<p>Or you can set <code>default_highlighter</code> for blocks indented by 4 spaces.</p>
+<p>Again see <a href="https://github.com/oils-for-unix/oils/blob/master/doc/doc-plugins.md">doc-plugins.md</a> for examples.</p>
+<a name="convenient-tables-with-ul-table"></a>
+<h2>Convenient Tables with <code>ul-table</code></h2>
+<p>See this doc: <a href="ul-table.html">ul-table: Markdown Tables Without New Syntax</a></p>
+<a name="code-location"></a>
+<h2>Code Location</h2>
+<ul>
+<li><a href="https://github.com/oils-for-unix/oils/blob/master/build/doc.sh">build/doc.sh</a> drives the tools in <a href="https://github.com/oils-for-unix/oils/blob/master/doctools/">doctools/</a>.</li>
+<li>Markdown files are in <a href="https://github.com/oils-for-unix/oils/blob/master/doc/">doc/</a>.</li>
+</ul>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="doc-plugins.html">Examples of HTML Plugins</a></li>
+<li><a href="ul-table.html">ul-table: Markdown Tables Without New Syntax</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

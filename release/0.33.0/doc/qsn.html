@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QSN: A Familiar String Interchange Format</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/qsn.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.33.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>QSN: A Familiar String Interchange Format</h1>
+<style>
+.q {
+  color: darkred;
+}
+.comment {
+  color: green;
+  font-style: italic;
+}
+.terminal {
+  color: darkred;
+  font-family: monospace;
+}
+.an {
+  color: darkgreen;
+}
+
+.attention {
+  font-size: x-large;
+  background-color: #DEE;
+  margin-left: 1em;
+  margin-right: 1em;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+</style>
+<p> </p>
+<p> </p>
+<div class=attention>
+<p> </p>
+<p>As of January 2024, QSN has been replaced by <a href="j8-notation.html">J8 Notation</a>.
+They're very similar, but J8 Notation is more &quot;harmonized&quot; with JSON.</p>
+<p> </p>
+</div>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>QSN (&quot;quoted string notation&quot;) is a data format for <strong>byte strings</strong>.
+Examples:</p>
+<pre>
+''                           <span class=comment># empty string</span>
+'my favorite song.mp3'
+'bob<span class=q>\t</span>1.0<span class=q>\n</span>carol<span class=q>\t</span>2.0<span class=q>\n</span>'     <span class=comment># tabs and newlines</span>
+'BEL = <span class=q>\x07</span>'                 <span class=comment># byte escape</span>
+'mu = <span class=q>\u{03bc}</span>'              <span class=comment># Unicode char escape</span>
+'mu = &#x03bc;'                     <span class=comment># represented literally, not escaped</span>
+</pre>
+<p>It's an adaptation of Rust's string literal syntax with a few use cases:</p>
+<ul>
+<li>To print filenames to a terminal.  Printing arbitrary bytes to a
+terminal is bad, so programs like <a href="/cross-ref.html?tag=coreutils#coreutils">coreutils</a> already have <a href="https://www.gnu.org/software/coreutils/quotes.html">informal
+QSN-like formats</a>.</li>
+<li>To exchange data between different programs, like <a href="https://json.org">JSON</a> or UTF-8.  Note
+that JSON can't express arbitrary byte strings.</li>
+<li>To solve the &quot;<a href="framing.html">framing problem</a>&quot; over pipes.  QSN represents
+newlines like <code>\n</code>, so literal newlines can be used to delimit records.</li>
+</ul>
+<p>Oil uses QSN because it's well-defined and parsable.  It's both human- and
+machine-readable.</p>
+<p>Any programming language or tool that understands JSON should also understand
+QSN.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#important-properties">Important Properties</a></div>
+  <div class="toclevel1"><a href="#more-qsn-use-cases">More QSN Use Cases</a></div>
+  <div class="toclevel1"><a href="#specification">Specification</a></div>
+  <div class="toclevel2"><a href="#a-short-description">A Short Description</a></div>
+  <div class="toclevel2"><a href="#an-analogy">An Analogy</a></div>
+  <div class="toclevel2"><a href="#full-spec">Full Spec</a></div>
+  <div class="toclevel1"><a href="#advantages-over-json-strings">Advantages Over JSON Strings</a></div>
+  <div class="toclevel1"><a href="#implementation-issues">Implementation Issues</a></div>
+  <div class="toclevel2"><a href="#how-does-a-qsn-encoder-deal-with-unicode">How Does a QSN Encoder Deal with Unicode?</a></div>
+  <div class="toclevel2"><a href="#which-bytes-should-be-hex-escaped">Which Bytes Should Be Hex-Escaped?</a></div>
+  <div class="toclevel2"><a href="#list-of-syntax-errors">List of Syntax Errors</a></div>
+  <div class="toclevel1"><a href="#reference-implementation-in-oil">Reference Implementation in Oil</a></div>
+  <div class="toclevel1"><a href="#appendices">Appendices</a></div>
+  <div class="toclevel2"><a href="#design-notes">Design Notes</a></div>
+  <div class="toclevel2"><a href="#related-links">Related Links</a></div>
+  <div class="toclevel2"><a href="#set-x-example"><code>set -x</code> example</a></div>
+</div>
+
+
+<a name="important-properties"></a>
+<h2>Important Properties</h2>
+<ul>
+<li>QSN can represent <strong>any byte sequence</strong>.</li>
+<li>Given a QSN-encoded string, any 2 decoders must produce the same byte string.
+(On the other hand, encoders have flexibility with regard to escaping.)</li>
+<li>An encoded string always fits on a <strong>single line</strong>.  Newlines must be encoded as
+<code>\n</code>, not literal.</li>
+<li>A encoded string always fits in a <strong>TSV cell</strong>.  Tabs must be encoded as <code>\t</code>,
+not literal.</li>
+<li>An encoded string can itself be <strong>valid UTF-8</strong>.
+<ul>
+<li>Example: <code>'μ \xff'</code> is valid UTF-8, even though the decoded string is not.</li>
+</ul>
+</li>
+<li>An encoded string can itself be <strong>valid ASCII</strong>.
+<ul>
+<li>Example: <code>'\xce\xbc'</code> is valid ASCII, even though the decoded string is
+not.</li>
+</ul>
+</li>
+</ul>
+<a name="more-qsn-use-cases"></a>
+<h2>More QSN Use Cases</h2>
+<ul>
+<li>To pack arbitrary bytes on a <strong>single line</strong>, e.g. for line-based tools like
+<a href="/cross-ref.html?tag=grep#grep">grep</a>, <a href="/cross-ref.html?tag=awk#awk">awk</a>, and <a href="/cross-ref.html?tag=xargs#xargs">xargs</a>.  QSN strings never contain
+literal newlines or tabs.</li>
+<li>For <code>set -x</code> in shell.  Like filenames, Unix <code>argv</code> arrays may contain
+arbitrary bytes.  There's an example in the appendix.
+<ul>
+<li><code>ps</code> has to display untrusted <code>argv</code> arrays.</li>
+<li><code>ls</code> has to display untrusted filenames.</li>
+<li><code>env</code> has to display untrusted byte strings.  (Most versions of <code>env</code> don't
+handle newlines well.)</li>
+</ul>
+</li>
+<li>As a building block for larger specifications, like <a href="qtt.html">QTT</a>.</li>
+<li>To transmit arbitrary bytes over channels that can only represent ASCII or
+UTF-8 (e.g. e-mail, Twitter).</li>
+</ul>
+<a name="specification"></a>
+<h2>Specification</h2>
+<a name="a-short-description"></a>
+<h3>A Short Description</h3>
+<ol>
+<li>Start with <a href="https://doc.rust-lang.org/reference/tokens.html#string-literals">Rust String Literal Syntax</a></li>
+<li>Use <strong>single quotes</strong> instead of double quotes to surround the string.  This
+is mainly to to avoid confusion with JSON.</li>
+</ol>
+<a name="an-analogy"></a>
+<h3>An Analogy</h3>
+<pre>
+
+     <span class=an>JavaScript Object Literals</span>   are to    <span class=an>JSON</span>
+as   <span class=an>Rust String Literals</span>         are to    <span class=an>QSN</span>
+
+</pre>
+<p>But QSN is <strong>not</strong> tied to either Rust or shell, just like JSON isn't tied to
+JavaScript.</p>
+<p>It's a <strong>language-independent format</strong> like UTF-8 or HTML.  We're only
+borrowing a design, so that it's well-specified and familiar.</p>
+<a name="full-spec"></a>
+<h3>Full Spec</h3>
+<p>TODO: The short description above should be sufficient, but we might want to
+write it out.</p>
+<ul>
+<li>Special escapes:
+<ul>
+<li><code>\t</code> <code>\r</code> <code>\n</code></li>
+<li><code>\'</code> <code>\&quot;</code></li>
+<li><code>\\</code></li>
+<li><code>\0</code></li>
+</ul>
+</li>
+<li>Byte escapes: <code>\x7F</code></li>
+<li>Character escapes: <code>\u{03bc}</code> or <code>\u{0003bc}</code>.  These are encoded as UTF-8.</li>
+</ul>
+<a name="advantages-over-json-strings"></a>
+<h2>Advantages Over JSON Strings</h2>
+<ul>
+<li>QSN can represent any byte string, like <code>'\x00\xff\x00'</code>.  JSON can't
+represent <strong>binary data</strong> directly.</li>
+<li>QSN can represent any code point, like <code>'\u{01f600}'</code> for 😀.  JSON
+needs awkward <a href="https://en.wikipedia.org/wiki/UTF-16#Code_points_from_U+010000_to_U+10FFFF">surrogate pairs</a> to represent this code point.</li>
+</ul>
+<a name="implementation-issues"></a>
+<h2>Implementation Issues</h2>
+<a name="how-does-a-qsn-encoder-deal-with-unicode"></a>
+<h3>How Does a QSN Encoder Deal with Unicode?</h3>
+<p>The input to a QSN encoder is a raw <strong>byte string</strong>.  However, the string may
+have additional structure, like being UTF-8 encoded.</p>
+<p>The encoder has three options to deal with this structure:</p>
+<ol>
+<li><strong>Don't decode</strong> UTF-8.  Walk through bytes one-by-one, showing unprintable
+ones with escapes like <code>\xce\xbc</code>.  Never emit escapes like <code>\u{3bc}</code> or
+literals like <code>μ</code>.  This option is OK for machines, but
+isn't friendly to humans who can read Unicode characters.</li>
+</ol>
+<p>Or <strong>speculatively decode</strong> UTF-8.  After decoding a valid UTF-8 sequence,
+there are two options:</p>
+<ol start="2">
+<li>
+<p>Show <strong>escaped code points</strong>, like <code>\u{3bc}</code>.  The encoded string is limited
+to the ASCII subset, which is useful in some contexts.</p>
+</li>
+<li>
+<p>Show them <strong>literally</strong>, like <code>μ</code>.</p>
+</li>
+</ol>
+<p>QSN encoding should never fail; it should only fall back to byte escapes like
+<code>\xff</code>.  TODO: Show the state machine for detecting and decoding UTF-8.</p>
+<p>Note: Strategies 2 and 3 indicate whether the string is valid UTF-8.</p>
+<a name="which-bytes-should-be-hex-escaped"></a>
+<h3>Which Bytes Should Be Hex-Escaped?</h3>
+<p>The reference implementation has two functions:</p>
+<ul>
+<li><code>IsUnprintableLow</code>: any byte below an ASCII space <code>' '</code> is escaped</li>
+<li><code>IsUnprintableHigh</code>: the byte <code>\x7f</code> and all bytes above are escaped, unless
+they're part of a valid UTF-8 sequence.</li>
+</ul>
+<p>In theory, only escapes like <code>\'</code> <code>\n</code> <code>\\</code> are strictly necessary, and no
+bytes need to be hex-escaped.  But that strategy would defeat the purpose of
+QSN for many applications, like printing filenames in a terminal.</p>
+<a name="list-of-syntax-errors"></a>
+<h3>List of Syntax Errors</h3>
+<p>QSN decoders must enforce (at least) these syntax errors:</p>
+<ul>
+<li>Literal newline or tab in a string.  Should be <code>\t</code> or <code>\n</code>.  (The lack of
+literal tabs and newlines is essential for <a href="qtt.html">QTT</a>.)</li>
+<li>Invalid character escape, e.g. <code>\z</code></li>
+<li>Invalid hex escape, e.g. <code>\xgg</code></li>
+<li>Invalid unicode escape, e.g. <code>\u{123</code> (incomplete)</li>
+</ul>
+<p>Separate messages aren't required for each error; the only requirement is that
+they not accept these sequences.</p>
+<a name="reference-implementation-in-oil"></a>
+<h2>Reference Implementation in Oil</h2>
+<ul>
+<li>Oil's <strong>encoder</strong> is in <a href="https://github.com/oils-for-unix/oils/blob/master/qsn_/qsn.py">qsn_/qsn.py</a>, including the state machine
+for the UTF-8 strategies.</li>
+<li>The <strong>decoder</strong> has a lexer in <a href="https://github.com/oils-for-unix/oils/blob/master/frontend/lexer_def.py">frontend/lexer_def.py</a>, and a
+&quot;parser&quot; / validator in <a href="https://github.com/oils-for-unix/oils/blob/master/qsn_/qsn_native.py">qsn_/qsn_native.py</a>.  (Note that QSN is a
+<a href="/cross-ref.html?tag=regular-language#regular-language">regular language</a>).</li>
+</ul>
+<p>The encoder has options to emit shell-compatible strings, which you probably
+<strong>don't need</strong>.  That is, C-escaped strings in bash look <code>$'like this\n'</code>.</p>
+<p>A <strong>subset</strong> of QSN is compatible with this syntax.  Example:</p>
+<pre><code>$'\x01\n'  # A valid bash string.  Removing $ makes it valid QSN.
+</code></pre>
+<p>Something like <code>$'\0065'</code> is never emitted, because QSN doesn't contain octal
+escapes.  It can be encoded  with hex or character escapes.</p>
+<a name="appendices"></a>
+<h2>Appendices</h2>
+<a name="design-notes"></a>
+<h3>Design Notes</h3>
+<p>The general idea: Rust string literals are like C and JavaScript string
+literals, without cruft like octal (<code>\755</code> or <code>\0755</code> — which is it?) and
+vertical tabs (<code>\v</code>).</p>
+<p>Comparison with shell strings:</p>
+<ul>
+<li><code>'Single quoted strings'</code> in shell can't represent arbitrary byte strings.</li>
+<li><code>$'C-style shell strings\n'</code> strings are similar to QSN, but have cruft like
+octal and <code>\v</code>.</li>
+<li><code>&quot;Double quoted strings&quot;</code> have unneeded features like <code>$var</code> and <code>$(command sub)</code>.</li>
+</ul>
+<p>Comparison with Python's <code>repr()</code>:</p>
+<ul>
+<li>A single quote in Python is <code>&quot;'&quot;</code>, whereas it's <code>'\''</code> in QSN</li>
+<li>Python has both <code>\uxxxx</code> and <code>\Uxxxxxxxx</code>, whereas QSN has the more natural
+<code>\u{xxxxxx}</code>.</li>
+</ul>
+<a name="related-links"></a>
+<h3>Related Links</h3>
+<ul>
+<li><a href="https://www.gnu.org/software/coreutils/quotes.html">GNU Coreutils - Quoting File names</a>.  <em>Starting with GNU
+coreutils version 8.25 (released Jan. 2016), ls's default output quotes
+filenames with special characters</em></li>
+<li><a href="https://en.wikipedia.org/wiki/In-band_signaling">In-band signaling</a> is the fundamental problem with filenames and
+terminals.  Code (control codes) and data are intermingled.</li>
+<li><a href="qtt.html">QTT</a> is a cleanup of CSV/TSV, built on top of QSN.</li>
+</ul>
+<a name="set-x-example"></a>
+<h3><code>set -x</code> example</h3>
+<p>When arguments don't have any spaces, there's no ambiguity:</p>
+<pre><code>$ set -x
+$ echo two args
++ echo two args
+</code></pre>
+<p>Here we need quotes to show that the <code>argv</code> array has 3 elements:</p>
+<pre><code>$ set -x
+$ x='a b'
+$ echo &quot;$x&quot; c
++ echo 'a b' c
+</code></pre>
+<p>And we want the trace to fit on a single line, so we print a QSN string with
+<code>\n</code>:</p>
+<pre><code>$ set -x
+$ x=$'a\nb'
+$ echo &quot;$x&quot; c
++ echo $'a\nb' c
+</code></pre>
+<p>Here's an example with unprintable characters:</p>
+<pre><code>$ set -x
+$ x=$'\e\001'
+$ echo &quot;$x&quot;
++ echo $'\x1b\x01'
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 25 Jun 2025 20:31:31 -0400</i>
+    </div>
+  </body>
+</html>

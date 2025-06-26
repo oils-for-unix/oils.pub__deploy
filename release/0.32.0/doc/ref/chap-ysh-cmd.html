@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Command Language Keywords (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-ysh-cmd.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>YSH Command Language Keywords</strong></p>
+</div>
+<p>This chapter describes new YSH keywords in the command language.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Assignment">Assignment</a> <br/>
+  <a class="dense-toc-h3" href="#const">const</a> <br/>
+  <a class="dense-toc-h3" href="#var">var</a> <br/>
+  <a class="dense-toc-h3" href="#setvar">setvar</a> <br/>
+  <a class="dense-toc-h3" href="#setglobal">setglobal</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Expression">Expression</a> <br/>
+  <a class="dense-toc-h3" href="#equal">equal</a> <br/>
+  <a class="dense-toc-h3" href="#call">call</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Definitions">Definitions</a> <br/>
+  <a class="dense-toc-h3" href="#proc">proc</a> <br/>
+  <a class="dense-toc-h3" href="#func">func</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-return">ysh-return</a> <br/>
+</div>
+</div>
+</div>
+<a name="Assignment"></a>
+<h2>Assignment</h2>
+<a name="const"></a>
+<h3>const</h3>
+<p>Binds a name to a YSH expression on the right, with a <strong>dynamic</strong> check to
+prevent mutation.</p>
+<pre><code>const c = 'mystr'        <span class="sh-comment"># equivalent to readonly c=mystr</span>
+const pat = / digit+ /   <span class="sh-comment"># an eggex, with no shell equivalent</span>
+</code></pre>
+<p>If you try to re-declare or mutate the name, the shell will fail with a runtime
+error.  <code>const</code> uses the same mechanism as the <code>readonly</code> builtin.</p>
+<p>Consts should only appear at the top-level, and can't appear within <code>proc</code> or
+<code>func</code>.</p>
+<a name="var"></a>
+<h3>var</h3>
+<p>Initializes a name to a YSH expression.</p>
+<pre><code>var s = 'mystr'        <span class="sh-comment"># equivalent to declare s=mystr</span>
+var pat = / digit+ /   <span class="sh-comment"># an eggex, with no shell equivalent</span>
+</code></pre>
+<p>It's either global or scoped to the current function.</p>
+<p>You can bind multiple variables:</p>
+<pre><code>var flag, i = parseArgs(spec, ARGV)
+
+var x, y = 42, 43
+</code></pre>
+<p>You can omit the right-hand side:</p>
+<pre><code>var x, y  <span class="sh-comment"># implicitly initialized to null</span>
+</code></pre>
+<a name="setvar"></a>
+<h3>setvar</h3>
+<p>At the top-level, setvar creates or mutates a variable.</p>
+<pre><code>setvar gFoo = 'mutable'
+</code></pre>
+<p>Inside a func or proc, it mutates a local variable declared with var.</p>
+<pre><code>proc p {
+  var x = 42
+  setvar x = 43
+}
+</code></pre>
+<p>You can mutate a List location:</p>
+<pre><code>setvar a[42] = 'foo'
+</code></pre>
+<p>Or a Dict location:</p>
+<pre><code>setvar d['key'] = 43
+setvar d.key = 43  <span class="sh-comment"># same thing</span>
+</code></pre>
+<p>You can use any of these these augmented assignment operators</p>
+<pre><code>+=   -=   *=   /=   **=   //=   %=
+&amp;=   |=   ^=   &lt;&lt;=   &gt;&gt;=
+</code></pre>
+<p>Examples:</p>
+<pre><code>setvar x += 2  <span class="sh-comment"># increment by 2</span>
+
+setvar a[42] *= 2  <span class="sh-comment"># multiply by 2</span>
+
+setvar d.flags |= 0b0010_000  <span class="sh-comment"># set a flag</span>
+</code></pre>
+<a name="setglobal"></a>
+<h3>setglobal</h3>
+<p>Creates or mutates a global variable.  Has the same syntax as <code>setvar</code>.</p>
+<a name="Expression"></a>
+<h2>Expression</h2>
+<a name="equal"></a>
+<h3>equal</h3>
+<p>The <code>=</code> keyword evaluates an expression and shows the result:</p>
+<pre><code><span class="sh-prompt">oil$</span> <span class="sh-command">= 1 + 2*3</span>
+(Int)   7
+</code></pre>
+<p>It's meant to be used interactively.  Think of it as an assignment with no
+variable on the left.</p>
+<a name="call"></a>
+<h3>call</h3>
+<p>The <code>call</code> keyword evaluates an expression and throws away the result:</p>
+<pre><code>var x = :| one two |
+call x-&gt;append('three')
+call x-&gt;append(['typed', 'data'])
+</code></pre>
+<a name="Definitions"></a>
+<h2>Definitions</h2>
+<a name="proc"></a>
+<h3>proc</h3>
+<p>Procs are like POSIX shell &quot;functions&quot;, but with named parameters.</p>
+<p>Instead of using shell's &quot;dynamic scope&quot; rules, they obey lexical scope.  In
+other words, they are closures.</p>
+<p>Here's a simple proc:</p>
+<pre><code>proc my-cp (src, dest) {
+  cp --verbose --verbose $src $dest
+}
+</code></pre>
+<p>Here's the most general form:</p>
+<pre><code>proc p (
+  w1, w2, ...rest_words;
+  t1, t2, ...rest_typed;
+  n1, n2, ...rest_named;
+  block) {
+
+  = w1
+  = t1
+  = n1
+  = block
+}
+</code></pre>
+<p>See the <a href="../proc-func.html">Guide to Procs and Funcs</a> for details.</p>
+<p>Compare with <a href="chap-builtin-cmd.html#sh-func">sh-func</a>.</p>
+<a name="func"></a>
+<h3>func</h3>
+<p>Funcs are pure functions, in the style of Python and JavaScript:</p>
+<pre><code>func add(x, y) {
+  return (x + y)
+}
+
+echo $[add(3, 2)]  <span class="sh-comment"># =&gt; 5</span>
+</code></pre>
+<p>Like procs, funcs are closures.</p>
+<p>See the <a href="../proc-func.html">Guide to Procs and Funcs</a> for details.</p>
+<a name="ysh-return"></a>
+<h3>ysh-return</h3>
+<p>To return an expression, wrap it in <code>()</code> as usual:</p>
+<pre><code>func inc(x) {
+  return (x + 1)
+}
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>J8 Notation - Fixing the JSON-Unix Mismatch</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/j8-notation.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.33.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>J8 Notation - Fixing the JSON-Unix Mismatch</h1>
+<p>J8 Notation is a set of text interchange formats.  It's a syntax for:</p>
+<ol>
+<li><strong>strings</strong> / bytes</li>
+<li>tree-shaped <strong>records</strong> (like <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>)</li>
+<li>line-based <strong>streams</strong> (like Unix)</li>
+<li><strong>tables</strong> (like TSV)</li>
+</ol>
+<p>It's part of the Oils project, and is intended to solve the <em>JSON-Unix
+Mismatch</em>: the Unix kernel deals with bytes, while JSON deals with Unicode
+strings (plus UTF-16 errors).</p>
+<p>It's backward compatible with <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>, and built on top of
+it.</p>
+<p>But just like JSON isn't only for JavaScript, J8 Notation isn't only for Oils.
+Any language understands JSON should also understand J8 Notation.</p>
+<p>(Note: J8 replaced the similar <a href="qsn.html">QSN</a> design in January
+2024.  QSN wasn't as compatible with both JSON and YSH code.)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#quick-picture">Quick Picture</a></div>
+  <div class="toclevel1"><a href="#goals">Goals</a></div>
+  <div class="toclevel1"><a href="#reference">Reference</a></div>
+  <div class="toclevel2"><a href="#todo-diagrams">TODO / Diagrams</a></div>
+  <div class="toclevel1"><a href="#j8-strings-unicode-and-bytes">J8 Strings - Unicode and bytes</a></div>
+  <div class="toclevel2"><a href="#review-of-json-strings">Review of JSON strings</a></div>
+  <div class="toclevel2"><a href="#j8-description">J8 Description</a></div>
+  <div class="toclevel2"><a href="#whats-representable-by-each-style">What's representable by each style?</a></div>
+  <div class="toclevel2"><a href="#assymmetry-of-encoders-and-decoders">Assymmetry of Encoders and Decoders</a></div>
+  <div class="toclevel2"><a href="#ysh-has-2-of-the-3-styles">YSH has 2 of the 3 styles</a></div>
+  <div class="toclevel2"><a href="#j8-strings-vs-posix-shell-strings">J8 Strings vs. POSIX Shell Strings</a></div>
+  <div class="toclevel1"><a href="#json8-tree-shaped-records">JSON8 - Tree-Shaped Records</a></div>
+  <div class="toclevel2"><a href="#review-of-json">Review of JSON</a></div>
+  <div class="toclevel2"><a href="#json8-description">JSON8 Description</a></div>
+  <div class="toclevel1"><a href="#j8-lines-lines-of-text">J8 Lines - Lines of Text</a></div>
+  <div class="toclevel1"><a href="#tsv8-table-shaped-text">TSV8 - Table-Shaped Text</a></div>
+  <div class="toclevel2"><a href="#review-of-tsv">Review of TSV</a></div>
+  <div class="toclevel2"><a href="#tsv8-description">TSV8 Description</a></div>
+  <div class="toclevel2"><a href="#design-notes">Design Notes</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#related-links">Related Links</a></div>
+  <div class="toclevel2"><a href="#future-work">Future Work</a></div>
+  <div class="toclevel1"><a href="#faq">FAQ</a></div>
+  <div class="toclevel2"><a href="#why-are-byte-escapes-spelled-yff-and-not-xff-as-in-c">Why are byte escapes spelled <code>\yff</code>, and not <code>\xff</code> as in C?</a></div>
+  <div class="toclevel2"><a href="#why-have-both-u-and-b-strings-if-only-b-is-technically-needed">Why have both <code>u''</code> and <code>b''</code> strings, if only <code>b''</code> is technically needed?</a></div>
+  <div class="toclevel2"><a href="#why-not-use-double-quotes-like-u-and-b">Why not use double quotes like <code>u&quot;&quot;</code> and <code>b&quot;&quot;</code>?</a></div>
+  <div class="toclevel2"><a href="#how-do-i-write-a-j8-encoder-and-decoder">How do I write a J8 encoder and decoder?</a></div>
+  <div class="toclevel2"><a href="#should-a-j8-number-be-mapped-to-an-int-float-or-decimal-type">Should a J8 number be mapped to an Int, Float, or Decimal type?</a></div>
+  <div class="toclevel1"><a href="#glossary">Glossary</a></div>
+</div>
+<a name="quick-picture"></a>
+<h2>Quick Picture</h2>
+<style>
+  .uni4 {
+    /* color: #111; */
+  }
+  .dq {
+    color: darkred;
+  }
+  .sq {
+    color: #111;
+  }
+</style>
+<p>There are 3 styles of J8 strings:</p>
+<pre style="font-size: x-large;">
+ <span class=dq>"</span>hi &#x1f642; \u<span class=uni4>D83D</span>\u<span class=uni4>DE42</span><span class=dq>"</span>      <span class="sh-comment"># JSON-style, with surrogate pair</span>
+
+<span class=sq>b'</span>hi &#x1f642; \yF0\y9F\y99\y82<span class=sq>'</span>  <span class="sh-comment"># Can be ANY bytes, including UTF-8</span>
+
+<span class=sq>u'</span>hi &#x1f642; \u{1F642}<span class=sq>'</span>         <span class="sh-comment"># nice alternative syntax</span>
+</pre>
+<p>They all denote the same decoded string — &quot;hi&quot; and two <code>U+1F642</code> smiley
+faces:</p>
+<pre style="font-size: x-large;">
+hi &#x1f642; &#x1f642;
+</pre>
+<p>Why did we add these <code>u''</code> and <code>b''</code> strings?</p>
+<ul>
+<li>We want to represent any string that a Unix kernel can emit (<code>argv</code> arrays,
+env variables, filenames, file contents, etc.)
+<ul>
+<li>J8 encoders emit <code>b''</code> strings to avoid losing information.</li>
+</ul>
+</li>
+<li><code>u''</code> strings are like <code>b''</code> strings, but they can only express valid
+Unicode strings.</li>
+</ul>
+
+<hr />
+<p>Now, starting with J8 strings, we define the formats JSON8:</p>
+<pre><code>{ name: &quot;Alice&quot;,
+  signature: b'\y01 ... \yff',  <span class="sh-comment"># binary data</span>
+}
+</code></pre>
+<p>J8 Lines:</p>
+<pre><code>  doc/hello.md
+ &quot;doc/with spaces.md&quot;
+b'doc/with byte \yff.md'
+</code></pre>
+<p>and TSV8:</p>
+<pre><code>!tsv8   size    name
+!type   Int     Str
+        42        doc/hello.md
+        55       &quot;doc/with spaces.md&quot;
+        99      b'doc/with byte \yff.md'
+</code></pre>
+<p>Together, these are called <em>J8 Notation</em>.</p>
+<p>(JSON8 and TSV8 are still to be fully implemented in Oils.).</p>
+<a name="goals"></a>
+<h2>Goals</h2>
+<ol>
+<li>Fix the <strong>JSON-Unix mismatch</strong>: all text formats should be able to express
+byte strings.
+<ul>
+<li>But it's OK to use plain JSON in Oils, e.g. when filenames are known to be
+strings.</li>
+</ul>
+</li>
+<li>Provide an option to avoid the surrogate pair / <strong>UTF-16 legacy</strong> of JSON.</li>
+<li>Allow expressing metadata about <strong>strings vs. bytes</strong>.</li>
+<li>Turn TSV into an <strong>exterior</strong> <a href="https://www.oilshell.org/blog/2018/11/30.html">data
+frame</a> format.
+<ul>
+<li>Unix tools like <code>awk</code>, <code>cut</code>, and <code>sort</code> already understand tables
+informally.</li>
+</ul>
+</li>
+</ol>
+
+<p>Non-goals:</p>
+<ol>
+<li>&quot;Replace&quot; JSON.  JSON8 is backward compatible with JSON, and sometimes the
+lossy encoding is OK.</li>
+<li>Resolve the strings vs. bytes dilemma in all situations.
+<ul>
+<li>Like JSON, our spec is <strong>syntactic</strong>.  We don't specify a mapping from J8
+strings to interior data types in any particular language.</li>
+</ul>
+</li>
+</ol>
+
+<a name="reference"></a>
+<h2>Reference</h2>
+<p>See the <a href="ref/toc-data.html">Data Notation Table of Contents</a> in the <a href="ref/index.html">Oils
+Reference</a>.</p>
+<a name="todo-diagrams"></a>
+<h3>TODO / Diagrams</h3>
+<ul>
+<li>Diagram of Evolution
+<ul>
+<li>JSON strings → J8 Strings</li>
+<li>J8 strings as a building block → JSON8 and TSV8</li>
+</ul>
+</li>
+<li>Venn Diagrams of Data Language Relationships
+<ul>
+<li>If you add the left &quot;gutter&quot; column, every TSV is valid TSV8.</li>
+<li>Every TSV8 is also syntactically valid TSV.  For example, you can import it
+into a spreadsheet, and remove/ignore the gutter column and type row.</li>
+<li>TODO: make a screenshot and test it</li>
+</ul>
+</li>
+<li>Doc: How to turn a JSON library into a J8 Notation library.
+<ul>
+<li>Issue: an interior type that can represent byte strings.</li>
+</ul>
+</li>
+</ul>
+<a name="j8-strings-unicode-and-bytes"></a>
+<h2>J8 Strings - Unicode and bytes</h2>
+<p>Let's review JSON strings, and then describe J8 strings.</p>
+<a name="review-of-json-strings"></a>
+<h3>Review of JSON strings</h3>
+<p>JSON strings are enclosed in double quotes, and may have these escape
+sequences:</p>
+<pre><code>\&quot;   \\   \/
+\b   \f   \n   \r   \t
+\u1234
+</code></pre>
+<p>Properties of JSON:</p>
+<ul>
+<li>The encoded form must also be valid UTF-8.</li>
+<li>The encoded form can't contain literal control characters, including literal
+tabs or newlines.  (This is good for TSV8, because it means a literal tab is
+always a field separator.)</li>
+</ul>
+<a name="j8-description"></a>
+<h3>J8 Description</h3>
+<p>There are 3 <strong>styles</strong> of J8 strings:</p>
+<ol>
+<li>JSON strings <code>j&quot;&quot;</code>, which may be written <code>&quot;&quot;</code></li>
+<li><code>b''</code> strings</li>
+<li><code>u''</code> strings</li>
+</ol>
+<p><code>b''</code> strings have these escapes:</p>
+<pre><code>\yff                <span class="sh-comment"># byte escape</span>
+\u{1f926}           <span class="sh-comment"># code point escape.  UTF-16 escapes like \u1234</span>
+                    <span class="sh-comment"># are ILLEGAL</span>
+\'                  <span class="sh-comment"># single quote, in addition to \&quot;</span>
+\&quot;  \\  \/          <span class="sh-comment"># same as JSON</span>
+\b  \f  \n  \r  \t  
+</code></pre>
+<p>(JSON-style double-quoted do not add the <code>\'</code> escape.  Except for the optional
+<code>j</code> prefix, they remain the same.)</p>
+<p>Examples:</p>
+<pre><code>b''
+b'hello'
+b'\\'
+b'&quot;double&quot; \'single\''
+b'nul byte \y00, unicode \u{1f642}'
+</code></pre>
+<p><code>u''</code> strings have all the same escapes, but <strong>not</strong> <code>\yff</code>.  This implies that
+they're always valid unicode strings.  (If JSON-style <code>\u1234</code> escapes were
+allowed, they wouldn't be.)</p>
+<p>Examples:</p>
+<pre><code>u''
+u'hello'
+u'unicode string \u{1f642}' 
+</code></pre>
+<p>A string <em>without</em> a prefix, like <code>'foo'</code>, is equivalent to <code>u'foo'</code>:</p>
+<pre><code> 'this is a u string'  <span class="sh-comment"># discouraged, unless the context is clear</span>
+
+u'this is a u string'  <span class="sh-comment"># better to be explicit</span>
+</code></pre>
+<a name="whats-representable-by-each-style"></a>
+<h3>What's representable by each style?</h3>
+<style>
+#subset {
+    text-align: center;
+    background-color: #DEE;
+    padding-top: 0.5em; padding-bottom: 0.5em;
+    margin-left: 3em; margin-right: 3em;
+}
+.set {
+  font-size: x-large;     
+}
+</style>
+<p>These relationships might help you understand the 3 styles of strings:</p>
+<div id="subset">
+<p><span class="set">Strings representable by <code>u''</code></span><br/>
+= All Unicode Strings (no more and no less)</p>
+<p><b>⊂</b></p>
+<p><span class="set">Strings representable by <code>&quot;&quot;</code></span> (JSON-style)<br/>
+= All Unicode Strings <b>∪</b> Surrogate Half Errors</p>
+<p><b>⊂</b></p>
+<p><span class="set">Strings representable by <code>b''</code></span><br/>
+= All Byte Strings</p>
+</div>
+<p>Examples:</p>
+<ul>
+<li>The JSON message <code>&quot;\udd26&quot;</code> represents a string that's not Unicode — it
+has a surrogate half error.  This string is <strong>not</strong> representable with <code>u''</code>
+strings.</li>
+<li>The J8 message <code>b'\yff'</code> represents a byte string.  This string is <strong>not</strong>
+representable with JSON strings or <code>u''</code> strings.</li>
+</ul>
+<a name="assymmetry-of-encoders-and-decoders"></a>
+<h3>Assymmetry of Encoders and Decoders</h3>
+<p>A few things to notice about J8 <strong>encoders</strong>:</p>
+<ol>
+<li>They can emit only <code>&quot;&quot;</code> strings, possibly using the Unicode replacement char
+<code>U+FFFD</code>.  This is a strict JSON encoder.</li>
+<li>They <em>must</em> emit <code>b''</code> strings to preserve all information, because <code>U+FFFD</code>
+replacement is lossy.</li>
+<li>They <em>never</em> need to emit <code>u''</code> strings.
+<ul>
+<li>This is because <code>&quot;&quot;</code> strings (and <code>b''</code> strings) can represent all values
+that <code>u''</code> strings can.  Still, <code>u''</code> strings may be desirable in some
+situations, like when you want <code>\u{1f642}</code> escapes, or to assert that a
+value must be a valid Unicode string.</li>
+</ul>
+</li>
+</ol>
+<p>On the other hand, J8 <strong>decoders</strong> must accept all 3 kinds of strings.</p>
+<a name="ysh-has-2-of-the-3-styles"></a>
+<h3>YSH has 2 of the 3 styles</h3>
+<p>A nice property of YSH is that the <code>u''</code> and <code>b''</code> strings are valid code:</p>
+<pre><code>echo u'hi \u{1f642}'  <span class="sh-comment"># u respected in YSH, but not OSH</span>
+
+var myBytes = b'\yff\yfe'
+</code></pre>
+<p>This is useful for correct code generation, and simplifies the language.</p>
+<p>But JSON-style strings aren't valid in YSH.  The two usages of double quotes
+can't really be reconciled, because JSON looks like <code>&quot;line\n&quot;</code> and shell looks
+like <code>&quot;x = ${myvar}&quot;</code>.</p>
+<a name="j8-strings-vs-posix-shell-strings"></a>
+<h3>J8 Strings vs. POSIX Shell Strings</h3>
+<p>When the encoded form of a J8 string doesn't contain a <strong>backslash</strong>, it's
+identical to a POSIX shell string.</p>
+<p>In this case, it can make sense to omit the <code>u''</code> prefix.  Example:</p>
+<pre>
+shell_string='hi &#x1f642;'
+
+var ysh_str = u'hi &#x1f642;'
+
+var ysh_str =  'hi &#x1f642;'  <span class="sh-comment"># same thing</span>
+</pre>
+<p>An encoded J8 string has no backslashes when the original string has all these
+properties:</p>
+<ol>
+<li>Valid Unicode (no non-UTF-8 bytes).</li>
+<li>No ASCII control characters.  All bytes are <code>0x20</code> and greater.</li>
+<li>No backslashes or single quotes.  (All other required escapes are control
+characters.)</li>
+</ol>
+<a name="json8-tree-shaped-records"></a>
+<h2>JSON8 - Tree-Shaped Records</h2>
+<p>Now that we've defined J8 strings, we can define JSON8, an obvious extension of
+JSON.</p>
+<p>(Not implemented yet.)</p>
+<a name="review-of-json"></a>
+<h3>Review of JSON</h3>
+<p>See <a href="https://json.org">https://json.org</a></p>
+<pre><code>[primitive]     null   true   false
+[number]        42  -1.2e-4
+[string]        &quot;hello\n&quot;
+[array]         [1, 2, 3]
+[object]        {&quot;key&quot;: 42}
+</code></pre>
+<a name="json8-description"></a>
+<h3>JSON8 Description</h3>
+<p>JSON8 is like JSON, but:</p>
+<ol>
+<li>All strings can be J8 strings — one of the <strong>3 styles</strong> describe
+above.</li>
+<li>Object/Dict keys may be <strong>unquoted</strong>, like <code>{age: 42}</code>
+<ul>
+<li>Unquoted keys must be a valid JS identifier name matching the pattern
+<code>[a-zA-Z_][a-zA-Z0-9_]*</code>.</li>
+</ul>
+</li>
+<li><strong>Trailing commas</strong> are allowed on objects and arrays: <code>{&quot;d&quot;: 42,}</code> and <code>[42,]</code></li>
+<li>End-of-line comments.  We use <code>#</code> to be consistent with shell.</li>
+</ol>
+
+<p>Example:</p>
+<pre><code>{ name: &quot;Bob&quot;,  <span class="sh-comment"># comment</span>
+  age: 30,
+  sig: b'\y00\y01 ... \yff',  <span class="sh-comment"># trailing comma, binary data</span>
+}
+</code></pre>
+
+<a name="j8-lines-lines-of-text"></a>
+<h2>J8 Lines - Lines of Text</h2>
+<p><em>J8 Lines</em> is another format built on J8 strings.  Each line is either:</p>
+<ol>
+<li>An unquoted string, which must be valid UTF-8.  Whitespace is allowed, but
+not other ASCII control chars.</li>
+<li>A quoted J8 string (JSON style <code>&quot;&quot;</code> or J8-style <code>b'' u''</code>)</li>
+<li>An <strong>ignored</strong> empty line</li>
+</ol>
+<p>In all cases, leading and trailing whitespace is ignored.</p>
+<hr />
+<p>For example, 6 strings with weird characters could be represented like this:</p>
+<pre><code>  dir/with spaces.txt       <span class="sh-comment"># unquoted string must be UTF-8</span>
+ &quot;dir/with newline \n.txt&quot;  <span class="sh-comment"># JSON-style </span>
+b'dir/with bytes \yff.txt'  <span class="sh-comment"># J8-style</span>
+u'dir/unicode \u{3bc}'
+                            <span class="sh-comment"># ignored empty line</span>
+ ''                         <span class="sh-comment"># empty string, not ignored</span>
+ 'dir/unicode \u{3bc}'      <span class="sh-comment"># no prefix implies u''</span>
+</code></pre>
+<p>Note that J8 strings always occupy <strong>one</strong> physical line, because they can't
+contain unescaped control characters, including newlines.</p>
+<p><em>J8 Lines</em> can be viewed as a simpler case of TSV8, described in the next
+section.</p>
+
+<a name="related"></a>
+<h4>Related</h4>
+<ul>
+<li><a href="https://jsonlines.org/">https://jsonlines.org/</a> allows not just strings, but any value like <code>{}</code> and
+<code>[]</code>.  We could define an obvious &quot;JSON8 Lines&quot; format, which is different
+than &quot;J8 Lines&quot;.</li>
+</ul>
+<a name="tsv8-table-shaped-text"></a>
+<h2>TSV8 - Table-Shaped Text</h2>
+<p>Let's review TSV, and then describe TSV8.</p>
+<a name="review-of-tsv"></a>
+<h3>Review of TSV</h3>
+<p>TSV has a very short specification:</p>
+<ul>
+<li><a href="https://www.iana.org/assignments/media-types/text/tab-separated-values">https://www.iana.org/assignments/media-types/text/tab-separated-values</a></li>
+</ul>
+<p>Example:</p>
+<pre><code>name&lt;TAB&gt;age
+alice&lt;TAB&gt;44
+bob&lt;TAB&gt;33
+</code></pre>
+<p>Limitations:</p>
+<ul>
+<li>Fields can't contain tabs or newlines.</li>
+<li>There's no escaping, so unprintable bytes in field values result in an
+unprintable TSV file.</li>
+<li>Spaces are easy to confuse with tabs.</li>
+</ul>
+<a name="tsv8-description"></a>
+<h3>TSV8 Description</h3>
+<p>TSV8 is like TSV with:</p>
+<ol>
+<li>A <code>!tsv8</code> prefix and required column names.</li>
+<li>An optional <code>!type</code> line, with types <code>Bool Int Float Str</code>.</li>
+<li>Other optional column attributes.</li>
+<li>Rows of data, each starting with an empty &quot;gutter&quot; column.</li>
+</ol>
+<p>Example:</p>
+<pre><code>!tsv8   age     name    
+!type   Int     Str     <span class="sh-comment"># optional types</span>
+!other  x       y       <span class="sh-comment"># more column metadata</span>
+        44        alice
+        33        bob
+         1       &quot;a\tb&quot;
+         2      b'nul \y00'
+         3      u'unicode \u{3bc}'
+</code></pre>
+<p>Types:</p>
+<pre><code>[Bool]      false   true
+[Int]       JSON numbers, restricted to [0-9]+
+[Float]     same as JSON
+[Str]       J8 string (any of the 3 styles)
+</code></pre>
+<p>Rules for cells:</p>
+<ol>
+<li>They can be any of 4 forms in J8 Lines:
+<ol>
+<li>Unquoted</li>
+<li>JSON-style <code>&quot;&quot;</code></li>
+<li><code>u''</code></li>
+<li><code>b''</code></li>
+</ol>
+</li>
+<li>Leading and trailing whitespace must be stripped, as in J8 Lines.</li>
+</ol>
+<p>TODO: What about empty cells?  Are they equivalent to <code>null</code>?  TSV apparently
+can't have empty cells, as the rule is <code>[character]+</code>, not <code>[character]+</code>.</p>
+<p>Column attributes:</p>
+<ul>
+<li><code>!format</code> could be Instant / Duration?</li>
+</ul>
+<a name="design-notes"></a>
+<h3>Design Notes</h3>
+<p>TODO: This section will be filled in as we implement TSV8.</p>
+<ul>
+<li>
+<p>Null Issues:</p>
+<ul>
+<li>Are bools nullable?  Seems like no reason, but you could be missing</li>
+<li>Are ints nullable?  In SQL they probably are</li>
+<li>Are floats nullable?  Yes, like NA in R.</li>
+<li>Decoders can use a parallel typed column to indicate nulls?</li>
+</ul>
+</li>
+<li>
+<p>It's OK to use plain TSV in YSH programs as well.  You don't have to add
+types if you don't want to.</p>
+</li>
+</ul>
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>This document described an upgrade of JSON strings:</p>
+<ul>
+<li>J8 Strings (in 3 styles)</li>
+</ul>
+<p>And data formats that built on top of these strings:</p>
+<ul>
+<li>JSON8 - tree-shaped records</li>
+<li>J8 Lines - Unix streams</li>
+<li>TSV8 - table-shaped data</li>
+</ul>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="related-links"></a>
+<h3>Related Links</h3>
+<ul>
+<li><a href="https://json.org/">https://json.org/</a></li>
+<li>JSON extensions
+<ul>
+<li><a href="https://json5.org/">https://json5.org/</a></li>
+<li><a href="https://nigeltao.github.io/blog/2021/json-with-commas-comments.html">JSON with Commas and
+Comments</a></li>
+<li>Survey: <a href="https://github.com/json-next/awesome-json-next">https://github.com/json-next/awesome-json-next</a></li>
+</ul>
+</li>
+</ul>
+<a name="future-work"></a>
+<h3>Future Work</h3>
+<p>We could have an SEXP8 format for:</p>
+<ul>
+<li>Concrete syntax trees, with location information</li>
+<li>Textual IRs like WebAssembly</li>
+</ul>
+<a name="faq"></a>
+<h2>FAQ</h2>
+<a name="why-are-byte-escapes-spelled-yff-and-not-xff-as-in-c"></a>
+<h3>Why are byte escapes spelled <code>\yff</code>, and not <code>\xff</code> as in C?</h3>
+<p>Because in JavaScript and Python, <code>\xff</code> is a <strong>code point</strong>, not a byte.  That
+is, it's a synonym for <code>\u00ff</code>, which is encoded in UTF-8 as the 2 bytes <code>0xc3 0xbf</code>.</p>
+<p>This is <strong>exactly</strong> the confusion we want to avoid, so <code>\yff</code> is explicitly
+different.</p>
+<p>One of Chrome's JSON encoders <a href="https://source.chromium.org/chromium/chromium/src/+/main:base/json/json_reader.h;l=27;drc=d0919138b7951c1a154cf802a68aad7904b6f4c9">also has this
+confusion</a>.</p>
+<a name="why-have-both-u-and-b-strings-if-only-b-is-technically-needed"></a>
+<h3>Why have both <code>u''</code> and <code>b''</code> strings, if only <code>b''</code> is technically needed?</h3>
+<p>A few reasons:</p>
+<ol>
+<li>Apps in languages like Python and Rust could make use of the distinction.
+Oils doesn't have a string/bytes distinction (on the &quot;interior&quot;), but many
+languages do.</li>
+<li>Using <code>u''</code> strings can avoid hacks like
+<a href="http://simonsapin.github.io/wtf-8/">WTF-8</a>, which is often required for
+round-tripping arbitrary JSON messages.  Our <code>u''</code> strings don't require
+WTF-8 because they can't represent surrogate halves.</li>
+<li><code>u''</code> strings add trivial weight to the spec, since compared to <code>b''</code>
+strings, they simply remove <code>\yff</code>.  This is true because <em>encoded</em> J8 strings
+must be valid UTF-8.</li>
+</ol>
+<a name="why-not-use-double-quotes-like-u-and-b"></a>
+<h3>Why not use double quotes like <code>u&quot;&quot;</code> and <code>b&quot;&quot;</code>?</h3>
+<p>J8-style strings could have used double quotes.  But single quotes make the new
+styles more visually distinct from <code>&quot;&quot;</code>, and it allows <code>''</code> as a synonym for
+<code>u''</code>.</p>
+<p>Compared to <code>&quot;&quot;</code> strings, <code>''</code> strings don't have a UTF-16 legacy.</p>
+<a name="how-do-i-write-a-j8-encoder-and-decoder"></a>
+<h3>How do I write a J8 encoder and decoder?</h3>
+<p>The list of errors at <a href="ref/chap-errors.html">ref/chap-errors.html</a> may be a
+good starting point.</p>
+<p>TODO: describe the Oils implementation.</p>
+<a name="should-a-j8-number-be-mapped-to-an-int-float-or-decimal-type"></a>
+<h3>Should a J8 number be mapped to an Int, Float, or Decimal type?</h3>
+<p>J8 Notation is like JSON: it only specifies the syntax of messages on the wire.</p>
+<p>The mapping of text to types is left to implementers, and depends on the
+programming language:</p>
+<ul>
+<li>Languages like C, C++, and Rust have different sizes of ints and floats</li>
+<li>Languages like JavaScript favor floats</li>
+<li>It's valid to map to a Decimal type, if the language runtime supports it</li>
+</ul>
+<p>OSH and YSH happen to use <code>Int</code> and <code>Float</code>, but this is logically separate
+from J8 Notation.</p>
+<a name="glossary"></a>
+<h2>Glossary</h2>
+<ul>
+<li><strong>J8 Strings</strong> - the building block for JSON8 and TSV8.  There are 3 similar
+syntaxes: <code>&quot;foo&quot;</code> and <code>b'foo'</code> and <code>u'foo'</code>.</li>
+<li><strong>JSON strings</strong> - double quoted strings <code>&quot;foo&quot;</code>.</li>
+<li><strong>J8-style strings</strong> - either <code>b'foo'</code> or <code>u'foo'</code>.</li>
+</ul>
+<p>Formats built on J8 strings:</p>
+<ul>
+<li><strong>J8 Lines</strong> - unquoted and J8 strings, one per line.</li>
+<li><strong>JSON8</strong> - An upgrade of JSON.</li>
+<li><strong>TSV8</strong> - An upgrade of TSV.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 25 Jun 2025 20:31:31 -0400</i>
+    </div>
+  </body>
+</html>

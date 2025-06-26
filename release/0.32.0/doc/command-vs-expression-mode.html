@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Command vs. Expression Mode</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/command-vs-expression-mode.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Command vs. Expression Mode</h1>
+<p><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> extends the shell <strong>command</strong> language with a Python-like
+<strong>expression</strong> language.</p>
+<p>Commands and expressions each have a <strong>lexer mode</strong>, which is an essential
+<a href="syntactic-concepts.html">syntactic concept</a> in YSH.</p>
+<p>This doc lists the places where <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> switches between modes.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#from-command-mode-to-expression-mode">From Command Mode to Expression Mode</a></div>
+  <div class="toclevel2"><a href="#rhs-of-assignments">RHS of Assignments</a></div>
+  <div class="toclevel2"><a href="#and-call-keywords"><code>=</code> and <code>call</code> keywords</a></div>
+  <div class="toclevel2"><a href="#ysh-for-while-if-case">YSH <code>for while if case</code>:</a></div>
+  <div class="toclevel2"><a href="#expression-sub-and-splice">Expression Sub and Splice</a></div>
+  <div class="toclevel2"><a href="#typed-arguments-to-procs">Typed Arguments to Procs</a></div>
+  <div class="toclevel2"><a href="#proc-and-func-parameter-lists">Proc and Func Parameter Lists</a></div>
+  <div class="toclevel1"><a href="#from-expression-mode-to-command-mode">From Expression Mode to Command Mode</a></div>
+  <div class="toclevel2"><a href="#array-literals">Array Literals</a></div>
+  <div class="toclevel2"><a href="#command-sub-command-literals">Command Sub, Command Literals</a></div>
+  <div class="toclevel1"><a href="#more-examples">More Examples</a></div>
+  <div class="toclevel2"><a href="#how-are-glob-patterns-written-in-each-mode">How Are Glob Patterns Written in Each Mode?</a></div>
+</div>
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>A main difference is whether you write strings like <code>unquoted</code> or <code>'quoted'</code>,
+and whether you write variables like <code>$dollar</code> or <code>unquoted</code>:</p>
+<style>
+thead { text-align: left; }
+table {
+  width: 100%;
+  margin-left: 2em; /* match */
+}
+</style>
+<table>
+<thead>
+<tr>
+  <th>Description</th>
+  <th>Lexing Mode</th>
+  <th>String</th>
+  <th>Variable</th>
+  <th>Example</th>
+</tr>
+</thead>
+<tr>
+  <td>Shell-Like</td>
+  <td>Command</td>
+  <td><code>unquoted</code></td>
+  <td><code>$dollar</code></td>
+  <td>
+<pre><code>ls foo/bar $myvar
+</code></pre>
+</td>
+</tr>
+<tr>
+  <td>Python-like</td>
+  <td>Expression</td>
+  <td><code>'quoted'</code></td>
+  <td><code>unquoted</code></td>
+  <td>
+<pre><code>var s = myfunc('str', myvar)
+</code></pre>
+</td>
+</tr>
+</table>
+<p>More examples:</p>
+<pre><code>ls foo/bar         <span class="sh-comment"># foo and bar are strings - command</span>
+var x = foo / bar  <span class="sh-comment"># foo and bar are the names of variables - expression</span>
+</code></pre>
+<p>And:</p>
+<pre><code>echo $filename.py           <span class="sh-comment"># $filename is a var - command</span>
+var x = filename ++ '.py'   <span class="sh-comment">#  filename is a var - expression</span>
+</code></pre>
+
+<a name="from-command-mode-to-expression-mode"></a>
+<h2>From Command Mode to Expression Mode</h2>
+<a name="rhs-of-assignments"></a>
+<h3>RHS of Assignments</h3>
+<p>Everything after <code>=</code> is parsed in expression mode:</p>
+<pre><code>var x = 42 + f(x)    <span class="sh-comment"># RHS of var/setvar</span>
+setvar x += g(y)
+
+setvar x = obj.method()   
+</code></pre>
+<p>This includes <em>bare assignments</em> in Hay blocks:</p>
+<pre><code>Rule {
+  x = 42 + a[i]
+}
+</code></pre>
+<a name="and-call-keywords"></a>
+<h3><code>=</code> and <code>call</code> keywords</h3>
+<p>Likewise, everything after <code>=</code> or <code>call</code> is in expression mode:</p>
+<pre><code>= 42 + f(x)
+</code></pre>
+<p>Throw away the value:</p>
+<pre><code>call mylist-&gt;append(x)
+</code></pre>
+<a name="ysh-for-while-if-case"></a>
+<h3>YSH <code>for while if case</code>:</h3>
+<p>Expressions are surrounded by <code>( )</code>:</p>
+<pre><code>for k, v in (mydict) { 
+  echo &quot;$k $v&quot;
+}
+
+while (x &gt; 0) {
+  setvar x -= 1
+}
+
+if (x &gt; 0) { 
+  echo 'positive'
+}
+
+case (len(x)) {
+  (1)    { echo one }
+  (2)    { echo two }
+  (else) { echo other }
+}
+</code></pre>
+<a name="expression-sub-and-splice"></a>
+<h3>Expression Sub and Splice</h3>
+<p>The <code>$[]</code> construct converts an expression to a string:</p>
+<pre><code>echo $[42 + a[i]]
+</code></pre>
+<p>The <code>@[]</code> construct converts a list to an array of strings:</p>
+<pre><code>echo @[arrayfunc('three', 'four', f(x))]
+</code></pre>
+<a name="typed-arguments-to-procs"></a>
+<h3>Typed Arguments to Procs</h3>
+<p>Typed arguments are surrounded by <code>( )</code>:</p>
+<pre><code>json write (['three', 'four'])
+<span class="sh-comment"># =&gt;</span>
+[ &quot;three&quot;, &quot;four&quot; ]
+</code></pre>
+<p>Lazy arguments:</p>
+<pre><code>assert [42 === x]
+</code></pre>
+<a name="proc-and-func-parameter-lists"></a>
+<h3>Proc and Func Parameter Lists</h3>
+<p>Parameters aren't expressions, but they're parsed with the same lexer:</p>
+<pre><code>proc p (x, y) {    <span class="sh-comment"># what's between () is in expression mode</span>
+  echo &quot;$x $y&quot;     <span class="sh-comment"># back to command mode</span>
+}
+
+func f(x) {
+  return (x)
+}
+</code></pre>
+<a name="from-expression-mode-to-command-mode"></a>
+<h2>From Expression Mode to Command Mode</h2>
+<a name="array-literals"></a>
+<h3>Array Literals</h3>
+<pre><code>var myarray = :| /tmp/foo ${var} $(echo hi) @myarray |
+</code></pre>
+<a name="command-sub-command-literals"></a>
+<h3>Command Sub, Command Literals</h3>
+<p>Everything in between sigil pairs is in command mode:</p>
+<pre><code>var x = $(hostname | tr a-z A-Z) 
+
+var y = @(seq 3)   <span class="sh-comment"># Split command sub</span>
+</code></pre>
+<p>This is a command literal:</p>
+<pre><code>var b = ^(echo $PWD)
+</code></pre>
+<a name="more-examples"></a>
+<h2>More Examples</h2>
+<a name="how-are-glob-patterns-written-in-each-mode"></a>
+<h3>How Are Glob Patterns Written in Each Mode?</h3>
+<p>No:</p>
+<pre><code>echo '*.py'              <span class="sh-comment"># a literal string, not a glob</span>
+
+echo @[glob(*.py)]       <span class="sh-comment"># syntax error, * is an operator in </span>
+                         <span class="sh-comment"># expression mode</span>
+
+var x = myfunc(*.py)     <span class="sh-comment"># ditto, syntax error</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>echo *.py                <span class="sh-comment"># expanded as a glob</span>
+
+echo @[glob('*.py')]     <span class="sh-comment"># A literal string passed to the builtin</span>
+                         <span class="sh-comment"># glob function</span>
+
+var x = f('*.py')        <span class="sh-comment"># Just a string</span>
+
+var x = f(glob('*.py'))  <span class="sh-comment"># Now it's expanded</span>
+</code></pre>
+<p>Another way to say this is that YSH works like Python:</p>
+<pre><code class="language-python">from glob import glob
+glob('*.py')             # this is a glob
+os.listdir('*.py')       # no glob because it's not how listdir() works
+</code></pre>
+<p>Also note that YSH has a builtin operator that uses glob aka <code>fnmatch()</code>
+syntax:</p>
+<pre><code>if (x ~~ '*.py') {
+  echo 'Python'
+}
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Packle</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/disabled-chap-packle.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Packle</h1>
+<p>This chapter in the <a href="index.html">Oils Reference</a> describes Packle, a binary
+serialization format for object graphs.</p>
+<p>It's a secure subset of Python's <code>pickle</code> format.</p>
+<p>Advantages:</p>
+<ul>
+<li>Strings are length-prefixed, so they don't need to be escaped and unescaped.</li>
+<li>Exact float representation, with NaN, Inf, and -Inf values.</li>
+<li>Represent graphs, not just trees.  (Think &quot;JSON key sharing&quot;)</li>
+<li>Strict Byte strings and strict Unicode, not the mess of JSON strings.</li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#Atoms">Atoms</a></div>
+  <div class="toclevel2"><a href="#Null">Null</a></div>
+  <div class="toclevel2"><a href="#Bool">Bool</a></div>
+  <div class="toclevel2"><a href="#Int">Int</a></div>
+  <div class="toclevel2"><a href="#Float">Float</a></div>
+  <div class="toclevel2"><a href="#Bytes">Bytes</a></div>
+  <div class="toclevel2"><a href="#Unicode">Unicode</a></div>
+  <div class="toclevel1"><a href="#Compound">Compound</a></div>
+  <div class="toclevel2"><a href="#List">List</a></div>
+  <div class="toclevel2"><a href="#Dict">Dict</a></div>
+</div>
+<a name="Atoms"></a>
+<h2>Atoms</h2>
+<p>TODO: describe wire format.</p>
+<a name="Null"></a>
+<h3>Null</h3>
+<a name="Bool"></a>
+<h3>Bool</h3>
+<a name="Int"></a>
+<h3>Int</h3>
+<a name="Float"></a>
+<h3>Float</h3>
+<a name="Bytes"></a>
+<h3>Bytes</h3>
+<a name="Unicode"></a>
+<h3>Unicode</h3>
+<a name="Compound"></a>
+<h2>Compound</h2>
+<p>TODO: describe wire format.</p>
+<a name="List"></a>
+<h3>List</h3>
+<a name="Dict"></a>
+<h3>Dict</h3>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>

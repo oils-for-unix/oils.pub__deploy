@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH vs. Shell Idioms</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/idioms.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.32.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH vs. Shell Idioms</h1>
+<p>This is an informal, lightly-organized list of recommended idioms for the
+<a href="/cross-ref.html?tag=YSH#YSH">YSH</a> language.  Each section has snippets labeled <em>No</em> and <em>Yes</em>.</p>
+<ul>
+<li>Use the <em>Yes</em> style when you want to write in YSH, and don't care about
+compatibility with other shells.</li>
+<li>The <em>No</em> style is discouraged in new code, but YSH will run it.  The <a href="/cross-ref.html?tag=osh-language#osh-language">OSH
+language</a> is compatible with
+<a href="/cross-ref.html?tag=posix-shell-spec#posix-shell-spec">POSIX</a> and <a href="/cross-ref.html?tag=bash#bash">bash</a>.</li>
+</ul>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#use-simple-word-evaluation-to-avoid-quoting-hell">Use Simple Word Evaluation to Avoid &quot;Quoting Hell&quot;</a></div>
+  <div class="toclevel2"><a href="#substitute-variables">Substitute Variables</a></div>
+  <div class="toclevel2"><a href="#splice-arrays">Splice Arrays</a></div>
+  <div class="toclevel2"><a href="#explicitly-split-glob-and-omit-empty-args">Explicitly Split, Glob, and Omit Empty Args</a></div>
+  <div class="toclevel2"><a href="#iterate-a-number-of-times-split-command-sub">Iterate a Number of Times (Split Command Sub)</a></div>
+  <div class="toclevel1"><a href="#avoid-ad-hoc-parsing-and-splitting">Avoid Ad Hoc Parsing and Splitting</a></div>
+  <div class="toclevel2"><a href="#more-strategies-for-structured-data">More Strategies For Structured Data</a></div>
+  <div class="toclevel1"><a href="#the-write-builtin-is-simpler-than-printf-and-echo">The <code>write</code> Builtin Is Simpler Than <code>printf</code> and <code>echo</code></a></div>
+  <div class="toclevel2"><a href="#write-an-arbitrary-line">Write an Arbitrary Line</a></div>
+  <div class="toclevel2"><a href="#write-without-a-newline">Write Without a Newline</a></div>
+  <div class="toclevel2"><a href="#write-an-array-of-lines">Write an Array of Lines</a></div>
+  <div class="toclevel1"><a href="#new-long-flags-on-the-read-builtin">New Long Flags on the <code>read</code> builtin</a></div>
+  <div class="toclevel2"><a href="#read-a-line">Read a Line</a></div>
+  <div class="toclevel2"><a href="#read-a-whole-file">Read a Whole File</a></div>
+  <div class="toclevel2"><a href="#read-lines-of-a-file">Read Lines of a File</a></div>
+  <div class="toclevel2"><a href="#read-a-number-of-bytes">Read a Number of Bytes</a></div>
+  <div class="toclevel2"><a href="#read-until-0-consume-find-print0">Read Until <code>\0</code> (consume <code>find -print0</code>)</a></div>
+  <div class="toclevel1"><a href="#ysh-enhancements-to-builtins">YSH Enhancements to Builtins</a></div>
+  <div class="toclevel2"><a href="#use-shopt-instead-of-set">Use <code>shopt</code> Instead of <code>set</code></a></div>
+  <div class="toclevel2"><a href="#use-when-mentioning-variable-names">Use <code>:</code> When Mentioning Variable Names</a></div>
+  <div class="toclevel2"><a href="#consider-using-long-flags">Consider Using <code>--long-flags</code></a></div>
+  <div class="toclevel1"><a href="#use-blocks-to-save-and-restore-context">Use Blocks to Save and Restore Context</a></div>
+  <div class="toclevel2"><a href="#do-something-in-another-directory">Do Something In Another Directory</a></div>
+  <div class="toclevel2"><a href="#batch-io">Batch I/O</a></div>
+  <div class="toclevel2"><a href="#temporarily-set-shell-options">Temporarily Set Shell Options</a></div>
+  <div class="toclevel2"><a href="#use-the-forkwait-builtin-for-subshells-not">Use the <code>forkwait</code> builtin for Subshells, not <code>()</code></a></div>
+  <div class="toclevel2"><a href="#use-the-fork-builtin-for-async-not">Use the <code>fork</code> builtin for async, not <code>&amp;</code></a></div>
+  <div class="toclevel1"><a href="#use-procs-better-shell-functions">Use Procs (Better Shell Functions)</a></div>
+  <div class="toclevel2"><a href="#use-named-parameters-instead-of-1-2">Use Named Parameters Instead of <code>$1</code>, <code>$2</code>, ...</a></div>
+  <div class="toclevel2"><a href="#use-named-varargs-instead-of">Use Named Varargs Instead of <code>&quot;$@&quot;</code></a></div>
+  <div class="toclevel2"><a href="#use-out-params-instead-of-declare-n">Use &quot;Out Params&quot; instead of <code>declare -n</code></a></div>
+  <div class="toclevel2"><a href="#note-procs-dont-mess-with-their-callers">Note: Procs Don't Mess With Their Callers</a></div>
+  <div class="toclevel1"><a href="#use-modules">Use Modules</a></div>
+  <div class="toclevel2"><a href="#relative-imports">Relative Imports</a></div>
+  <div class="toclevel2"><a href="#include-guards">Include Guards</a></div>
+  <div class="toclevel2"><a href="#taskfile-pattern">Taskfile Pattern</a></div>
+  <div class="toclevel1"><a href="#error-handling">Error Handling</a></div>
+  <div class="toclevel2"><a href="#dont-use-outside-of-if-while">Don't Use <code>&amp;&amp;</code> Outside of <code>if</code> / <code>while</code></a></div>
+  <div class="toclevel2"><a href="#ignore-an-error">Ignore an Error</a></div>
+  <div class="toclevel2"><a href="#retrieve-a-commands-status-when-errexit-is-on">Retrieve A Command's Status When <code>errexit</code> is On</a></div>
+  <div class="toclevel2"><a href="#does-a-builtin-or-external-command-succeed">Does a Builtin Or External Command Succeed?</a></div>
+  <div class="toclevel2"><a href="#does-a-function-succeed">Does a Function Succeed?</a></div>
+  <div class="toclevel2"><a href="#does-a-pipeline-succeed">Does a Pipeline Succeed?</a></div>
+  <div class="toclevel2"><a href="#does-a-command-with-process-subs-succeed">Does a Command With Process Subs Succeed?</a></div>
+  <div class="toclevel2"><a href="#handle-errors-in-ysh-expressions">Handle Errors in YSH Expressions</a></div>
+  <div class="toclevel2"><a href="#test-boolean-statuses-like-grep-diff-test">Test Boolean Statuses, like <code>grep</code>, <code>diff</code>, <code>test</code></a></div>
+  <div class="toclevel1"><a href="#use-ysh-expressions-initializations-and-assignments-var-setvar">Use YSH Expressions, Initializations, and Assignments (var, setvar)</a></div>
+  <div class="toclevel2"><a href="#set-an-environment-variable-globally">Set an Environment Variable Globally</a></div>
+  <div class="toclevel2"><a href="#initialize-and-assign-strings-and-integers">Initialize and Assign Strings and Integers</a></div>
+  <div class="toclevel2"><a href="#expressions-on-integers">Expressions on Integers</a></div>
+  <div class="toclevel2"><a href="#mutate-integers">Mutate Integers</a></div>
+  <div class="toclevel2"><a href="#initialize-and-assign-arrays">Initialize and Assign Arrays</a></div>
+  <div class="toclevel2"><a href="#initialize-and-assign-dicts">Initialize and Assign Dicts</a></div>
+  <div class="toclevel2"><a href="#get-values-from-arrays-and-dicts">Get Values From Arrays and Dicts</a></div>
+  <div class="toclevel2"><a href="#conditions-and-comparisons">Conditions and Comparisons</a></div>
+  <div class="toclevel2"><a href="#substituting-expressions-in-words">Substituting Expressions in Words</a></div>
+  <div class="toclevel1"><a href="#use-egg-expressions-instead-of-regexes">Use Egg Expressions instead of Regexes</a></div>
+  <div class="toclevel2"><a href="#test-for-a-match">Test for a Match</a></div>
+  <div class="toclevel2"><a href="#extract-submatches">Extract Submatches</a></div>
+  <div class="toclevel1"><a href="#glob-matching">Glob Matching</a></div>
+  <div class="toclevel1"><a href="#todo">TODO</a></div>
+  <div class="toclevel2"><a href="#distinguish-between-variables-and-functions">Distinguish Between Variables and Functions</a></div>
+  <div class="toclevel1"><a href="#related-documents">Related Documents</a></div>
+</div>
+<a name="use-simple-word-evaluation-to-avoid-quoting-hell"></a>
+<h2>Use <a href="simple-word-eval.html">Simple Word Evaluation</a> to Avoid &quot;Quoting Hell&quot;</h2>
+<a name="substitute-variables"></a>
+<h3>Substitute Variables</h3>
+<p>No:</p>
+<pre><code>local x='my song.mp3'
+ls &quot;$x&quot;  <span class="sh-comment"># quotes required to avoid mangling</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>var x = 'my song.mp3'
+ls $x  <span class="sh-comment"># no quotes needed</span>
+</code></pre>
+<a name="splice-arrays"></a>
+<h3>Splice Arrays</h3>
+<p>No:</p>
+<pre><code>local myflags=( --all --long )
+ls &quot;${myflags[@]}&quot; &quot;$@&quot;
+</code></pre>
+<p>Yes:</p>
+<pre><code>var myflags = :| --all --long |
+ls @myflags @ARGV
+</code></pre>
+<a name="explicitly-split-glob-and-omit-empty-args"></a>
+<h3>Explicitly Split, Glob, and Omit Empty Args</h3>
+<p>YSH doesn't split arguments after variable expansion.</p>
+<p>No:</p>
+<pre><code>local packages='python-dev gawk'
+apt install $packages
+</code></pre>
+<p>Yes:</p>
+<pre><code>var packages = 'python-dev gawk'
+apt install @[split(packages)]
+</code></pre>
+<p>Even better:</p>
+<pre><code>var packages = :| python-dev gawk |  <span class="sh-comment"># array literal</span>
+apt install @packages                <span class="sh-comment"># splice array</span>
+</code></pre>
+<hr />
+<p>YSH doesn't glob after variable expansion.</p>
+<p>No:</p>
+<pre><code>local pat='*.py'
+echo $pat
+</code></pre>
+<p>Yes:</p>
+<pre><code>var pat = '*.py'
+echo @[glob(pat)]   <span class="sh-comment"># explicit call</span>
+</code></pre>
+<hr />
+<p>YSH doesn't omit unquoted words that evaluate to the empty string.</p>
+<p>No:</p>
+<pre><code>local e=''
+cp $e other $dest            <span class="sh-comment"># cp gets 2 args, not 3, in sh</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>var e = ''
+cp @[maybe(e)] other $dest   <span class="sh-comment"># explicit call</span>
+</code></pre>
+<a name="iterate-a-number-of-times-split-command-sub"></a>
+<h3>Iterate a Number of Times (Split Command Sub)</h3>
+<p>No:</p>
+<pre><code>local n=3
+for x in $(seq $n); do  <span class="sh-comment"># No implicit splitting of unquoted words in YSH</span>
+  echo $x
+done
+</code></pre>
+<p>OK:</p>
+<pre><code>var n = 3
+for x in @(seq $n) {   <span class="sh-comment"># Explicit splitting</span>
+  echo $x
+}
+</code></pre>
+<p>Better;</p>
+<pre><code>var n = 3
+for x in (1 .. n+1) {  <span class="sh-comment"># Range, avoids external program</span>
+  echo $x
+}
+</code></pre>
+<p>Note that <code>{1..3}</code> works in bash and YSH, but the numbers must be constant.</p>
+<a name="avoid-ad-hoc-parsing-and-splitting"></a>
+<h2>Avoid Ad Hoc Parsing and Splitting</h2>
+<p>In other words, avoid <em>groveling through backslashes and spaces</em> in shell.</p>
+<p>Instead, emit and consume <a href="/cross-ref.html?tag=j8-notation#j8-notation">J8 Notation</a>:</p>
+<ul>
+<li>J8 strings are <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> strings, with an upgrade for byte string
+literals</li>
+<li><a href="/cross-ref.html?tag=JSON8#JSON8">JSON8</a> is <a href="/cross-ref.html?tag=JSON#JSON">JSON</a>, with this same upgrade</li>
+<li><a href="/cross-ref.html?tag=TSV8#TSV8">TSV8</a> is TSV with this upgrade (not yet implemented)</li>
+</ul>
+<p>Custom parsing and serializing should be limited to &quot;the edges&quot; of your YSH
+programs.</p>
+<a name="more-strategies-for-structured-data"></a>
+<h3>More Strategies For Structured Data</h3>
+<ul>
+<li><strong>Wrap</strong> and Adapt External Tools.  Parse their output, and emit <a href="j8-notation.html">J8 Notation</a>.
+<ul>
+<li>These can be one-off, &quot;bespoke&quot; wrappers in your program, or maintained
+programs.  Use the <code>proc</code> construct and <code>flagspec</code>!</li>
+<li>Example: <a href="https://github.com/sustrik/uxy">uxy</a> wrappers.</li>
+<li>TODO: Examples written in YSH and in other languages.</li>
+</ul>
+</li>
+<li><strong>Patch</strong> Existing Tools.
+<ul>
+<li>Enhance GNU grep, etc. to emit <a href="j8-notation.html">J8 Notation</a>.  Add a
+<code>--j8</code> flag.</li>
+</ul>
+</li>
+<li><strong>Write Your Own</strong> Structured Versions.
+<ul>
+<li>For example, you can write a structured subset of <code>ls</code> in Python with
+little effort.</li>
+</ul>
+</li>
+</ul>
+
+<a name="the-write-builtin-is-simpler-than-printf-and-echo"></a>
+<h2>The <code>write</code> Builtin Is Simpler Than <code>printf</code> and <code>echo</code></h2>
+<a name="write-an-arbitrary-line"></a>
+<h3>Write an Arbitrary Line</h3>
+<p>No:</p>
+<pre><code>printf '%s\n' &quot;$mystr&quot;
+</code></pre>
+<p>Yes:</p>
+<pre><code>write -- $mystr
+</code></pre>
+<p>The <code>write</code> builtin accepts <code>--</code> so it doesn't confuse flags and args.</p>
+<a name="write-without-a-newline"></a>
+<h3>Write Without a Newline</h3>
+<p>No:</p>
+<pre><code>echo -n &quot;$mystr&quot;  <span class="sh-comment"># breaks if mystr is -e</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>write --end '' -- $mystr
+write -n -- $mystr  <span class="sh-comment"># -n is an alias for --end ''</span>
+</code></pre>
+<a name="write-an-array-of-lines"></a>
+<h3>Write an Array of Lines</h3>
+<pre><code>var myarray = :| one two three |
+write -- @myarray
+</code></pre>
+<a name="new-long-flags-on-the-read-builtin"></a>
+<h2>New Long Flags on the <code>read</code> builtin</h2>
+<a name="read-a-line"></a>
+<h3>Read a Line</h3>
+<p>No:</p>
+<pre><code>read line          <span class="sh-comment"># Mangles your backslashes!</span>
+</code></pre>
+<p>Better:</p>
+<pre><code>read -r line       <span class="sh-comment"># Still messes with leading and trailing whitespace</span>
+
+IFS= read -r line  <span class="sh-comment"># OK, but doesn't work in YSH</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>read --raw-line    <span class="sh-comment"># Gives you the line, without trailing \n</span>
+</code></pre>
+<p>(Note that <code>read --raw-line</code> is still an unbuffered read, which means it slowly
+reads a byte at a time.  We plan to add buffered reads as well.)</p>
+<a name="read-a-whole-file"></a>
+<h3>Read a Whole File</h3>
+<p>No:</p>
+<pre><code>read -d ''           <span class="sh-comment"># harder to read, easy to forget -r</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>read --all           <span class="sh-comment"># sets $_reply</span>
+read --all (&amp;myvar)  <span class="sh-comment"># sets $myvar</span>
+</code></pre>
+<a name="read-lines-of-a-file"></a>
+<h3>Read Lines of a File</h3>
+<p>No:</p>
+<pre><code><span class="sh-comment"># The IFS= idiom doesn't work in YSH, because of dynamic scope!</span>
+while IFS= read -r line; do
+  echo $line
+done
+</code></pre>
+<p>Yes:</p>
+<pre><code>while read --raw-line {
+  echo $_reply
+}
+<span class="sh-comment"># this reads a byte at a time, unbuffered, like shell</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>for line in (io.stdin) {
+  echo $line
+}
+<span class="sh-comment"># this reads buffered lines, which is much faster</span>
+</code></pre>
+<a name="read-a-number-of-bytes"></a>
+<h3>Read a Number of Bytes</h3>
+<p>No:</p>
+<pre><code>read -n 3            <span class="sh-comment"># slow because it respects -d delim</span>
+                     <span class="sh-comment"># also strips whitespace</span>
+</code></pre>
+<p>Better:</p>
+<pre><code>read -N 3            <span class="sh-comment"># good behavior, but easily confused with -n</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>read --num-bytes 3           <span class="sh-comment"># sets $_reply</span>
+read --num-bytes 3 (&amp;myvar)  <span class="sh-comment"># sets $myvar</span>
+</code></pre>
+<a name="read-until-0-consume-find-print0"></a>
+<h3>Read Until <code>\0</code> (consume <code>find -print0</code>)</h3>
+<p>No:</p>
+<pre><code><span class="sh-comment"># Obscure syntax that bash accepts, but not other shells</span>
+read -r -d '' myvar
+</code></pre>
+<p>Yes:</p>
+<pre><code>read -0 (&amp;myvar)
+</code></pre>
+<a name="ysh-enhancements-to-builtins"></a>
+<h2>YSH Enhancements to Builtins</h2>
+<a name="use-shopt-instead-of-set"></a>
+<h3>Use <code>shopt</code> Instead of <code>set</code></h3>
+<p>Using a single builtin for all options makes scripts easier to read:</p>
+<p>Discouraged:</p>
+<pre><code>set -o errexit  
+shopt -s dotglob
+</code></pre>
+<p>Idiomatic:</p>
+<pre><code>shopt --set errexit
+shopt --set dotglob
+</code></pre>
+<p>(As always, <code>set</code> can be used when you care about compatibility with other
+shells.)</p>
+<a name="use-when-mentioning-variable-names"></a>
+<h3>Use <code>:</code> When Mentioning Variable Names</h3>
+<p>YSH accepts this optional &quot;pseudo-sigil&quot; to make code more explicit.</p>
+<p>No:</p>
+<pre><code>read -0 record &lt; file.bin
+echo $record
+</code></pre>
+<p>Yes:</p>
+<pre><code>read -0 (&amp;myvar) &lt; file.bin
+echo $record
+</code></pre>
+<a name="consider-using-long-flags"></a>
+<h3>Consider Using <code>--long-flags</code></h3>
+<p>Easier to write:</p>
+<pre><code>test -d /tmp
+test -d / &amp;&amp; test -f /vmlinuz
+
+shopt -u extglob
+</code></pre>
+<p>Easier to read:</p>
+<pre><code>test --dir /tmp
+test --dir / &amp;&amp; test --file /vmlinuz
+
+shopt --unset extglob
+</code></pre>
+<a name="use-blocks-to-save-and-restore-context"></a>
+<h2>Use Blocks to Save and Restore Context</h2>
+<a name="do-something-in-another-directory"></a>
+<h3>Do Something In Another Directory</h3>
+<p>No:</p>
+<pre><code>( cd /tmp; echo $PWD )  <span class="sh-comment"># subshell is unnecessary (and limited)</span>
+</code></pre>
+<p>No:</p>
+<pre><code>pushd /tmp
+echo $PWD
+popd
+</code></pre>
+<p>Yes:</p>
+<pre><code>cd /tmp {
+  echo $PWD
+}
+</code></pre>
+<a name="batch-io"></a>
+<h3>Batch I/O</h3>
+<p>No:</p>
+<pre><code>echo 1 &gt; out.txt   
+echo 2 &gt;&gt; out.txt  <span class="sh-comment"># appending is less efficient</span>
+                   <span class="sh-comment"># because open() and close()</span>
+</code></pre>
+<p>No:</p>
+<pre><code>{ echo 1
+  echo 2
+} &gt; out.txt
+</code></pre>
+<p>Yes:</p>
+<pre><code>redir &gt; out.txt {
+  echo 1
+  echo 2
+}
+</code></pre>
+<p>The <code>redir</code> builtin is syntactic sugar -- it lets you see redirects before the
+code that uses them.</p>
+<a name="temporarily-set-shell-options"></a>
+<h3>Temporarily Set Shell Options</h3>
+<p>No:</p>
+<pre><code>set +o errexit
+myfunc  <span class="sh-comment"># without error checking</span>
+set -o errexit
+</code></pre>
+<p>Yes:</p>
+<pre><code>shopt --unset errexit {
+  myfunc
+}
+</code></pre>
+<a name="use-the-forkwait-builtin-for-subshells-not"></a>
+<h3>Use the <code>forkwait</code> builtin for Subshells, not <code>()</code></h3>
+<p>No:</p>
+<pre><code>( cd /tmp; rm *.sh )
+</code></pre>
+<p>Yes:</p>
+<pre><code>forkwait {
+  cd /tmp
+  rm *.sh
+}
+</code></pre>
+<p>Better:</p>
+<pre><code>cd /tmp {  <span class="sh-comment"># no process created</span>
+  rm *.sh
+}
+</code></pre>
+<a name="use-the-fork-builtin-for-async-not"></a>
+<h3>Use the <code>fork</code> builtin for async, not <code>&amp;</code></h3>
+<p>No:</p>
+<pre><code>myfunc &amp;
+
+{ sleep 1; echo one; sleep 2; } &amp;
+</code></pre>
+<p>Yes:</p>
+<pre><code>fork { myfunc }
+
+fork { sleep 1; echo one; sleep 2 }
+</code></pre>
+<a name="use-procs-better-shell-functions"></a>
+<h2>Use Procs (Better Shell Functions)</h2>
+<a name="use-named-parameters-instead-of-1-2"></a>
+<h3>Use Named Parameters Instead of <code>$1</code>, <code>$2</code>, ...</h3>
+<p>No:</p>
+<pre><code>f() {
+  local src=$1
+  local dest=${2:-/tmp}
+
+  cp &quot;$src&quot; &quot;$dest&quot;
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code>proc f(src, dest='/tmp') {   <span class="sh-comment"># Python-like default values</span>
+  cp $src $dest
+}
+</code></pre>
+<a name="use-named-varargs-instead-of"></a>
+<h3>Use Named Varargs Instead of <code>&quot;$@&quot;</code></h3>
+<p>No:</p>
+<pre><code>f() {
+  local first=$1
+  shift
+
+  echo $first
+  echo &quot;$@&quot;
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code>proc f(first, @rest) {  <span class="sh-comment"># @ means &quot;the rest of the arguments&quot;</span>
+  write -- $first
+  write -- @rest        <span class="sh-comment"># @ means &quot;splice this array&quot;</span>
+}
+</code></pre>
+<p>You can also use the implicit <code>ARGV</code> variable:</p>
+<pre><code>proc p {
+  cp -- @ARGV /tmp
+}
+</code></pre>
+<a name="use-out-params-instead-of-declare-n"></a>
+<h3>Use &quot;Out Params&quot; instead of <code>declare -n</code></h3>
+<p>Out params are one way to &quot;return&quot; values from a <code>proc</code>.</p>
+<p>No:</p>
+<pre><code>f() {
+  local in=$1
+  local -n out=$2
+
+  out=PREFIX-$in
+}
+
+myvar='init'
+f zzz myvar         <span class="sh-comment"># assigns myvar to 'PREFIX-zzz'</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>proc f(in, :out) {  <span class="sh-comment"># : is an out param, i.e. a string &quot;reference&quot;</span>
+  setref out = &quot;PREFIX-$in&quot;
+}
+
+var myvar = 'init'
+f zzz :myvar        <span class="sh-comment"># assigns myvar to 'PREFIX-zzz'.</span>
+                    <span class="sh-comment"># colon is required</span>
+</code></pre>
+<a name="note-procs-dont-mess-with-their-callers"></a>
+<h3>Note: Procs Don't Mess With Their Callers</h3>
+<p>That is, <a href="/cross-ref.html?tag=dynamic-scope#dynamic-scope">dynamic scope</a> is turned off when procs are
+invoked.</p>
+<p>Here's an example of shell functions reading variables in their caller:</p>
+<pre><code>bar() {
+  echo $foo_var  <span class="sh-comment"># looks up the stack</span>
+}
+
+foo() {
+  foo_var=x
+  bar
+}
+
+foo
+</code></pre>
+<p>In YSH, you have to pass params explicitly:</p>
+<pre><code>proc bar {
+  echo $foo_var  <span class="sh-comment"># error, not defined</span>
+}
+</code></pre>
+<p>Shell functions can also <strong>mutate</strong> variables in their caller!  But procs can't
+do this, which makes code easier to reason about.</p>
+<a name="use-modules"></a>
+<h2>Use Modules</h2>
+<p>YSH has a few lightweight features that make it easier to organize code into
+files.  It doesn't have &quot;namespaces&quot;.</p>
+<a name="relative-imports"></a>
+<h3>Relative Imports</h3>
+<p>Suppose we are running <code>bin/mytool</code>, and we want <code>BASE_DIR</code> to be the root of
+the repository so we can do a relative import of <code>lib/foo.sh</code>.</p>
+<p>No:</p>
+<pre><code><span class="sh-comment"># All of these are common idioms, with caveats</span>
+BASE_DIR=$(dirname $0)/..
+
+BASE_DIR=$(dirname ${BASH_SOURCE[0]})/..
+
+BASE_DIR=$(cd $($dirname $0)/.. &amp;&amp; pwd)
+
+BASE_DIR=$(dirname (dirname $(readlink -f $0)))
+
+source $BASE_DIR/lib/foo.sh
+</code></pre>
+<p>Yes:</p>
+<pre><code>const BASE_DIR = &quot;$this_dir/..&quot;
+
+source $BASE_DIR/lib/foo.sh
+
+<span class="sh-comment"># Or simply:</span>
+source $_this_dir/../lib/foo.sh
+</code></pre>
+<p>The value of <code>_this_dir</code> is the directory that contains the currently executing
+file.</p>
+<a name="include-guards"></a>
+<h3>Include Guards</h3>
+<p>No:</p>
+<pre><code><span class="sh-comment"># libfoo.sh</span>
+if test -z &quot;$__LIBFOO_SH&quot;; then
+  return
+fi
+__LIBFOO_SH=1
+</code></pre>
+<p>Yes:</p>
+<pre><code><span class="sh-comment"># libfoo.sh</span>
+module libfoo.sh || return 0
+</code></pre>
+<a name="taskfile-pattern"></a>
+<h3>Taskfile Pattern</h3>
+<p>No:</p>
+<pre><code>deploy() {
+  echo ...
+}
+&quot;$@&quot;
+</code></pre>
+<p>Yes</p>
+<pre><code>proc deploy() {
+  echo ...
+}
+runproc @ARGV  <span class="sh-comment"># gives better error messages</span>
+</code></pre>
+<a name="error-handling"></a>
+<h2>Error Handling</h2>
+<p><a href="error-handling.html">YSH Fixes Shell's Error Handling (<code>errexit</code>)</a> once and
+for all!  Here's a comprehensive list of error handling idioms.</p>
+<a name="dont-use-outside-of-if-while"></a>
+<h3>Don't Use <code>&amp;&amp;</code> Outside of <code>if</code> / <code>while</code></h3>
+<p>It's implicit because <code>errexit</code> is on in YSH.</p>
+<p>No:</p>
+<pre><code>mkdir /tmp/dest &amp;&amp; cp foo /tmp/dest
+</code></pre>
+<p>Yes:</p>
+<pre><code>mkdir /tmp/dest
+cp foo /tmp/dest
+</code></pre>
+<p>It also avoids the <em>Trailing <code>&amp;&amp;</code> Pitfall</em> mentioned at the end of the <a href="error-handling.html">error
+handling</a> doc.</p>
+<a name="ignore-an-error"></a>
+<h3>Ignore an Error</h3>
+<p>No:</p>
+<pre><code>ls /bad || true  <span class="sh-comment"># OK because ls is external</span>
+myfunc || true   <span class="sh-comment"># suffers from the &quot;Disabled errexit Quirk&quot;</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>try { ls /bad }
+try { myfunc }
+</code></pre>
+<a name="retrieve-a-commands-status-when-errexit-is-on"></a>
+<h3>Retrieve A Command's Status When <code>errexit</code> is On</h3>
+<p>No:</p>
+<pre><code><span class="sh-comment"># set -e is enabled earlier</span>
+
+set +e
+mycommand  <span class="sh-comment"># this ignores errors when mycommand is a function</span>
+status=$?  <span class="sh-comment"># save it before it changes</span>
+set -e
+
+echo $status
+</code></pre>
+<p>Yes:</p>
+<pre><code>try {
+  mycommand
+}
+echo $[_error.code]
+</code></pre>
+<a name="does-a-builtin-or-external-command-succeed"></a>
+<h3>Does a Builtin Or External Command Succeed?</h3>
+<p>These idioms are OK in both shell and YSH:</p>
+<pre><code>if ! cp foo /tmp {
+  echo 'error copying'  <span class="sh-comment"># any non-zero status</span>
+}
+
+if ! test -d /bin {
+  echo 'not a directory'
+}
+</code></pre>
+<p>To be consistent with the idioms below, you can also write them like this:</p>
+<pre><code>try {
+  cp foo /tmp
+}
+if failed {  <span class="sh-comment"># shortcut for (_error.code !== 0)</span>
+  echo 'error copying'
+}
+</code></pre>
+<a name="does-a-function-succeed"></a>
+<h3>Does a Function Succeed?</h3>
+<p>When the command is a shell function, you shouldn't use <code>if myfunc</code> directly.
+This is because shell has the <em>Disabled <code>errexit</code> Quirk</em>, which is detected by
+YSH <code>strict_errexit</code>.</p>
+<p><strong>No</strong>:</p>
+<pre><code>if myfunc; then  <span class="sh-comment"># errors not checked in body of myfunc</span>
+  echo 'success'
+fi
+</code></pre>
+<p><strong>Yes</strong>.  The <em><code>$0</code> Dispatch Pattern</em> is a workaround that works in all shells.</p>
+<pre><code>if $0 myfunc; then  <span class="sh-comment"># invoke a new shell</span>
+  echo 'success'
+fi
+
+&quot;$@&quot;  <span class="sh-comment"># Run the function $1 with args $2, $3, ...</span>
+</code></pre>
+<p><strong>Yes</strong>.  The YSH <code>try</code> builtin sets the special <code>_error</code> variable and returns
+<code>0</code>.</p>
+<pre><code>try {
+  myfunc  <span class="sh-comment"># doesn't abort</span>
+}
+if failed {
+  echo 'success'
+}
+</code></pre>
+<a name="does-a-pipeline-succeed"></a>
+<h3>Does a Pipeline Succeed?</h3>
+<p>No:</p>
+<pre><code>if ps | grep python; then
+  echo 'found'
+fi
+</code></pre>
+<p>This is technically correct when <code>pipefail</code> is on, but it's impossible for
+YSH <code>strict_errexit</code> to distinguish it from <code>if myfunc | grep python</code> ahead
+of time (the <a href="error-handling.html#the-meta-pitfall">&quot;meta&quot; pitfall</a>).  If you
+know what you're doing, you can disable <code>strict_errexit</code>.</p>
+<p>Yes:</p>
+<pre><code>try {
+  ps | grep python
+}
+if failed {
+  echo 'found'
+}
+
+<span class="sh-comment"># You can also examine the status of each part of the pipeline</span>
+if (_pipeline_status[0] !== 0) {
+  echo 'ps failed'
+}
+</code></pre>
+<a name="does-a-command-with-process-subs-succeed"></a>
+<h3>Does a Command With Process Subs Succeed?</h3>
+<p>Similar to the pipeline example above:</p>
+<p>No:</p>
+<pre><code>if ! comm &lt;(sort left.txt) &lt;(sort right.txt); then
+  echo 'error'
+fi
+</code></pre>
+<p>Yes:</p>
+<pre><code>try {
+  comm &lt;(sort left.txt) &lt;(sort right.txt)
+}
+if failed {
+  echo 'error'
+}
+
+<span class="sh-comment"># You can also examine the status of each process sub</span>
+if (_process_sub_status[0] !== 0) {
+  echo 'first process sub failed'
+}
+</code></pre>
+<p>(I used <code>comm</code> in this example because it doesn't have a true / false / error
+status like <code>diff</code>.)</p>
+<a name="handle-errors-in-ysh-expressions"></a>
+<h3>Handle Errors in YSH Expressions</h3>
+<pre><code>try {
+  var x = 42 / 0
+  echo &quot;result is $[42 / 0]&quot;
+}
+if failed {
+  echo 'divide by zero'
+}
+</code></pre>
+<a name="test-boolean-statuses-like-grep-diff-test"></a>
+<h3>Test Boolean Statuses, like <code>grep</code>, <code>diff</code>, <code>test</code></h3>
+<p>The YSH <code>boolstatus</code> builtin distinguishes <strong>error</strong> from <strong>false</strong>.</p>
+<p><strong>No</strong>, this is subtly wrong.  <code>grep</code> has 3 different return values.</p>
+<pre><code>if grep 'class' *.py {       
+  echo 'found'               <span class="sh-comment"># status 0 means found</span>
+} else {
+  echo 'not found OR ERROR'  <span class="sh-comment"># any non-zero status</span>
+}
+</code></pre>
+<p><strong>Yes</strong>.  <code>boolstatus</code> aborts the program if <code>egrep</code> doesn't return 0 or 1.</p>
+<pre><code>if boolstatus grep 'class' *.py {  <span class="sh-comment"># may abort</span>
+  echo 'found'               <span class="sh-comment"># status 0 means found</span>
+} else {
+  echo 'not found'           <span class="sh-comment"># status 1 means not found</span>
+}
+</code></pre>
+<p>More flexible style:</p>
+<pre><code>try {
+  grep 'class' *.py
+}
+case (_error.code) {
+  (0)    { echo 'found' }
+  (1)    { echo 'not found' }
+  (else) { echo 'fatal' }
+}
+</code></pre>
+<a name="use-ysh-expressions-initializations-and-assignments-var-setvar"></a>
+<h2>Use YSH Expressions, Initializations, and Assignments (var, setvar)</h2>
+<a name="set-an-environment-variable-globally"></a>
+<h3>Set an Environment Variable Globally</h3>
+<p>No:</p>
+<pre><code>export PYTHONPATH=.  <span class="sh-comment"># export is disabled in YSH</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>setglobal ENV.PYTHONPATH = '.'  
+</code></pre>
+<p>That is, enviroments use the <a href="ref/chap-special-var.html#ENV">ENV</a> object/namespace, rather than being global
+variables.</p>
+<p>Note: the idiom for setting an env var locally is unchanged:</p>
+<pre><code>PYTHONPATH=. myscript.py
+</code></pre>
+<a name="initialize-and-assign-strings-and-integers"></a>
+<h3>Initialize and Assign Strings and Integers</h3>
+<p>No:</p>
+<pre><code>local mystr=foo
+mystr='new value'
+
+local myint=42  <span class="sh-comment"># still a string in shell</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>var mystr = 'foo'
+setvar mystr = 'new value'
+
+var myint = 42  <span class="sh-comment"># a real integer</span>
+</code></pre>
+<a name="expressions-on-integers"></a>
+<h3>Expressions on Integers</h3>
+<p>No:</p>
+<pre><code>x=$(( 1 + 2*3 ))
+(( x = 1 + 2*3 ))
+</code></pre>
+<p>Yes:</p>
+<pre><code>setvar x = 1 + 2*3
+</code></pre>
+<a name="mutate-integers"></a>
+<h3>Mutate Integers</h3>
+<p>No:</p>
+<pre><code>(( i++ ))  <span class="sh-comment"># interacts poorly with errexit</span>
+i=$(( i+1 ))
+</code></pre>
+<p>Yes:</p>
+<pre><code>setvar i += 1  <span class="sh-comment"># like Python, with a keyword</span>
+</code></pre>
+<a name="initialize-and-assign-arrays"></a>
+<h3>Initialize and Assign Arrays</h3>
+<p>Arrays in YSH look like <code>:| my array |</code> and <code>['my', 'array']</code>.</p>
+<p>No:</p>
+<pre><code>local -a myarray=(one two three)
+myarray[3]='THREE'
+</code></pre>
+<p>Yes:</p>
+<pre><code>var myarray = :| one two three |
+setvar myarray[3] = 'THREE'
+
+var same = ['one', 'two', 'three']
+var typed = [1, 2, true, false, null]
+</code></pre>
+<a name="initialize-and-assign-dicts"></a>
+<h3>Initialize and Assign Dicts</h3>
+<p>Dicts in YSH look like <code>{key: 'value'}</code>.</p>
+<p>No:</p>
+<pre><code>local -A myassoc=(['key']=value ['k2']=v2)
+myassoc['key']=V
+</code></pre>
+<p>Yes:</p>
+<pre><code><span class="sh-comment"># keys don't need to be quoted</span>
+var myassoc = {key: 'value', k2: 'v2'}
+setvar myassoc['key'] = 'V'
+</code></pre>
+<a name="get-values-from-arrays-and-dicts"></a>
+<h3>Get Values From Arrays and Dicts</h3>
+<p>No:</p>
+<pre><code>local x=${a[i-1]}
+x=${a[i]}
+
+local y=${A['key']}
+</code></pre>
+<p>Yes:</p>
+<pre><code>var x = a[i-1]
+setvar x = a[i]
+
+var y = A['key']
+</code></pre>
+<a name="conditions-and-comparisons"></a>
+<h3>Conditions and Comparisons</h3>
+<p>No:</p>
+<pre><code>if (( x &gt; 0 )); then
+  echo 'positive'
+fi
+</code></pre>
+<p>Yes:</p>
+<pre><code>if (x &gt; 0) {
+  echo 'positive'
+}
+</code></pre>
+<a name="substituting-expressions-in-words"></a>
+<h3>Substituting Expressions in Words</h3>
+<p>No:</p>
+<pre><code>echo flag=$((1 + a[i] * 3))  <span class="sh-comment"># C-like arithmetic</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>echo flag=$[1 + a[i] * 3]    <span class="sh-comment"># Arbitrary YSH expressions</span>
+
+<span class="sh-comment"># Possible, but a local var might be more readable</span>
+echo flag=$['1' if x else '0']
+</code></pre>
+<a name="use-egg-expressions-instead-of-regexes"></a>
+<h2>Use <a href="eggex.html">Egg Expressions</a> instead of Regexes</h2>
+<a name="test-for-a-match"></a>
+<h3>Test for a Match</h3>
+<p>No:</p>
+<pre><code>local pat='[[:digit:]]+'
+if [[ $x =~ $pat ]]; then
+  echo 'number'
+fi
+</code></pre>
+<p>Yes:</p>
+<pre><code>if (x ~ /digit+/) {
+  echo 'number'
+}
+</code></pre>
+<p>Or extract the pattern:</p>
+<pre><code>var pat = / digit+ /
+if (x ~ pat) {
+  echo 'number'
+}
+</code></pre>
+<a name="extract-submatches"></a>
+<h3>Extract Submatches</h3>
+<p>No:</p>
+<pre><code>if [[ $x =~ foo-([[:digit:]]+) ]] {
+  echo &quot;${BASH_REMATCH[1]}&quot;  <span class="sh-comment"># first submatch</span>
+}
+</code></pre>
+<p>Yes:</p>
+<pre><code>if (x ~ / 'foo-' &lt;capture d+&gt; /) {   <span class="sh-comment"># &lt;&gt; is capture</span>
+  echo $[_group(1)]                  <span class="sh-comment"># first submatch</span>
+}
+</code></pre>
+<a name="glob-matching"></a>
+<h2>Glob Matching</h2>
+<p>No:</p>
+<pre><code>if [[ $x == *.py ]]; then
+  echo 'Python'
+fi
+</code></pre>
+<p>Yes:</p>
+<pre><code>if (x ~~ '*.py') {
+  echo 'Python'
+}
+</code></pre>
+<p>No:</p>
+<pre><code>case $x in
+  *.py)
+    echo Python
+    ;;
+  *.sh)
+    echo Shell
+    ;;
+esac
+</code></pre>
+<p>Yes (purely a style preference):</p>
+<pre><code>case $x {          <span class="sh-comment"># curly braces</span>
+  (*.py)           <span class="sh-comment"># balanced parens</span>
+    echo 'Python'
+    ;;
+  (*.sh)
+    echo 'Shell'
+    ;;
+}
+</code></pre>
+<a name="todo"></a>
+<h2>TODO</h2>
+<a name="distinguish-between-variables-and-functions"></a>
+<h3>Distinguish Between Variables and Functions</h3>
+<ul>
+<li><code>$RANDOM</code> vs. <code>random()</code></li>
+<li><code>LANG=C</code> vs.  <code>shopt --setattr LANG=C</code></li>
+</ul>
+<a name="related-documents"></a>
+<h2>Related Documents</h2>
+<ul>
+<li><a href="shell-idioms.html">Shell Language Idioms</a>.  This advice applies to shells
+other than YSH.</li>
+<li><a href="upgrade-breakage.html">What Breaks When You Upgrade to YSH</a>.  Shell constructs that YSH
+users should avoid.</li>
+<li><a href="error-handling.html">YSH Fixes Shell's Error Handling (<code>errexit</code>)</a>.  YSH fixes the
+flaky error handling in POSIX shell and bash.</li>
+<li>TODO: Go through more of the <a href="https://github.com/dylanaraps/pure-bash-bible">Pure Bash
+Bible</a>.  YSH provides
+alternatives for such quirky syntax.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Tue, 24 Jun 2025 16:31:43 -0400</i>
+    </div>
+  </body>
+</html>
