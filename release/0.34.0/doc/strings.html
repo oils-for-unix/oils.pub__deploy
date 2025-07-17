@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Strings: Quotes, Interpolation, Escaping, and Buffers</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/strings.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.34.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Strings: Quotes, Interpolation, Escaping, and Buffers</h1>
+<p>Strings are the most important data structure in shell.  YSH makes them easier
+and safer!</p>
+<p>This doc addresses these questions:</p>
+<ul>
+<li>How do you write different kinds of strings in YSH programs?</li>
+<li>How do they behave at runtime?  What are the common operations?</li>
+<li>What are the recommended ways to use them?</li>
+</ul>
+<p>Shell Features:</p>
+<ul>
+<li>Quotes (single or double quoted)</li>
+<li>Interpolation aka substitution (variable, command, etc.)</li>
+</ul>
+<p>YSH Features:</p>
+<ul>
+<li>Escaping for safety: <code>${x|html}</code>, etc.</li>
+<li>Buffers for efficiency and readability: <code>${.myproc arg1}</code>, etc.
+<ul>
+<li>(buffers are PHP-like)</li>
+</ul>
+</li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel2"><a href="#for-pythonjsc-users">For Python/JS/C Users</a></div>
+  <div class="toclevel2"><a href="#for-shell-users">For Shell Users</a></div>
+  <div class="toclevel2"><a href="#quick-reference">Quick Reference</a></div>
+  <div class="toclevel1"><a href="#use-unquoted-strings-in-command-mode">Use Unquoted Strings in Command Mode</a></div>
+  <div class="toclevel1"><a href="#two-kinds-of-single-quoted-strings">Two Kinds of Single-Quoted Strings</a></div>
+  <div class="toclevel2"><a href="#raw-with-rcprogram-files">Raw with <code>r'C:\Program Files\'</code></a></div>
+  <div class="toclevel2"><a href="#c-escaped-with-foon">C-Escaped With <code>$'foo\n'</code></a></div>
+  <div class="toclevel2"><a href="#qsn-for-data-interchange">QSN For <em>Data</em> Interchange</a></div>
+  <div class="toclevel1"><a href="#use-double-quoted-strings-for-interpolation">Use Double-Quoted Strings For Interpolation</a></div>
+  <div class="toclevel2"><a href="#implicit-safe-interpolation-with-x-todo">Implicit Safe Interpolation with <code>$[x]</code> (TODO)</a></div>
+  <div class="toclevel2"><a href="#explicit-safe-interpolation-with-xhtml-todo">Explicit Safe Interpolation With <code>${x|html}</code> (TODO)</a></div>
+  <div class="toclevel2"><a href="#raw-interpolation-with-x-may-be-unsafe">Raw Interpolation with <code>$x</code> (may be unsafe)</a></div>
+  <div class="toclevel2"><a href="#command-sub-echo-hi">Command Sub <code>$(echo hi)</code></a></div>
+  <div class="toclevel2"><a href="#fast-command-sub-myproc-stdout-capture">Fast Command Sub <code>${.myproc}</code> (stdout capture)</a></div>
+  <div class="toclevel1"><a href="#escapers-codecs-todo">Escapers / Codecs (TODO)</a></div>
+  <div class="toclevel1"><a href="#use-triple-quoted-strings-instead-of-here-docs-todo">Use Triple Quoted Strings Instead of Here Docs (TODO)</a></div>
+  <div class="toclevel1"><a href="#concatenate-with-str1str2">Concatenate With <code>&quot;$str1$str2&quot;</code></a></div>
+  <div class="toclevel2"><a href="#avoid-concatenation-in-a-loop">Avoid Concatenation in a Loop</a></div>
+  <div class="toclevel1"><a href="#append-with-two-styles">Append with Two Styles</a></div>
+  <div class="toclevel2"><a href="#echo-printf-write-and-myproc-write_to_buffer"><code>echo</code>, <code>printf</code>, <code>write</code>, and <code>${.myproc}</code> (<code>write_to_buffer</code>)</a></div>
+  <div class="toclevel2"><a href="#append-and-join"><code>append</code> and <code>join</code></a></div>
+  <div class="toclevel1"><a href="#appendix-a-deprecated-shell-constructs">Appendix A: Deprecated Shell Constructs</a></div>
+  <div class="toclevel1"><a href="#appendix-b-related-documents">Appendix B: Related Documents</a></div>
+</div>
+<a name="summary"></a>
+<h2>Summary</h2>
+<ul>
+<li>YSH has three ways to write strings: single quoted, double quoted, and
+C-style (which is also QSN-style).</li>
+<li>Each of the three types has a multiline variant.  They are Python-style
+triple-quoted, but they also strip leading space in an intelligent way.</li>
+<li>TODO: Tagged strings, like <code>&quot;&lt;h2&gt;$x&lt;/h2&gt;&quot;html</code></li>
+<li>TODO: For string safety, YSH adds the concept of &quot;escapers&quot; and interpolation
+with <code>$[x]</code> (square brackets)</li>
+<li>TODO: For convenience and performance, YSH adds buffers and <em>builtin
+substitution</em>: <code>${.myproc arg1}</code>.</li>
+</ul>
+<a name="for-pythonjsc-users"></a>
+<h3>For Python/JS/C Users</h3>
+<ul>
+<li>Single and double quotes are different.    Double quotes allow interpolation.</li>
+<li>Neither style of string respects backslash escapes like <code>\n</code> for newline.
+You have to use the third form.</li>
+</ul>
+<a name="for-shell-users"></a>
+<h3>For Shell Users</h3>
+<ul>
+<li>YSH replaces here docs with Python-style triple-quoted strings.</li>
+</ul>
+<p>Preferences:</p>
+<ul>
+<li>Unquoted strings (command mode only)</li>
+<li>Single-quoted strings
+<ul>
+<li>when you need to express special characters</li>
+<li>QSN</li>
+</ul>
+</li>
+<li>Double-quoted strings
+<ul>
+<li>with <code>$[]</code> interpolation</li>
+<li>with <code>${}</code> interpolation</li>
+<li>with fast command sub `${.myproc arg1}</li>
+</ul>
+</li>
+</ul>
+<a name="quick-reference"></a>
+<h3>Quick Reference</h3>
+<pre><code>echo unquoted          <span class="sh-comment"># bare words are allowed in command mode</span>
+
+echo 'with spaces'     <span class="sh-comment"># single quoted string</span>
+var s = 'with spaces'
+
+<span class="sh-comment"># Raw single quoted string, to emphasize literal backslashes</span>
+var s = r'C:\Program Files\'
+
+<span class="sh-comment"># C-escaped single quoted string</span>
+var line = $'foo\n'
+
+<span class="sh-comment"># double quoted with safe interpolation (TODO)</span>
+echo &quot;&lt;p&gt;hello $[name]&lt;/p&gt;&quot;       <span class="sh-comment"># default_escaper must be set</span>
+echo &quot;&lt;p&gt;hello ${name|html}&lt;/p&gt;&quot;  <span class="sh-comment"># explicit escaper</span>
+
+<span class="sh-comment"># double quoted with unsafe interpolation</span>
+echo &quot;hello $name&quot;
+echo &quot;hello ${name}_suffix&quot;       <span class="sh-comment"># braces delimit variable name</span>
+
+echo $(date +%x)                  <span class="sh-comment"># command sub</span>
+</code></pre>
+<p>Still TODO:</p>
+<pre><code>echo ${.myproc arg1}
+
+cat &lt;&lt;&lt; '''
+   one
+   two
+   '''
+
+cat &lt;&lt;&lt; $'''
+   mu = \u{3bc}
+   nul = \x00
+   '''
+
+var s = &quot;&quot;&quot;
+   multiline with ${vars}
+   $(date +%x)
+   ${.myproc arg1}
+   &quot;&quot;&quot;
+</code></pre>
+<a name="use-unquoted-strings-in-command-mode"></a>
+<h2>Use Unquoted Strings in Command Mode</h2>
+<p>Shell is unique!  You don't have to quote strings.</p>
+<ul>
+<li>link: command vs. expression mode</li>
+</ul>
+<p>and quoted strings in expression mode</p>
+<a name="two-kinds-of-single-quoted-strings"></a>
+<h2>Two Kinds of Single-Quoted Strings</h2>
+<a name="raw-with-rcprogram-files"></a>
+<h3>Raw with <code>r'C:\Program Files\'</code></h3>
+<ul>
+<li>TODO: <code>parse_raw_strings</code></li>
+</ul>
+<a name="c-escaped-with-foon"></a>
+<h3>C-Escaped With <code>$'foo\n'</code></h3>
+<ul>
+<li>Use the <a href="/cross-ref.html?tag=QSN#QSN">QSN</a> subset</li>
+</ul>
+<a name="qsn-for-data-interchange"></a>
+<h3>QSN For <em>Data</em> Interchange</h3>
+<p>TODO: explain the difference.</p>
+<p>This is different!  It's data and not code.  Analogy to JSON.</p>
+<ul>
+<li>When you want represent any string on a single line (filenames)</li>
+<li>To make binary data readable</li>
+<li>To display data in a terminal (protect against terminal codes)</li>
+</ul>
+<a name="use-double-quoted-strings-for-interpolation"></a>
+<h2>Use Double-Quoted Strings For Interpolation</h2>
+<a name="implicit-safe-interpolation-with-x-todo"></a>
+<h3>Implicit Safe Interpolation with <code>$[x]</code> (TODO)</h3>
+<ul>
+<li>Use <code>$[x]</code> for safe interpolation
+<ul>
+<li>Respects <code>shopt --set default_escaper</code></li>
+</ul>
+</li>
+</ul>
+<a name="explicit-safe-interpolation-with-xhtml-todo"></a>
+<h3>Explicit Safe Interpolation With <code>${x|html}</code> (TODO)</h3>
+<ul>
+<li>Use <code>${x|html}</code> for safe interpolation</li>
+</ul>
+<p>Note you can have bugs if you use the wrong escaper!</p>
+<a name="raw-interpolation-with-x-may-be-unsafe"></a>
+<h3>Raw Interpolation with <code>$x</code> (may be unsafe)</h3>
+<ul>
+<li>Use <code>$x</code> or <code>${x}</code>
+<ul>
+<li>These are identical except for syntax</li>
+</ul>
+</li>
+<li>Useful for log messages, which aren't security sensitive</li>
+</ul>
+<p>Note that you should <strong>not</strong> use <code>&quot;${var}&quot;</code> in YSH code.  Use <code>$var</code> or
+<code>${var}</code> because of simple word evaluation.</p>
+<a name="command-sub-echo-hi"></a>
+<h3>Command Sub <code>$(echo hi)</code></h3>
+<a name="fast-command-sub-myproc-stdout-capture"></a>
+<h3>Fast Command Sub <code>${.myproc}</code> (stdout capture)</h3>
+<p>Note that only words are allowed here; not full commands.  Wrap other commands
+in a proc.</p>
+<ul>
+<li>Using <code>write_to_buffer</code></li>
+</ul>
+<p>TODO:</p>
+<p>echo ${.myproc foo|html}  # I think this should be supported</p>
+<a name="escapers-codecs-todo"></a>
+<h2>Escapers / Codecs (TODO)</h2>
+<p>For <code>${x|html}</code> and <code>${.myproc|html}</code></p>
+<p>TODO</p>
+<ul>
+<li>how to register them</li>
+<li>wasm plugins?</li>
+</ul>
+<a name="use-triple-quoted-strings-instead-of-here-docs-todo"></a>
+<h2>Use Triple Quoted Strings Instead of Here Docs (TODO)</h2>
+<p>TODO</p>
+<a name="concatenate-with-str1str2"></a>
+<h2>Concatenate With <code>&quot;$str1$str2&quot;</code></h2>
+<p>Or <code>&quot;${str1}${str2}&quot;</code></p>
+<ul>
+<li>is <code>s ++ t</code> valid?. It isn't necessary for strings and lists
+<ul>
+<li><code>:| @a @b |</code> is the same for lists</li>
+<li>does this Python syntax also work?  <code>[*a, *b]</code></li>
+<li>Dicts: <code>{d, **e}</code> might be better</li>
+</ul>
+</li>
+</ul>
+<a name="avoid-concatenation-in-a-loop"></a>
+<h3>Avoid Concatenation in a Loop</h3>
+<pre><code>setvar s = &quot;${s}${suffix}&quot;
+</code></pre>
+<a name="append-with-two-styles"></a>
+<h2>Append with Two Styles</h2>
+<p>Since there is no <code>++</code> operator, there is no <code>++=</code> operator.</p>
+<a name="echo-printf-write-and-myproc-write_to_buffer"></a>
+<h3><code>echo</code>, <code>printf</code>, <code>write</code>, and <code>${.myproc}</code> (<code>write_to_buffer</code>)</h3>
+<p>echo, printf, and write have their output captured.</p>
+<pre><code>proc p(arg) {
+  <span class="sh-comment">### A proc that has its output captured quickly.</span>
+
+  echo $arg
+  write two
+
+  const x = 'three'
+  printf '%s\n' $x
+
+  <span class="sh-comment"># newline for interactive testing, but not when captured</span>
+  if ! shopt -q write_to_buffer {
+    echo  
+  }
+}
+
+echo ${.p one}  <span class="sh-comment"># $'one\ntwo\nthree\n'</span>
+</code></pre>
+<a name="append-and-join"></a>
+<h3><code>append</code> and <code>join</code></h3>
+<pre><code>var buf = :| |
+append 'one ' (buf)
+append $'two\n' (buf)
+echo $[join(buf)]
+</code></pre>
+<a name="appendix-a-deprecated-shell-constructs"></a>
+<h2>Appendix A: Deprecated Shell Constructs</h2>
+<ul>
+<li>here docs!
+<ul>
+<li>Use tripled quoted strings.</li>
+</ul>
+</li>
+<li>Backticks for command sub
+<ul>
+<li>Use <code>$(echo hi)</code></li>
+</ul>
+</li>
+<li>Arithmetic substitution like <code>$((1 + 2))</code>
+<ul>
+<li>Use YSH expressions: <code>$[1 + 2]</code></li>
+</ul>
+</li>
+<li><code>${x%%prefix}</code> and so forth
+<ul>
+<li>Use builtin YSH functions (TODO)</li>
+</ul>
+</li>
+<li>Unused: bash <code>$&quot;&quot;</code> for localization?</li>
+</ul>
+<a name="appendix-b-related-documents"></a>
+<h2>Appendix B: Related Documents</h2>
+<ul>
+<li>Simple Word Eval: you don't need quoting as much</li>
+<li>Expression Language</li>
+<li><a href="qsn.html">QSN</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 16 Jul 2025 22:03:27 -0400</i>
+    </div>
+  </body>
+</html>

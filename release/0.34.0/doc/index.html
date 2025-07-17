@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>All Docs</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/index.md" id="source-link">source</a> |
+      <a href="..">version 0.34.0</a> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>All Docs</h1>
+<p>This page links to all docs.  A dagger † means a doc isn't finished.</p>
+<p>See <a href="published.html">Published Docs</a> for those that are ready to read.</p>
+
+<h2>Good Places to Start</h2>
+<ul>
+<li><a href="ysh-tour.html">A Tour of YSH</a></li>
+<li><a href="idioms.html">YSH vs. Shell Idioms</a></li>
+<li><a href="ref/index.html"><strong>Oils Reference</strong></a> - underlies the <a href="ref/chap-builtin-cmd.html#help">help</a> builtin</li>
+<li><a href="faq-doc.html">FAQ on Docs</a>.  <strong>Look here if you can't find
+something</strong>.</li>
+</ul>
+<h2>Preliminaries</h2>
+<ul>
+<li><a href="INSTALL.html">INSTALL</a>. How do I install Oils?  This text file is also in
+the <code>oils-for-unix</code> tarball.
+<ul>
+<li><a href="help-mirror.html">Oils Build <code>--help</code> Mirror</a></li>
+<li><a href="portability.html">Portability</a></li>
+</ul>
+</li>
+<li><a href="getting-started.html">Getting Started</a>.  How do I use the shell?</li>
+</ul>
+<h2>Interactive Shell</h2>
+<ul>
+<li><a href="headless.html">Headless Mode</a>.  For alternative UIs on top of YSH.</li>
+<li><a href="completion.html">Completion</a> †.  We emulate bash completion.</li>
+</ul>
+<h2>OSH is a Compatible Shell</h2>
+<ul>
+<li><a href="shell-idioms.html">Shell Language Idioms</a> has some advice for using any
+shell, not just Oils.</li>
+<li><a href="lib-osh.html">OSH Standard Library</a> †.  Small but useful enhancements.</li>
+</ul>
+<p>For sophisticated users:</p>
+<ul>
+<li><a href="known-differences.html">Known Differences Between OSH and Other Shells</a></li>
+<li><a href="quirks.html">OSH Quirks</a> for compatibility.</li>
+</ul>
+<h2>YSH is a New, Powerful Shell</h2>
+<ul>
+<li><a href="ysh-tour.html">A Tour of YSH</a>.  Explains YSH from scratch, without referring
+to shell's legacy.</li>
+<li><a href="upgrade-breakage.html">What Breaks When You Upgrade to YSH</a>.  When you turn
+on YSH, there are some shell constructs you can no longer use.  We try to
+minimize the length of this list.</li>
+<li><a href="ysh-faq.html">YSH Language FAQ</a></li>
+<li><a href="style-guide.html">YSH Style Guide</a></li>
+</ul>
+<h3>Comparisons</h3>
+<ul>
+<li><a href="idioms.html">YSH vs. Shell Idioms</a>.  A list of code snippets.</li>
+<li><a href="ysh-vs-shell.html">YSH vs. Shell</a>.  High-level descriptions: how does YSH
+differ from Bourne/POSIX shell?</li>
+<li><a href="ysh-vs-python.html">YSH Expressions vs. Python</a>.  The expression language is
+borrowed from Python, with a few tweaks.</li>
+<li><a href="novelties.html">Novelties in OSH and YSH</a>.  May be helpful for experienced
+programmers.</li>
+</ul>
+<h3>Design Concepts</h3>
+<ul>
+<li><a href="language-influences.html">YSH Language Influences</a> - Shell, Python,
+JavaScript, Lisp, ...</li>
+<li>Syntax
+<ul>
+<li><a href="syntax-feelings.html">A Feel For YSH Syntax</a></li>
+<li><a href="syntactic-concepts.html">Syntactic Concepts</a> may help you remember the
+language.</li>
+<li><a href="command-vs-expression-mode.html">Command vs. Expression Mode</a>.</li>
+</ul>
+</li>
+<li><a href="warts.html">Warts</a>.  Mostly for compatibility.</li>
+</ul>
+<p>YSH has 3 main sublanguages:</p>
+<ul>
+<li><strong>Command</strong> language, which now consistently uses <code>{ }</code> for blocks.
+<ul>
+<li><a href="hay.html">Hay - Custom Languages for Unix Systems</a>.  Use Ruby-like
+blocks to declare data and interleaved code.</li>
+</ul>
+</li>
+<li><strong>Word</strong> language.
+<ul>
+<li><a href="simple-word-eval.html">Simple Word Evaluation</a>.  Written for shell
+experts.</li>
+</ul>
+</li>
+<li><strong>Expression</strong> language on typed data.
+<ul>
+<li><a href="eggex.html">Egg Expressions</a>.  A new regex syntax, abbreviated <em>eggex</em>.</li>
+<li><a href="ysh-regex-api.html">YSH Regex API</a>.  Convenient and powerful.</li>
+</ul>
+</li>
+</ul>
+<p>Features:</p>
+<ul>
+<li><a href="ysh-error.html">Guide to YSH Error Handling</a></li>
+<li><a href="proc-func.html">Guide to Procs and Funcs</a>
+<ul>
+<li><a href="block-literals.html">Block Literals</a> †</li>
+</ul>
+</li>
+</ul>
+<p>Designs for &quot;Maximalist YSH&quot;:</p>
+<ul>
+<li><a href="stream-table-process.html">Streams, Tables, and Processes - awk, R, xargs</a> †</li>
+<li><a href="ysh-doc-processing.html">Document Processing in YSH - Notation, Query, Templating</a> †</li>
+</ul>
+<p>Crosscutting design issues:</p>
+<ul>
+<li><a href="variables.html">Variable Declaration, Mutation, and Scope</a></li>
+<li><a href="strings.html">Strings: Quotes, Interpolation, Escaping, and Buffers</a> †
+<ul>
+<li><a href="unicode.html">Unicode</a> †.  Oils supports and prefers UTF-8.</li>
+</ul>
+</li>
+<li><a href="ysh-io.html">YSH Input/Output</a></li>
+</ul>
+<h2>Data Languages Avoid Ad-Hoc Parsing</h2>
+<p>YSH programs &quot;talk about&quot; these data languages, also called interchange formats
+or protocols.  In-memory data structures are <em>in service</em> of data languages on
+the wire, <strong>not</strong> the other way around.</p>
+<ul>
+<li><a href="j8-notation.html">J8 Notation</a>.  An upgrade of JSON to bytes, strings,
+lines, and structured data.
+<ul>
+<li><a href="json.html">JSON</a>.  Some usage details.</li>
+<li><a href="framing.html">Framing</a> †</li>
+</ul>
+</li>
+<li><a href="byo.html">BYO Protocols</a> - for testing and completion.</li>
+</ul>
+<h2>The Shared Oils Runtime</h2>
+<ul>
+<li><a href="types.html">Types in the Oils Runtime</a></li>
+<li><a href="pure-mode.html">Pure Mode: For Config Files and Functions</a></li>
+<li><a href="error-handling.html">YSH Fixes Shell's Error Handling (<code>errexit</code>)</a></li>
+<li><a href="error-catalog.html">Oils Error Catalog, With Hints</a></li>
+<li><a href="xtrace.html">Tracing Execution</a>.  YSH enhances shell's <code>set -x</code>.</li>
+<li><a href="options.html">Options</a> †.  Parsing and runtime options turn OSH into YSH.</li>
+</ul>
+<p>Internal details:</p>
+<ul>
+<li><a href="interpreter-state.html">Interpreter State</a> †.  What's inside a shell
+interpreter?</li>
+<li><a href="process-model.html">Process Model</a> †.  The shell language is a thin
+layer over the Unix kernel.</li>
+</ul>
+<h2>For Contributors</h2>
+<ul>
+<li><a href="oils-repo/README.html">README.md</a>.  If you want to modify Oils, start here.
+We welcome contributions!</li>
+<li><a href="repo-overview.html">Oils Repo Overview</a></li>
+<li><a href="doc-toolchain.html">Doc Toolchain</a> and <a href="doc-plugins.html">Doc Plugins</a>.
+<ul>
+<li><a href="ul-table.html">ul-table: Markdown Tables Without New Syntax</a></li>
+</ul>
+</li>
+<li><a href="https://github.com/oilshell/oil/wiki">Github Wiki for oilshell/oil</a></li>
+<li><a href="old/index.html">Old Docs</a>.  Drafts that may be deleted.</li>
+</ul>
+<p>Internal Architecture:</p>
+<ul>
+<li><a href="architecture-notes.html">Notes on Oils Architecture</a>
+<ul>
+<li><a href="parser-architecture.html">Parser Architecture</a></li>
+</ul>
+</li>
+<li><a href="pretty-printing.html">Pretty Printing</a> - March 2024 design notes.</li>
+<li><a href="oils-repo/mycpp/README.html">mycpp/README</a> - How we translate typed Python to
+C++.</li>
+</ul>
+<h2>More</h2>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki">Github Wiki for oilshell/oil</a>.</li>
+<li><a href="https://www.oilshell.org/blog/">The blog</a> has useful background information,
+although older posts are more likely to have incorrect information.</li>
+<li><a href="https://www.oilshell.org/">The home page</a> has links to docs for new users.</li>
+</ul>
+<p>Old:</p>
+<ul>
+<li><a href="INSTALL-old.html">INSTALL-old</a> for the slow <code>oil-$VERSION</code> tarball, based on
+CPython.</li>
+</ul>
+
+    <div id="build-timestamp">
+      <i>Generated on Wed, 16 Jul 2025 22:03:27 -0400</i>
+    </div>
+  </body>
+</html>

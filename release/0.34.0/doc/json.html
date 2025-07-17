@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JSON in Oils</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/json.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.34.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>JSON in Oils</h1>
+<p><a href="https://www.json.org/">JSON</a> is used by both web services and command line
+tools, so a modern Unix shell needs to support it.</p>
+<p>Oils has a <code>json</code> builtin which you can use from bot OSH and YSH.</p>
+<p>It also has a parallel <code>json8</code> builtin with the same uage.  See <a href="j8-notation.html">J8
+Notation</a> for details on the encoding.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#json-read-parses-from-stdin"><code>json read</code> parses from <code>stdin</code></a></div>
+  <div class="toclevel1"><a href="#json-write-prints-to-stdout"><code>json write</code> prints to <code>stdout</code></a></div>
+  <div class="toclevel2"><a href="#write-builtin"><code>write</code> builtin</a></div>
+  <div class="toclevel1"><a href="#filter-data-structures-with-ysh-expressions">Filter Data Structures with YSH Expressions</a></div>
+  <div class="toclevel1"><a href="#other-data-structures-can-be-printed-as-json">Other Data Structures Can Be Printed as JSON</a></div>
+</div>
+<p>The <code>json</code> <strong>builtin</strong> has <code>read</code> and <code>write</code> subcommands, which convert
+between serialized data languages and in-memory data structures.</p>
+<p>YSH data structures are like those in Python and JavaScript, so this
+correspondence is natural.</p>
+<a name="json-read-parses-from-stdin"></a>
+<h2><code>json read</code> parses from <code>stdin</code></h2>
+<p>Usage:</p>
+<pre><code>json  read (PLACE?)
+json8 read (PLACE?)
+</code></pre>
+<p>Examples:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">cat stats.json</span>
+{&quot;count&quot;: 42}
+
+<span class="sh-comment"># Read from a file.  By default, the variable _reply is written.</span>
+<span class="sh-prompt">$</span> <span class="sh-command">json read &lt; stats.json</span>
+
+<span class="sh-comment"># Use = to pretty print an expression</span>
+<span class="sh-prompt">$</span> <span class="sh-command">= _reply</span>
+(Dict)   {'count': 42}
+</code></pre>
+<p>Specify a place to put the data:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">json read (&amp;myvar) &lt; stats.json</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">= myvar</span>
+(Dict)   {'count': 42}
+</code></pre>
+<p>Use it in a pipeline:</p>
+<pre><code><span class="sh-comment"># 'json read' is valid at the end of a pipeline (because YSH implements</span>
+<span class="sh-comment"># shopt -s lastpipe)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo '{&quot;count&quot;: 42}' | json read (&amp;myvar)</span>
+</code></pre>
+<p>Failure with invalid input data:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo '[ &quot;incomplete&quot;' | json read (&amp;myvar) &lt; invalid.json</span>
+[ &quot;incomplete&quot;
+ ^
+json read: premature EOF
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo $?</span>
+1
+</code></pre>
+<a name="json-write-prints-to-stdout"></a>
+<h2><code>json write</code> prints to <code>stdout</code></h2>
+<p>Usage:</p>
+<pre><code>json write (EXPR, space=2)
+
+EXPR is an expression that evaluates to a serializable object.
+
+space is the number of spaces that object and array entries are indented
+by.  If it's 0 or less, then no newlines or spaces are printed.
+</code></pre>
+<p>Examples:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var d = {name: &quot;bob&quot;, age: 42}</span>  <span class="sh-comment"># create Dict</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">json write (d)</span>  <span class="sh-comment"># print as JSON, with 2 space indent</span>
+{
+  &quot;name&quot;: &quot;bob&quot;,
+  &quot;count&quot;: 42
+}
+
+<span class="sh-prompt">$</span> <span class="sh-command">json write (d, space=0)</span>  <span class="sh-comment"># no indent at all</span>
+{&quot;name&quot;:&quot;bob&quot;,&quot;count&quot;:42}
+</code></pre>
+<a name="write-builtin"></a>
+<h3><code>write</code> builtin</h3>
+<p>TODO</p>
+<pre><code>write --j8 hello there
+write --json hello there  <span class="sh-comment"># unicode replacement char</span>
+</code></pre>
+<a name="filter-data-structures-with-ysh-expressions"></a>
+<h2>Filter Data Structures with YSH Expressions</h2>
+<p>Once your data is deserialized, you can use YSH expression to operate on it.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo '{&quot;counts&quot;: [42, 99]}' | json read (&amp;d)</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">= d['counts']</span>
+(List)   [42, 99]
+
+<span class="sh-prompt">$</span> <span class="sh-command">= d['counts'][1]</span>
+(Int)    99
+
+<span class="sh-comment"># d-&gt;counts is a synonym for d[&quot;counts&quot;]</span>
+<span class="sh-prompt">$</span> <span class="sh-command">json write (d-&gt;counts)</span>
+[
+  42,
+  99
+]
+</code></pre>
+<p>Note: It may more efficient to filter large data structures with tools like
+<code>jq</code> first.</p>
+<a name="other-data-structures-can-be-printed-as-json"></a>
+<h2>Other Data Structures Can Be Printed as JSON</h2>
+<p>YSH arrays and shell arrays both serialize to a list of strings:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">declare sharray=( foo.txt *.py )</span>
+<span class="sh-prompt">$</span> <span class="sh-command">json write (sharray)</span>
+[  
+   &quot;foo.txt&quot;,
+   &quot;one.py&quot;,
+   &quot;two.py&quot;
+]
+
+<span class="sh-prompt">$</span> <span class="sh-command">var oilarray = :| foo.txt *.py |</span>
+<span class="sh-prompt">$</span> <span class="sh-command">json write (oilarray)</span>
+[  
+   &quot;foo.txt&quot;,
+   &quot;one.py&quot;,
+   &quot;two.py&quot;
+]
+</code></pre>
+<p>Bash-style associative arrays are printed like <code>Dict[Str, Str]</code>:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">declare -A assoc=([&quot;key&quot;]=value)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">json write (assoc)</span>
+{
+  &quot;key&quot;: &quot;value&quot;
+}
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 16 Jul 2025 22:03:27 -0400</i>
+    </div>
+  </body>
+</html>

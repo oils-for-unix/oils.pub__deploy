@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Table of Contents</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/ref-index.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/toc-ysh.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.34.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+<a href="toc-osh.html">OSH</a> | <strong>YSH Table of Contents</strong> | <a href="toc-data.html">Data Notation</a></p>
+</div>
+<p><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> is shell with a familiar syntax, JSON-like data structures, good
+error handling, and more.</p>
+
+<h2 id="type-method">
+  Types and Methods <a class="group-link" href="chap-type-method.html">type-method</a>
+</h2>
+<pre><code class="language-chapter-links-type-method">  [<a href="chap-type-method.html#Atoms" class="level2">Atoms</a>]          <a href="chap-type-method.html#Null">Null</a>        <a href="chap-type-method.html#null">null</a>
+                   <a href="chap-type-method.html#Bool">Bool</a>        <a href="chap-type-method.html#expr/true">expr/true</a>        <a href="chap-type-method.html#expr/false">expr/false</a>
+  [<a href="chap-type-method.html#Numbers" class="level2">Numbers</a>]        <a href="chap-type-method.html#Int">Int</a>
+                   <a href="chap-type-method.html#Float">Float</a>
+                   <a href="chap-type-method.html#Range">Range</a>
+  [<a href="chap-type-method.html#String" class="level2">String</a>]         <a href="chap-type-method.html#Str">Str</a>       <span style="color: darkred">X </span><a href="chap-type-method.html#find">find</a>()         <span style="color: darkred">X </span><a href="chap-type-method.html#findLast">findLast</a>()
+                             <span style="color: darkred">X </span><a href="chap-type-method.html#contains">contains</a>()       <a href="chap-type-method.html#replace">replace</a>()
+                               <a href="chap-type-method.html#trim">trim</a>()           <a href="chap-type-method.html#trimStart">trimStart</a>()       <a href="chap-type-method.html#trimEnd">trimEnd</a>()
+                               <a href="chap-type-method.html#startsWith">startsWith</a>()     <a href="chap-type-method.html#endsWith">endsWith</a>()
+                               <a href="chap-type-method.html#upper">upper</a>()          <a href="chap-type-method.html#lower">lower</a>()
+                               <a href="chap-type-method.html#search">search</a>()         <a href="chap-type-method.html#leftMatch">leftMatch</a>()
+                               <a href="chap-type-method.html#split">split</a>()          <a href="chap-type-method.html#lines">lines</a>()
+  [<a href="chap-type-method.html#Patterns" class="level2">Patterns</a>]       <a href="chap-type-method.html#Eggex">Eggex</a>
+                   <a href="chap-type-method.html#Match">Match</a>       <a href="chap-type-method.html#group">group</a>()          <a href="chap-type-method.html#start">start</a>()           <a href="chap-type-method.html#end">end</a>()
+                             <span style="color: darkred">X </span><a href="chap-type-method.html#groups">groups</a>()       <span style="color: darkred">X </span><a href="chap-type-method.html#groupDict">groupDict</a>()
+  [<a href="chap-type-method.html#Containers" class="level2">Containers</a>]     <a href="chap-type-method.html#List">List</a>        <a href="chap-type-method.html#List/append">List/append</a>()    <a href="chap-type-method.html#pop">pop</a>()             <a href="chap-type-method.html#extend">extend</a>()
+                               <a href="chap-type-method.html#indexOf">indexOf</a>()        <a href="chap-type-method.html#lastIndexOf">lastIndexOf</a>()   <span style="color: darkred">X </span><a href="chap-type-method.html#includes">includes</a>()
+                               <a href="chap-type-method.html#insert">insert</a>()         <a href="chap-type-method.html#remove">remove</a>()
+                               <a href="chap-type-method.html#reverse">reverse</a>()        <a href="chap-type-method.html#List/clear">List/clear</a>()
+                   <a href="chap-type-method.html#Dict">Dict</a>        <a href="chap-type-method.html#erase">erase</a>()        <span style="color: darkred">X </span><a href="chap-type-method.html#Dict/clear">Dict/clear</a>()    <span style="color: darkred">X </span><a href="chap-type-method.html#accum">accum</a>()
+                             <span style="color: darkred">X </span><a href="chap-type-method.html#update">update</a>()
+                   <a href="chap-type-method.html#Place">Place</a>       <a href="chap-type-method.html#setValue">setValue</a>()
+  [<a href="chap-type-method.html#Code-Types" class="level2">Code Types</a>]     <a href="chap-type-method.html#Func">Func</a>        
+                   <a href="chap-type-method.html#BuiltinFunc">BuiltinFunc</a>
+                   <a href="chap-type-method.html#BoundFunc">BoundFunc</a>
+                   <a href="chap-type-method.html#Proc">Proc</a>        <a href="chap-type-method.html#docComment">docComment</a>()   
+                   <a href="chap-type-method.html#BuiltinProc">BuiltinProc</a>
+  [<a href="chap-type-method.html#Objects" class="level2">Objects</a>]        <a href="chap-type-method.html#Obj">Obj</a>         <a href="chap-type-method.html#__invoke__">__invoke__</a>       <a href="chap-type-method.html#new">new</a>
+                             <span style="color: darkred">X </span><a href="chap-type-method.html#__call__">__call__</a>         <a href="chap-type-method.html#__index__">__index__</a>       <span style="color: darkred">X </span><a href="chap-type-method.html#__str__">__str__</a>
+  [<a href="chap-type-method.html#Reflection" class="level2">Reflection</a>]     <a href="chap-type-method.html#Command">Command</a>     <a href="chap-type-method.html#sourceCode">sourceCode</a>()
+                   <a href="chap-type-method.html#Expr">Expr</a>
+                   <a href="chap-type-method.html#Frame">Frame</a>
+                   <a href="chap-type-method.html#DebugFrame">DebugFrame</a>  <a href="chap-type-method.html#toString">toString</a>()
+                   <a href="chap-type-method.html#io">io</a>          <a href="chap-type-method.html#stdin">stdin</a>            <a href="chap-type-method.html#io/eval">io/eval</a>()         <a href="chap-type-method.html#io/evalExpr">io/evalExpr</a>()
+                               <a href="chap-type-method.html#captureStdout">captureStdout</a>()  <a href="chap-type-method.html#captureAll">captureAll</a>()      <a href="chap-type-method.html#promptVal">promptVal</a>()
+                             <span style="color: darkred">X </span><a href="chap-type-method.html#time">time</a>()         <span style="color: darkred">X </span><a href="chap-type-method.html#strftime">strftime</a>()      <span style="color: darkred">X </span><a href="chap-type-method.html#glob">glob</a>()
+                   <a href="chap-type-method.html#vm">vm</a>          <a href="chap-type-method.html#getFrame">getFrame</a>()       <a href="chap-type-method.html#getDebugStack">getDebugStack</a>()   <a href="chap-type-method.html#id">id</a>() 
+</code></pre>
+<h2 id="builtin-func">
+  Builtin Functions <a class="group-link" href="chap-builtin-func.html">builtin-func</a>
+</h2>
+<pre><code class="language-chapter-links-builtin-func">  [<a href="chap-builtin-func.html#Values" class="level2">Values</a>]        <a href="chap-builtin-func.html#len">len</a>()             <a href="chap-builtin-func.html#func/type">func/type</a>()
+  [<a href="chap-builtin-func.html#Conversions" class="level2">Conversions</a>]   <a href="chap-builtin-func.html#bool">bool</a>()            <a href="chap-builtin-func.html#int">int</a>()              <a href="chap-builtin-func.html#float">float</a>()
+                  <a href="chap-builtin-func.html#str">str</a>()             <a href="chap-builtin-func.html#list">list</a>()             <a href="chap-builtin-func.html#dict">dict</a>()
+                <span style="color: darkred">X </span><a href="chap-builtin-func.html#runes">runes</a>()         <span style="color: darkred">X </span><a href="chap-builtin-func.html#encodeRunes">encodeRunes</a>()
+                <span style="color: darkred">X </span><a href="chap-builtin-func.html#bytes">bytes</a>()         <span style="color: darkred">X </span><a href="chap-builtin-func.html#encodeBytes">encodeBytes</a>()
+  [<a href="chap-builtin-func.html#Str" class="level2">Str</a>]         <span style="color: darkred">X </span><a href="chap-builtin-func.html#strcmp">strcmp</a>()          <a href="chap-builtin-func.html#shSplit">shSplit</a>()
+  [<a href="chap-builtin-func.html#List" class="level2">List</a>]          <a href="chap-builtin-func.html#join">join</a>()       
+  [<a href="chap-builtin-func.html#Dict" class="level2">Dict</a>]          <a href="chap-builtin-func.html#keys">keys</a>()            <a href="chap-builtin-func.html#values">values</a>()           <a href="chap-builtin-func.html#get">get</a>()       
+  [<a href="chap-builtin-func.html#Float" class="level2">Float</a>]         <a href="chap-builtin-func.html#floatsEqual">floatsEqual</a>()   <span style="color: darkred">X </span><a href="chap-builtin-func.html#isinf">isinf</a>()          <span style="color: darkred">X </span><a href="chap-builtin-func.html#isnan">isnan</a>()
+  [<a href="chap-builtin-func.html#Obj" class="level2">Obj</a>]           <a href="chap-builtin-func.html#first">first</a>()           <a href="chap-builtin-func.html#rest">rest</a>()             <a href="chap-builtin-func.html#get">get</a>()
+  [<a href="chap-builtin-func.html#Word" class="level2">Word</a>]          <a href="chap-builtin-func.html#glob">glob</a>()            <a href="chap-builtin-func.html#maybe">maybe</a>()
+  [<a href="chap-builtin-func.html#Serialize" class="level2">Serialize</a>]     <a href="chap-builtin-func.html#toJson">toJson</a>()          <a href="chap-builtin-func.html#fromJson">fromJson</a>()
+                  <a href="chap-builtin-func.html#toJson8">toJson8</a>()         <a href="chap-builtin-func.html#fromJson8">fromJson8</a>()
+                <span style="color: darkred">X </span><a href="chap-builtin-func.html#toJ8Line">toJ8Line</a>()      <span style="color: darkred">X </span><a href="chap-builtin-func.html#fromJ8Line">fromJ8Line</a>()
+  [<a href="chap-builtin-func.html#Pattern" class="level2">Pattern</a>]       <a href="chap-builtin-func.html#_group">_group</a>()          <a href="chap-builtin-func.html#_start">_start</a>()           <a href="chap-builtin-func.html#_end">_end</a>()
+  [<a href="chap-builtin-func.html#Reflection" class="level2">Reflection</a>]    <a href="chap-builtin-func.html#func/eval">func/eval</a>()       <a href="chap-builtin-func.html#func/evalExpr">func/evalExpr</a>()  
+  [<a href="chap-builtin-func.html#Introspect" class="level2">Introspect</a>]    <a href="chap-builtin-func.html#shvarGet">shvarGet</a>()        <a href="chap-builtin-func.html#getVar">getVar</a>()           <a href="chap-builtin-func.html#setVar">setVar</a>()  
+                  <a href="chap-builtin-func.html#parseCommand">parseCommand</a>()  <span style="color: darkred">X </span><a href="chap-builtin-func.html#parseExpr">parseExpr</a>()      <span style="color: darkred">X </span><a href="chap-builtin-func.html#bindFrame">bindFrame</a>()
+  [<a href="chap-builtin-func.html#Hay-Config" class="level2">Hay Config</a>]    <a href="chap-builtin-func.html#parseHay">parseHay</a>()        <a href="chap-builtin-func.html#evalHay">evalHay</a>()
+<span style="color: darkred">X </span>[<a href="chap-builtin-func.html#Hashing" class="level2">Hashing</a>]       <a href="chap-builtin-func.html#sha1dc">sha1dc</a>()          <a href="chap-builtin-func.html#sha256">sha256</a>()
+</code></pre>
+
+<h2 id="builtin-cmd">
+  Builtin Commands <a class="group-link" href="chap-builtin-cmd.html">builtin-cmd</a>
+</h2>
+
+<pre><code class="language-chapter-links-builtin-cmd_42">  [<a href="chap-builtin-cmd.html#Memory" class="level2">Memory</a>]        <a href="chap-builtin-cmd.html#cmd/append">cmd/append</a>             Add elements to end of array
+                  <a href="chap-builtin-cmd.html#pp">pp</a>                     value   proc      test_
+                                         asdl_   cell_   X gc-stats_
+  [<a href="chap-builtin-cmd.html#Handle-Errors" class="level2">Handle Errors</a>] <a href="chap-builtin-cmd.html#error">error</a>                  error 'failed' (status=2)
+                  <a href="chap-builtin-cmd.html#try">try</a>                    Run with errexit, set _error
+                  <a href="chap-builtin-cmd.html#failed">failed</a>                 Test if _error.code !== 0
+                  <a href="chap-builtin-cmd.html#boolstatus">boolstatus</a>             Enforce 0 or 1 exit status
+                  <a href="chap-builtin-cmd.html#assert">assert</a>                 assert [42 === f(x)]
+  [<a href="chap-builtin-cmd.html#Shell-State" class="level2">Shell State</a>]   <a href="chap-builtin-cmd.html#ysh-cd">ysh-cd</a>       <a href="chap-builtin-cmd.html#ysh-shopt">ysh-shopt</a> compatible, and takes a block
+                  <a href="chap-builtin-cmd.html#shvar">shvar</a>                  Temporary modify global settings
+                  <a href="chap-builtin-cmd.html#ctx">ctx</a>                    Share and update a temporary &quot;context&quot;
+                  <a href="chap-builtin-cmd.html#push-registers">push-registers</a>         Save registers like $?, PIPESTATUS
+  [<a href="chap-builtin-cmd.html#Word-Lookup" class="level2">Word Lookup</a>]   <a href="chap-builtin-cmd.html#invoke">invoke</a>                 Run a command, and control name lookup
+                  <a href="chap-builtin-cmd.html#runproc">runproc</a>                Run a proc; use as main entry point
+                <span style="color: darkred">X </span><a href="chap-builtin-cmd.html#extern">extern</a>                 Run an external command, with an ENV
+  [<a href="chap-builtin-cmd.html#Modules" class="level2">Modules</a>]       
+                  <a href="chap-builtin-cmd.html#source-guard">source-guard</a>           guard against duplicate 'source'
+                  <a href="chap-builtin-cmd.html#is-main">is-main</a>                false when sourcing a file
+                  <a href="chap-builtin-cmd.html#use">use</a>                    create a module Obj from a source file
+  [<a href="chap-builtin-cmd.html#I/O" class="level2">I/O</a>]           <a href="chap-builtin-cmd.html#ysh-read">ysh-read</a>               flags --all, -0
+                  <a href="chap-builtin-cmd.html#ysh-echo">ysh-echo</a>               no -e -n with simple_echo
+                  <a href="chap-builtin-cmd.html#ysh-test">ysh-test</a>               --file --true etc.
+                  <a href="chap-builtin-cmd.html#ysh-wait">ysh-wait</a>               wait --all --verbose
+                  <a href="chap-builtin-cmd.html#write">write</a>                  Like echo, with --, --sep, --end
+                  <a href="chap-builtin-cmd.html#fork">fork</a>         <a href="chap-builtin-cmd.html#forkwait">forkwait</a>  Replace &amp; and (), and takes a block
+                  <a href="chap-builtin-cmd.html#redir">redir</a>                  Run a block, with redirects
+  [<a href="chap-builtin-cmd.html#Private" class="level2">Private</a>]       <a href="chap-builtin-cmd.html#cat">cat</a>          <a href="chap-builtin-cmd.html#rm">rm</a>        POSIX-compatible
+                  <a href="chap-builtin-cmd.html#sleep">sleep</a>
+  [<a href="chap-builtin-cmd.html#Hay-Config" class="level2">Hay Config</a>]    <a href="chap-builtin-cmd.html#hay">hay</a>          <a href="chap-builtin-cmd.html#haynode">haynode</a>   For DSLs and config files
+  [<a href="chap-builtin-cmd.html#Completion" class="level2">Completion</a>]    <a href="chap-builtin-cmd.html#compadjust">compadjust</a>   <a href="chap-builtin-cmd.html#compexport">compexport</a>
+  [<a href="chap-builtin-cmd.html#Data-Formats" class="level2">Data Formats</a>]  <a href="chap-builtin-cmd.html#json">json</a>                   read write
+                  <a href="chap-builtin-cmd.html#json8">json8</a>                  read write
+</code></pre>
+<h2 id="stdlib">
+  Standard Library<a class="group-link" href="chap-stdlib.html">stdlib</a>
+</h2>
+<pre><code class="language-chapter-links-stdlib">  [<a href="chap-stdlib.html#math" class="level2">math</a>]          <a href="chap-stdlib.html#abs">abs</a>()         <a href="chap-stdlib.html#max">max</a>()          <a href="chap-stdlib.html#min">min</a>()    <span style="color: darkred">X </span><a href="chap-stdlib.html#round">round</a>()
+                  <a href="chap-stdlib.html#sum">sum</a>()     
+  [<a href="chap-stdlib.html#list" class="level2">list</a>]          <a href="chap-stdlib.html#all">all</a>()         <a href="chap-stdlib.html#any">any</a>()          <a href="chap-stdlib.html#repeat">repeat</a>()
+  [<a href="chap-stdlib.html#yblocks" class="level2">yblocks</a>]       <a href="chap-stdlib.html#yb-capture">yb-capture</a>    <a href="chap-stdlib.html#yb-capture-2">yb-capture-2</a>
+  [<a href="chap-stdlib.html#args" class="level2">args</a>]          <a href="chap-stdlib.html#parser">parser</a>        <a href="chap-stdlib.html#flag">flag</a>           <a href="chap-stdlib.html#arg">arg</a>        <a href="chap-stdlib.html#rest">rest</a>
+                  <a href="chap-stdlib.html#parseArgs">parseArgs</a>()
+  [<a href="chap-stdlib.html#binascii" class="level2">binascii</a>]    <span style="color: darkred">X </span><a href="chap-stdlib.html#toBase16">toBase16</a>()  <span style="color: darkred">X </span><a href="chap-stdlib.html#fromBase16">fromBase16</a>()
+                <span style="color: darkred">X </span><a href="chap-stdlib.html#toBase64">toBase64</a>()  <span style="color: darkred">X </span><a href="chap-stdlib.html#fromBase64">fromBase64</a>()
+</code></pre>
+
+<p>Design for streams and tables (awk/xargs/dplyr):</p>
+<pre><code class="language-chapter-links-stdlib_42"><span style="color: darkred">X </span>[<a href="chap-stdlib.html#Lines" class="level2">Lines</a>]         <a href="chap-stdlib.html#slurp-by">slurp-by</a>               combine adjacent lines into cells
+<span style="color: darkred">X </span>[<a href="chap-stdlib.html#Awk" class="level2">Awk</a>]           <a href="chap-stdlib.html#each-line">each-line</a>              --j8 --max-jobs (Str, Template, Block)
+                  <a href="chap-stdlib.html#each-row">each-row</a>               --max-jobs (Str, Template, Block)
+                  <a href="chap-stdlib.html#each-word">each-word</a>              xargs-like splitting, similar to IFS too
+                  <a href="chap-stdlib.html#split-by">split-by</a>               (str=\n, ifs=':', pattern=/s+/)
+                  <a href="chap-stdlib.html#if-split-by">if-split-by</a>            only lines that match
+                  <a href="chap-stdlib.html#chop">chop</a>                   alias for split-by (pattern=/s+/)
+                  <a href="chap-stdlib.html#must-match">must-match</a>             (/ &lt;capture d+&gt; &lt;/capture w+&gt; /)
+                  <a href="chap-stdlib.html#if-match">if-match</a>               only lines that match
+<span style="color: darkred">X </span>[<a href="chap-stdlib.html#Table-Create" class="level2">Table Create</a>]  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#def">def</a>              &amp;place or print TSV8
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#parse">parse</a>            --by-row --by-col (&amp;place), TSV or TSV8
+                  <a href="chap-stdlib.html#table/cols">table/cols</a>             cols       name age, or name:Str age:Int
+                  <a href="chap-stdlib.html#types">types</a>                  type       Str  Int
+                  <a href="chap-stdlib.html#attr">attr</a>                   attr units   -  secs
+                  <a href="chap-stdlib.html#row">row</a>                    emit row
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#cat">cat</a>              concatenate TSV8
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#align">align</a>            to ssv8
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#tabify">tabify</a>           to tsv8 (similar to table parse)
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#header">header</a>           cols = :|name age|, types = :|Str Int|, ...
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#slice">slice</a>            e.g. slice (1, -1)   slice (5, 7)
+                  <a href="chap-stdlib.html#table">table</a> <a href="chap-stdlib.html#to-tsv">to-tsv</a>           lose type info, and error on \t in cells
+<span style="color: darkred">X </span>[<a href="chap-stdlib.html#Table-Ops" class="level2">Table Ops</a>]     <a href="chap-stdlib.html#where">where</a>                  subset of rows; dplyr filter()
+                  <a href="chap-stdlib.html#pick">pick</a>                   subset of columns ('select' taken by shell)
+                  <a href="chap-stdlib.html#mutate">mutate</a>                 [average = count / sum]
+                  <a href="chap-stdlib.html#transmute">transmute</a>              drop columns that are used
+                  <a href="chap-stdlib.html#rename">rename</a>                 (bytes='bytes', path='filename')
+                  <a href="chap-stdlib.html#group-by">group-by</a>               add a column with a group ID [ext]
+                  <a href="chap-stdlib.html#sort-by">sort-by</a>                sort by columns; dplyr arrange() [ext]
+                  <a href="chap-stdlib.html#summary">summary</a>                count/sum, histogram, any/all, reduce, ...
+</code></pre>
+
+<h2 id="front-end">
+  Front End <a class="group-link" href="chap-front-end.html">front-end</a>
+</h2>
+<pre><code class="language-chapter-links-front-end">  [<a href="chap-front-end.html#Usage" class="level2">Usage</a>]         <a href="chap-front-end.html#oils-usage">oils-usage</a>   <a href="chap-front-end.html#ysh-usage">ysh-usage</a>             <a href="chap-front-end.html#shell-flags">shell-flags</a>
+                  <a href="chap-front-end.html#config">config</a>       <a href="chap-front-end.html#startup">startup</a>               <a href="chap-front-end.html#line-editing">line-editing</a>          
+                  <a href="chap-front-end.html#exit-codes">exit-codes</a>
+  [<a href="chap-front-end.html#Lexing" class="level2">Lexing</a>]        <a href="chap-front-end.html#comment">comment</a> #    <a href="chap-front-end.html#line-continuation">line-continuation</a> \   <a href="chap-front-end.html#ascii-whitespace">ascii-whitespace</a> [ \t\r\n]
+  [<a href="chap-front-end.html#Lexing" class="level2">Lexing</a>]        <a href="chap-front-end.html#doc-comment">doc-comment</a> ###                    <a href="chap-front-end.html#multiline-command">multiline-command</a> ...
+  [<a href="chap-front-end.html#Tools" class="level2">Tools</a>]         <a href="chap-front-end.html#cat-em">cat-em</a>                             <a href="chap-front-end.html#syntax-tree">syntax-tree</a>
+</code></pre>
+<h2 id="cmd-lang">
+  Command Language <a class="group-link" href="chap-cmd-lang.html">cmd-lang</a>
+</h2>
+
+<pre><code class="language-chapter-links-cmd-lang_33">  [<a href="chap-cmd-lang.html#Commands" class="level2">Commands</a>]      <a href="chap-cmd-lang.html#simple-command">simple-command</a>
+                  command-lookup-order
+                  ysh-prefix-binding
+                  <a href="chap-cmd-lang.html#semicolon">semicolon</a> ;
+  [<a href="chap-cmd-lang.html#Redirects" class="level2">Redirects</a>]     <a href="chap-cmd-lang.html#ysh-here-str">ysh-here-str</a>    read &lt;&lt;&lt; '''
+  [<a href="chap-cmd-lang.html#YSH-Simple" class="level2">YSH Simple</a>]    <a href="chap-cmd-lang.html#typed-arg">typed-arg</a>       json write (x)
+                  <a href="chap-cmd-lang.html#lazy-expr-arg">lazy-expr-arg</a>   assert [42 === x]
+                  <a href="chap-cmd-lang.html#block-arg">block-arg</a>       cd /tmp { echo $PWD }; cd /tmp (; ; blockexpr)
+  [<a href="chap-cmd-lang.html#YSH-Cond" class="level2">YSH Cond</a>]      <a href="chap-cmd-lang.html#ysh-case">ysh-case</a>        case (x) { *.py { echo 'python' } }
+                  <a href="chap-cmd-lang.html#ysh-if">ysh-if</a>          if (x &gt; 0) { echo }
+  [<a href="chap-cmd-lang.html#YSH-Iter" class="level2">YSH Iter</a>]      <a href="chap-cmd-lang.html#ysh-for">ysh-for</a>         for i, item in (mylist) { echo }
+                  <a href="chap-cmd-lang.html#ysh-while">ysh-while</a>       while (x &gt; 0) { echo }
+</code></pre>
+
+<h2 id="ysh-cmd">
+  YSH Command Language Keywords <a class="group-link" href="chap-ysh-cmd.html">ysh-cmd</a>
+</h2>
+<pre><code class="language-chapter-links-ysh-cmd_33">  [<a href="chap-ysh-cmd.html#Assignment" class="level2">Assignment</a>]    <a href="chap-ysh-cmd.html#const">const</a>   <a href="chap-ysh-cmd.html#var">var</a>     Declare variables
+                  <a href="chap-ysh-cmd.html#setvar">setvar</a>          setvar a[i] = 42
+                  <a href="chap-ysh-cmd.html#setglobal">setglobal</a>       setglobal d.key = 'foo'
+  [<a href="chap-ysh-cmd.html#Expression" class="level2">Expression</a>]    <a href="chap-ysh-cmd.html#equal">equal</a> =         = 1 + 2*3
+                  <a href="chap-ysh-cmd.html#call">call</a>            call mylist-&gt;append(42)
+  [<a href="chap-ysh-cmd.html#Definitions" class="level2">Definitions</a>]   <a href="chap-ysh-cmd.html#proc">proc</a>            proc p (s, ...rest) {
+                                  typed proc p (; typed, ...rest; n=0; b) {
+                  <a href="chap-ysh-cmd.html#func">func</a>            func f(x; opt1, opt2) { return (x + 1) }
+                  <a href="chap-ysh-cmd.html#ysh-return">ysh-return</a>      return (myexpr)
+</code></pre>
+<h2 id="expr-lang">
+  Expression Language and Assignments <a class="group-link" href="chap-expr-lang.html">expr-lang</a>
+</h2>
+
+<pre><code class="language-chapter-links-expr-lang_33">  [<a href="chap-expr-lang.html#Assignment" class="level2">Assignment</a>]    <a href="chap-expr-lang.html#assign">assign</a>        =
+                  <a href="chap-expr-lang.html#aug-assign">aug-assign</a>    +=   -=   *=   /=   **=   //=   %=
+                                &amp;=   |=   ^=   &lt;&lt;=   &gt;&gt;=
+  [<a href="chap-expr-lang.html#Literals" class="level2">Literals</a>]      <a href="chap-expr-lang.html#atom-literal">atom-literal</a>  null   true   false
+                  <a href="chap-expr-lang.html#int-literal">int-literal</a>   42  65_536  0xFF  0o755  0b10
+                  <a href="chap-expr-lang.html#float-literal">float-literal</a> 3.14  1.5e-10
+                <span style="color: darkred">X </span><a href="chap-expr-lang.html#num-suffix">num-suffix</a>    42 K Ki M Mi G Gi T Ti / ms us
+                  <a href="chap-expr-lang.html#char-literal">char-literal</a>  \\ \t \&quot;   \y00   \u{3bc}
+                  <a href="chap-expr-lang.html#ysh-string">ysh-string</a>    &quot;x is $x&quot;  $&quot;x is $x&quot;   r'[a-z]\n'
+                                u'line\n'  b'byte \yff'
+                  <a href="chap-expr-lang.html#triple-quoted">triple-quoted</a> &quot;&quot;&quot;  $&quot;&quot;&quot;  r'''  u'''  b'''
+                  <a href="chap-expr-lang.html#list-literal">list-literal</a>  ['one', 'two', 3]  :| unquoted words |
+                  <a href="chap-expr-lang.html#dict-literal">dict-literal</a>  {name: 'bob'}  {a, b}
+                  <a href="chap-expr-lang.html#range">range</a>         1 ..&lt; n  1 ..= n
+                  <a href="chap-expr-lang.html#block-expr">block-expr</a>    ^(echo $PWD)
+                  <a href="chap-expr-lang.html#expr-literal">expr-literal</a>  ^[1 + 2*3]
+                  <a href="chap-expr-lang.html#str-template">str-template</a>  ^&quot;$a and $b&quot; for Str.replace()
+                <span style="color: darkred">X </span><a href="chap-expr-lang.html#expr-sub">expr-sub</a>      $[myobj]
+                <span style="color: darkred">X </span><a href="chap-expr-lang.html#expr-splice">expr-splice</a>   @[myobj]
+  [<a href="chap-expr-lang.html#Operators" class="level2">Operators</a>]     <a href="chap-expr-lang.html#op-precedence">op-precedence</a> Like Python
+                  <a href="chap-expr-lang.html#concat">concat</a>        s1 ++ s2,  L1 ++ L2
+                  <a href="chap-expr-lang.html#ysh-equals">ysh-equals</a>    ===   !==   ~==   is, is not
+                  <a href="chap-expr-lang.html#ysh-in">ysh-in</a>        in, not in
+                  <a href="chap-expr-lang.html#ysh-compare">ysh-compare</a>   &lt;  &lt;=  &gt;  &gt;=  (numbers only)
+                  <a href="chap-expr-lang.html#ysh-logical">ysh-logical</a>   not  and  or
+                  <a href="chap-expr-lang.html#ysh-arith">ysh-arith</a>     +  -  *  /  //  %   ** 
+                  <a href="chap-expr-lang.html#ysh-bitwise">ysh-bitwise</a>   ~  &amp;  |  ^  &lt;&lt;  &gt;&gt;
+                  <a href="chap-expr-lang.html#ysh-ternary">ysh-ternary</a>   '+' if x &gt;= 0 else '-'
+                  <a href="chap-expr-lang.html#ysh-index">ysh-index</a>     s[0]  mylist[3]  mydict['key']
+                  <a href="chap-expr-lang.html#ysh-attr">ysh-attr</a>      mydict.key  mystr.startsWith('x')
+                  <a href="chap-expr-lang.html#ysh-slice">ysh-slice</a>     a[1:-1]  s[1:-1]
+                  <a href="chap-expr-lang.html#ysh-func-call">ysh-func-call</a> f(x, y, ...pos; n=1, ...named)
+                  <a href="chap-expr-lang.html#thin-arrow">thin-arrow</a>    mylist-&gt;pop()
+                  <a href="chap-expr-lang.html#fat-arrow">fat-arrow</a>     mylist =&gt; join() =&gt; upper()
+                  <a href="chap-expr-lang.html#match-ops">match-ops</a>     ~   !~   ~~   !~~
+  [<a href="chap-expr-lang.html#Eggex" class="level2">Eggex</a>]         <a href="chap-expr-lang.html#re-literal">re-literal</a>    / d+ ; re-flags ; ERE /
+                  <a href="chap-expr-lang.html#re-primitive">re-primitive</a>  %zero    'sq'
+                  <a href="chap-expr-lang.html#class-literal">class-literal</a> [c a-z 'abc' @str_var \\ \xFF \u{3bc}]
+                  <a href="chap-expr-lang.html#named-class">named-class</a>    dot   digit   space   word   d  s  w
+                  <a href="chap-expr-lang.html#re-repeat">re-repeat</a>     d?   d*   d+   d{3}   d{2,4}
+                  <a href="chap-expr-lang.html#re-compound">re-compound</a>    seq1 seq2   alt1|alt2   (expr1 expr2)
+                  <a href="chap-expr-lang.html#re-capture">re-capture</a>    &lt;capture d+ as name: int&gt;
+                  <a href="chap-expr-lang.html#re-splice">re-splice</a>     Subpattern   @subpattern
+                  <a href="chap-expr-lang.html#re-flags">re-flags</a>      reg_icase   reg_newline
+                <span style="color: darkred">X </span><a href="chap-expr-lang.html#re-multiline">re-multiline</a>  ///
+</code></pre>
+<h2 id="word-lang">
+  Word Language <a class="group-link" href="chap-word-lang.html">word-lang</a>
+</h2>
+
+<pre><code class="language-chapter-links-word-lang_34">  [<a href="chap-word-lang.html#Joining" class="level2">Joining</a>]       <a href="chap-word-lang.html#ysh-word-join">ysh-word-join</a>    --flag='value'  PATH=&quot;value&quot;
+  [<a href="chap-word-lang.html#Quotes" class="level2">Quotes</a>]        <a href="chap-word-lang.html#ysh-string">ysh-string</a>       &quot;x is $x&quot;  $&quot;x is $x&quot;  r'[a-z]\n'
+                                   u'line\n'  b'byte \yff'
+                  <a href="chap-word-lang.html#triple-quoted">triple-quoted</a>    &quot;&quot;&quot;  $&quot;&quot;&quot;  r'''  u'''  b'''
+                <span style="color: darkred">X </span><a href="chap-word-lang.html#tagged-str">tagged-str</a>       &quot;&lt;span id=$x&gt;&quot;html
+  [<a href="chap-word-lang.html#Substitutions" class="level2">Substitutions</a>] <a href="chap-word-lang.html#expr-sub">expr-sub</a>         echo $[42 + a[i]]
+                  <a href="chap-word-lang.html#expr-splice">expr-splice</a>      echo @[split(x)]
+                  <a href="chap-word-lang.html#var-splice">var-splice</a>       @myarray @ARGV
+                  <a href="chap-word-lang.html#command-sub">command-sub</a>      $(date)
+                  <a href="chap-word-lang.html#command-splice">command-splice</a>   @(cat my-j8-lines.txt)
+  [<a href="chap-word-lang.html#Formatting" class="level2">Formatting</a>]  <span style="color: darkred">X </span><a href="chap-word-lang.html#ysh-printf">ysh-printf</a>       ${x %.3f}
+                <span style="color: darkred">X </span><a href="chap-word-lang.html#ysh-format">ysh-format</a>       ${x|html}
+</code></pre>
+<h2 id="mini-lang">
+  Other Mini Languages <a class="group-link" href="chap-mini-lang.html">mini-lang</a>
+</h2>
+
+<pre><code class="language-chapter-links-mini-lang_33">  [<a href="chap-mini-lang.html#Patterns" class="level2">Patterns</a>]      <a href="chap-mini-lang.html#glob-pat">glob-pat</a>      *.py
+  [<a href="chap-mini-lang.html#Other-Sublang" class="level2">Other Sublang</a>] <a href="chap-mini-lang.html#braces">braces</a>        {alice,bob}@example.com
+</code></pre>
+<h2 id="option">
+  Global Shell Options <a class="group-link" href="chap-option.html">option</a>
+</h2>
+<pre><code class="language-chapter-links-option">  [<a href="chap-option.html#Optimize" class="level2">Optimize</a>]     <a href="chap-option.html#rewrite_extern">rewrite_extern</a>
+  [<a href="chap-option.html#Groups" class="level2">Groups</a>]       <a href="chap-option.html#strict:all">strict:all</a>      <a href="chap-option.html#ysh:upgrade">ysh:upgrade</a>     <a href="chap-option.html#ysh:all">ysh:all</a>
+  [<a href="chap-option.html#YSH-Details" class="level2">YSH Details</a>]  <a href="chap-option.html#opts-redefine">opts-redefine</a>   <a href="chap-option.html#opts-internal">opts-internal</a>
+</code></pre>
+<h2 id="special-var">
+  Special Variables <a class="group-link" href="chap-special-var.html">special-var</a>
+</h2>
+<pre><code class="language-chapter-links-special-var">  [<a href="chap-special-var.html#YSH-Vars" class="level2">YSH Vars</a>]      <a href="chap-special-var.html#ARGV">ARGV</a>                <a href="chap-special-var.html#ENV">ENV</a>
+                  <a href="chap-special-var.html#__defaults__">__defaults__</a>        <a href="chap-special-var.html#__builtins__">__builtins__</a>        <span style="color: darkred">X </span><a href="chap-special-var.html#__sh_function__">__sh_function__</a>
+                  <a href="chap-special-var.html#_this_dir">_this_dir</a>
+  [<a href="chap-special-var.html#YSH-Status" class="level2">YSH Status</a>]    <a href="chap-special-var.html#_error">_error</a>
+                  <a href="chap-special-var.html#_pipeline_status">_pipeline_status</a>    <a href="chap-special-var.html#_process_sub_status">_process_sub_status</a>
+  [<a href="chap-special-var.html#YSH-Tracing" class="level2">YSH Tracing</a>]   <a href="chap-special-var.html#SHX_indent">SHX_indent</a>          <a href="chap-special-var.html#SHX_punct">SHX_punct</a>             <a href="chap-special-var.html#SHX_pid_str">SHX_pid_str</a>
+  [<a href="chap-special-var.html#YSH-read" class="level2">YSH read</a>]      <a href="chap-special-var.html#_reply">_reply</a>
+  [<a href="chap-special-var.html#History" class="level2">History</a>]       <a href="chap-special-var.html#YSH_HISTFILE">YSH_HISTFILE</a>
+  [<a href="chap-special-var.html#Interactive" class="level2">Interactive</a>]   <a href="chap-special-var.html#OILS_COMP_UI">OILS_COMP_UI</a>
+  [<a href="chap-special-var.html#Oils-VM" class="level2">Oils VM</a>]       <a href="chap-special-var.html#OILS_VERSION">OILS_VERSION</a>
+                  <a href="chap-special-var.html#OILS_GC_THRESHOLD">OILS_GC_THRESHOLD</a>   <a href="chap-special-var.html#OILS_GC_ON_EXIT">OILS_GC_ON_EXIT</a>
+                  <a href="chap-special-var.html#OILS_GC_STATS">OILS_GC_STATS</a>       <a href="chap-special-var.html#OILS_GC_STATS_FD">OILS_GC_STATS_FD</a>
+                  <a href="chap-special-var.html#LIB_YSH">LIB_YSH</a>
+  [<a href="chap-special-var.html#Float" class="level2">Float</a>]         <a href="chap-special-var.html#NAN">NAN</a>                 <a href="chap-special-var.html#INFINITY">INFINITY</a>
+  [<a href="chap-special-var.html#Module" class="level2">Module</a>]        <a href="chap-special-var.html#__provide__">__provide__</a> 
+  [<a href="chap-special-var.html#Other-Env" class="level2">Other Env</a>]     <a href="chap-special-var.html#HOME">HOME</a>                <a href="chap-special-var.html#PATH">PATH</a>
+</code></pre>
+
+<h2 id="plugin">
+  Plugins and Hooks <a class="group-link" href="chap-plugin.html">plugin</a>
+</h2>
+<pre><code class="language-chapter-links-plugin">  [<a href="chap-plugin.html#YSH" class="level2">YSH</a>]   <a href="chap-plugin.html#renderPrompt">renderPrompt</a>()
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Wed, 16 Jul 2025 22:03:27 -0400</i>
+    </div>
+  </body>
+</html>
