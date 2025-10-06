@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Unicode in Oils</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/unicode.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Unicode in Oils</h1>
+<p>Roughly speaking, you can divide programming languages into 3 categories with
+respect to Unicode strings:</p>
+<ol>
+<li><strong>UTF-8</strong> - Go, Rust, Julia, ..., Oils</li>
+<li><strong>UTF-16</strong> - Java, JavaScript, ...</li>
+<li><strong>UTF-32</strong> aka Unicode code points - Python 2 and 3, C and C++, ...</li>
+</ol>
+<p>So Oils is in the <strong>first</strong> category: it's UTF-8 centric.</p>
+<p>Let's see what this means — in terms your mental model when writing OSH
+and YSH, and in terms of the Oils implementation.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#example-the-length-of-a-string">Example: The Length of a String</a></div>
+  <div class="toclevel2"><a href="#note-on-bash">Note on bash</a></div>
+  <div class="toclevel1"><a href="#code-strings-and-data-strings">Code Strings and Data Strings</a></div>
+  <div class="toclevel2"><a href="#osh-vs-ysh">OSH vs. YSH</a></div>
+  <div class="toclevel2"><a href="#data-encoding">Data Encoding</a></div>
+  <div class="toclevel2"><a href="#passing-data-to-libc-the-kernel">Passing Data to libc / the Kernel</a></div>
+  <div class="toclevel1"><a href="#your-system-locale-should-be-utf-8">Your System Locale Should Be UTF-8</a></div>
+  <div class="toclevel2"><a href="#note-some-string-operations-use-libc-and-some-dont">Note: Some string operations use libc, and some don't</a></div>
+  <div class="toclevel1"><a href="#tips">Tips</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#appendix-languages-operations-that-involve-unicode">Appendix: Languages Operations That Involve Unicode</a></div>
+  <div class="toclevel2"><a href="#osh-bash">OSH / bash</a></div>
+  <div class="toclevel2"><a href="#ysh">YSH</a></div>
+  <div class="toclevel2"><a href="#data-languages">Data Languages</a></div>
+  <div class="toclevel1"><a href="#more-notes">More Notes</a></div>
+  <div class="toclevel2"><a href="#list-of-low-level-utf-8-operations">List of Low-Level UTF-8 Operations</a></div>
+  <div class="toclevel2"><a href="#setlocale-calls-made-by-bash-python">setlocale() calls made by bash, Python, ...</a></div>
+</div>
+<a name="example-the-length-of-a-string"></a>
+<h2>Example: The Length of a String</h2>
+<p>The Oils runtime has a single <code>Str</code> <a href="types.html">data type</a>, which is used by
+both OSH and YSH.</p>
+<p>A <code>Str</code> is an array of bytes, which <strong>may or may not be</strong> UTF-8 encoded.  For
+example:</p>
+<pre><code>s=$'\u03bc'      <span class="sh-comment"># 1 code point, which is UTF-8 encoded as 2 bytes</span>
+
+echo ${#s}       <span class="sh-comment"># =&gt; 1 code point (regardless of locale, right now)</span>
+
+echo $[len(s)]   <span class="sh-comment"># =&gt; 2 bytes</span>
+</code></pre>
+<p>That is, the YSH feature <code>len(mystr)</code> returns the length in <strong>bytes</strong>.  But the
+shell feature <code>${#s}</code> <em>decodes</em> the string as UTF-8, and returns the length in
+<strong>code points</strong>.</p>
+<p>Again, this string storage model is like Go and Julia, but different than
+JavaScript (UTF-16) and Python (code points).</p>
+<a name="note-on-bash"></a>
+<h3>Note on bash</h3>
+<p><code>bash</code> does support multiple lengths, but in a way that depends on global
+variables:</p>
+<pre><code>s=$'\u03bc'  <span class="sh-comment"># one code point</span>
+
+echo ${#s}   <span class="sh-comment"># =&gt; 1, when say LANG=C.UTF-8</span>
+
+LC_ALL=C     <span class="sh-comment"># libc setlocale() called under the hood</span>
+echo ${#s}   <span class="sh-comment"># =&gt; 2 bytes, now that LC_ALL=C</span>
+</code></pre>
+<p>So bash doesn't seem to fall cleanly in one of the 3 categories above.</p>
+<p>It would be interesting to test bash with non-UTF-8 libc locales like Shift JIS
+(Japanese), but they are rare.  In practice, the locale almost always C or
+UTF-8, so bash and Oils are similar.</p>
+<p>But Oils is more strict about UTF-8, and YSH discourages global variables like
+<code>LC_ALL</code>.</p>
+<p>(TODO: For compatibility, OSH should call <code>setlocale()</code> when assigning
+<code>LC_ALL=C</code>.)</p>
+
+<a name="code-strings-and-data-strings"></a>
+<h2>Code Strings and Data Strings</h2>
+<a name="osh-vs-ysh"></a>
+<h3>OSH vs. YSH</h3>
+<p>For backward compatibility, OSH source files may have <strong>arbitrary bytes</strong>.  For
+example, <code>echo [the literal byte 0xFF]</code> is a valid source file.</p>
+<p>In contrast, YSH source files must be encoded in UTF-8, including its ASCII
+subset.  (TODO: Enforce this with <code>shopt --set utf8_source</code>)</p>
+<p>If you write C-escaped strings, then your source file can be ASCII:</p>
+<pre><code>echo $'\u03bc'   <span class="sh-comment"># bash style</span>
+
+echo u'\u{3bc}'  <span class="sh-comment"># YSH style</span>
+</code></pre>
+<p>If you write UTF-8 characters, then your source is UTF-8:</p>
+<pre>
+echo '&#x03bc;'
+</pre>
+<a name="data-encoding"></a>
+<h3>Data Encoding</h3>
+<p>As mentioned, strings in OSH and YSH are arbitrary sequences of <strong>bytes</strong>,
+which may or may not be valid UTF-8.</p>
+<p>Some operations like length <code>${#s}</code> and slicing <code>${s:1:3}</code> require the string
+to be <strong>valid UTF-8</strong>.  Decoding errors are fatal if <code>shopt -s strict_word_eval</code> is on.</p>
+<a name="passing-data-to-libc-the-kernel"></a>
+<h3>Passing Data to libc / the Kernel</h3>
+<p>When passed to external programs, strings are truncated at the first <code>NUL</code>
+(<code>'\0'</code>) byte.  This is a consequence of how Unix and C work.</p>
+<a name="your-system-locale-should-be-utf-8"></a>
+<h2>Your System Locale Should Be UTF-8</h2>
+<p>At startup, Oils calls the <code>libc</code> function <code>setlocale()</code>, which initializes the
+global variables from environment variables like <code>LC_CTYPE</code> and <code>LC_COLLATE</code>.
+(For details, see <a href="ref/chap-special-var.html#osh-locale">osh-locale</a> and <a href="ref/chap-special-var.html#ysh-locale">ysh-locale</a>.)</p>
+<p>These global variables determine how <code>libc</code> string operations like <code>tolower()</code>
+<code>glob()</code>, and <code>regexec()</code> behave.</p>
+<p>For example:</p>
+<ul>
+<li>In <code>glob()</code> syntax, does <code>?</code> match a byte or a code point?</li>
+<li>In <code>regcomp()</code> syntax, does <code>.</code> match a byte or a code point?</li>
+</ul>
+<p>Oils only supports UTF-8 locales.  If the locale is not UTF-8, Oils prints a
+warning to <code>stderr</code> at startup.  You can silence it with <code>OILS_LOCALE_OK=1</code>.</p>
+<p>(Note: GNU readline also calls <code>setlocale()</code>, but Oils may or may not link
+against GNU readline.)</p>
+<a name="note-some-string-operations-use-libc-and-some-dont"></a>
+<h3>Note: Some string operations use libc, and some don't</h3>
+<p>For example:</p>
+<ul>
+<li>String length like <code>${#s}</code> is implemented in Oils code, not <code>libc</code>.  It
+currently assumes UTF-8.
+<ul>
+<li>The YSH <code>trim()</code> method is also implemented in Oils, not <code>libc</code>.  It
+decodes UTF-8 to detect Unicode spaces.</li>
+</ul>
+</li>
+<li>On the other hand, <code>[[ s =~ $pat ]]</code> is implemented with <code>libc</code>, so it's
+affected by the locale settings.
+<ul>
+<li>This is also true of <code>(s ~ pat)</code> in YSH.</li>
+</ul>
+</li>
+</ul>
+<a name="tips"></a>
+<h2>Tips</h2>
+<ul>
+<li>The GNU <code>iconv</code> program converts text from one encoding to another.</li>
+</ul>
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>Oils is more UTF-8 centric than bash:</p>
+<ul>
+<li>Your system locale should be UTF-8</li>
+<li>Some OSH string operations <strong>assume</strong> UTF-8, because they are implemented
+inside Oils.  They don't use <code>libc</code> string functions that potentially support
+multiple locales.</li>
+</ul>
+
+<a name="appendix-languages-operations-that-involve-unicode"></a>
+<h2>Appendix: Languages Operations That Involve Unicode</h2>
+<p>Here are some details.</p>
+<a name="osh-bash"></a>
+<h3>OSH / bash</h3>
+<p>These operations are implemented in Python.</p>
+<p>In <code>osh/string_ops.py</code>:</p>
+<ul>
+<li><code>${#s}</code> - length in code points
+<ul>
+<li>OSH gives proper decoding errors; bash returns nonsense</li>
+</ul>
+</li>
+<li><code>${s:1:2}</code> - index and length are in code points
+<ul>
+<li>Again, OSH may give decoding errors</li>
+</ul>
+</li>
+<li><code>${x#glob?}</code> and <code>${x##glob?}</code> - see section on glob below</li>
+</ul>
+<p>In <code>builtin/</code>:</p>
+<ul>
+<li><code>printf '%d' \'c</code> where <code>c</code> is an arbitrary character.  This is an obscure
+syntax for <code>ord()</code>, i.e. getting an integer from an encoded character.</li>
+</ul>
+<a name="operations-that-use-glob-syntax"></a>
+<h4>Operations That Use Glob Syntax</h4>
+<p>The libc functions <code>glob()</code> and <code>fnmatch()</code> accept a pattern, which may have
+the <code>?</code> wildcard.  It stands for a single <strong>code point</strong> (in UTF-8 locales),
+not a byte.</p>
+<p>Word evaluation uses a <code>glob()</code> call:</p>
+<pre><code>echo ?.c  <span class="sh-comment"># which files match?</span>
+</code></pre>
+<p>These language constructs result in <code>fnmatch()</code> calls:</p>
+<pre><code>${s#?}  <span class="sh-comment"># remove one character suffix, quadratic loop for globs</span>
+
+case $x in ?) echo 'one char' ;; esac
+
+[[ $x == ? ]]
+</code></pre>
+<a name="operations-that-involve-regexes-ere"></a>
+<h4>Operations That Involve Regexes (ERE)</h4>
+<p>Regexes have the wildcard <code>.</code>.  Like <code>?</code> in globs, it stands for a <strong>code
+point</strong>.  They also have <code>[^a]</code>, which stands for a code point.</p>
+<pre><code>pat='.'  <span class="sh-comment"># single code point</span>
+[[ $x =~ $pat ]]
+</code></pre>
+<p>This construct our <strong>glob to ERE translator</strong> for position info:</p>
+<pre><code>echo ${s/?/x}
+</code></pre>
+<a name="more-locale-aware-operations"></a>
+<h4>More Locale-aware operations</h4>
+<ul>
+<li><code>$IFS</code> word splitting, which also affects the <code>shSplit()</code> builtin
+<ul>
+<li>Doesn't respect unicode in dash, ash, mksh.  But it does in bash, yash, and
+zsh with <code>setopt SH_WORD_SPLIT</code>.  (TODO: Oils could support Unicode in
+<code>$IFS</code>.)</li>
+</ul>
+</li>
+<li><code>${foo,}</code> and <code>${foo^}</code> for lowercase / uppercase
+<ul>
+<li>TODO: For bash compatibility, use <code>libc</code> functions?</li>
+</ul>
+</li>
+<li><code>[[ a &lt; b ]]</code> and <code>[ a '&lt;' b ]</code> for sorting
+<ul>
+<li>TODO: For bash compatibility, use libc <code>strcoll()</code>?</li>
+</ul>
+</li>
+<li>The <code>$PS1</code> prompt language has various time <code>%</code> codes, which are
+locale-specific.</li>
+<li>In bash, <code>printf</code> also has a libc time calls with <code>%()T</code>.</li>
+</ul>
+<p>Other:</p>
+<ul>
+<li>The prompt width is calculated with <code>wcswidth()</code>, which doesn't just count
+code points.  It calculates the <strong>display width</strong> of characters, which is
+different in general.</li>
+</ul>
+<a name="ysh"></a>
+<h3>YSH</h3>
+<ul>
+<li>Eggex matching depends on ERE semantics.
+<ul>
+<li><code>mystr ~ / [ \y01 ] /</code></li>
+<li><code>case (x) { / dot / }</code></li>
+</ul>
+</li>
+<li><a href="ref/chap-type-method.html">String methods</a>
+<ul>
+<li><code>Str.{trim,trimStart,trimEnd}</code> respect unicode space, like JavaScript does</li>
+<li>TODO: <code>Str.{upper,lower}</code> also need unicode case folding
+<ul>
+<li>are they different than the bash operations?</li>
+</ul>
+</li>
+<li>TODO: <code>s.split()</code> doesn't have a default &quot;split by space&quot;, which should
+probably respect unicode space, like <code>trim()</code> does</li>
+</ul>
+</li>
+<li><a href="ref/chap-builtin-func.html">Builtin functions</a>
+<ul>
+<li>TODO: <code>for offset, rune in (runes(mystr))</code> should decode UTF-8, like Go</li>
+<li><code>strcmp()</code> should do byte-wise and UTF-8 wise comparisons?</li>
+</ul>
+</li>
+</ul>
+<a name="data-languages"></a>
+<h3>Data Languages</h3>
+<ul>
+<li>Decoding JSON/J8 validates UTF-8</li>
+<li>Encoding JSON/J8 decodes and validates UTF-8
+<ul>
+<li>So we can distinguish valid UTF-8 and invalid bytes like <code>\yff</code></li>
+</ul>
+</li>
+</ul>
+<a name="more-notes"></a>
+<h2>More Notes</h2>
+<a name="list-of-low-level-utf-8-operations"></a>
+<h3>List of Low-Level UTF-8 Operations</h3>
+<p>libc:</p>
+<ul>
+<li><code>glob()</code> and <code>fnmatch()</code></li>
+<li><code>regexec()</code></li>
+<li><code>strcoll()</code> respects <code>LC_COLLATE</code>, which bash probably does</li>
+<li><code>tolower() toupper()</code> - will we use these?</li>
+</ul>
+<p>In Python:</p>
+<ul>
+<li>Decode next rune from a position, or previous rune
+<ul>
+<li><code>trimLeft()</code> and <code>${s#prefix}</code> need this</li>
+</ul>
+</li>
+<li>Decode UTF-8
+<ul>
+<li>J8 encoding and decoding need this</li>
+<li><code>for r in (runes(x))</code> needs this</li>
+<li>respecting surrogate half
+<ul>
+<li>JSON needs this</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Encode integer rune to UTF-8 sequence
+<ul>
+<li>J8 needs this, for <code>\u{3bc}</code> (currently in <code>data_lang/j8.py Utf8Encode()</code>)</li>
+</ul>
+</li>
+</ul>
+<p>Not sure:</p>
+<ul>
+<li>Case folding
+<ul>
+<li>both OSH and YSH have uppercase and lowercase</li>
+</ul>
+</li>
+</ul>
+<a name="setlocale-calls-made-by-bash-python"></a>
+<h3>setlocale() calls made by bash, Python, ...</h3>
+<p>bash:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">ltrace -e setlocale bash -c 'echo'</span>
+bash-&gt;setlocale(LC_ALL, &quot;&quot;)                    = &quot;en_US.UTF-8&quot;
+...
+bash-&gt;setlocale(LC_CTYPE, &quot;&quot;)                  = &quot;en_US.UTF-8&quot;
+bash-&gt;setlocale(LC_COLLATE, &quot;&quot;)                = &quot;en_US.UTF-8&quot;
+bash-&gt;setlocale(LC_MESSAGES, &quot;&quot;)               = &quot;en_US.UTF-8&quot;
+bash-&gt;setlocale(LC_NUMERIC, &quot;&quot;)                = &quot;en_US.UTF-8&quot;
+bash-&gt;setlocale(LC_TIME, &quot;&quot;)                   = &quot;en_US.UTF-8&quot;
+...
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>both bash and GNU readline call <code>setlocale()</code>.</li>
+<li>I think <code>LC_ALL</code> is sufficient?</li>
+<li>I think <code>LC_COLLATE</code> affects <code>glob()</code> order, which makes bash scripts
+non-deterministic.
+<ul>
+<li>We ran into this with <code>spec/task-runner.sh gen-task-file</code>, which does a
+glob of <code>*/*.test.sh</code>.  James Chen-Smith ran it with the equivalent of
+LANG=C, which scrambled the order.</li>
+</ul>
+</li>
+</ul>
+<p>Python 2 and 3 mostly agree:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">ltrace -e setlocale python3 -c 'print()'</span>
+python3-&gt;setlocale(LC_CTYPE, nil)              = &quot;C&quot;
+python3-&gt;setlocale(LC_CTYPE, &quot;&quot;)               = &quot;en_US.UTF-8&quot;
+</code></pre>
+<p>It only calls it for <code>LC_CTYPE</code>, not <code>LC_ALL</code>.</p>
+
+
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>

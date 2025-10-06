@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Command Language (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-cmd-lang.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>Command Language</strong></p>
+</div>
+<p>This chapter describes the command language for OSH, and some YSH extensions.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Quick-Sketch-Whats-a-Command">Quick Sketch: What's a Command?</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Commands">Commands</a> <br/>
+  <a class="dense-toc-h3" href="#simple-command">simple-command</a> <br/>
+  <a class="dense-toc-h3" href="#command-lookup-order">command-lookup-order</a> <br/>
+  <a class="dense-toc-h3" href="#prefix-binding">prefix-binding</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-prefix-binding">ysh-prefix-binding</a> <br/>
+  <a class="dense-toc-h3" href="#semicolon">semicolon ;</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Conditional">Conditional</a> <br/>
+  <a class="dense-toc-h3" href="#case">case</a> <br/>
+  <a class="dense-toc-h3" href="#if">if</a> <br/>
+  <a class="dense-toc-h3" href="#dbracket">dbracket [[</a> <br/>
+  <a class="dense-toc-h3" href="#bang">bang !</a> <br/>
+  <a class="dense-toc-h3" href="#and">and &amp;&amp;</a> <br/>
+  <a class="dense-toc-h3" href="#or">or ||</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Iteration">Iteration</a> <br/>
+  <a class="dense-toc-h3" href="#while">while</a> <br/>
+  <a class="dense-toc-h3" href="#until">until</a> <br/>
+  <a class="dense-toc-h3" href="#for">for</a> <br/>
+  <a class="dense-toc-h3" href="#for-expr-sh">for-expr-sh</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Control Flow">Control Flow</a> <br/>
+  <a class="dense-toc-h3" href="#break">break</a> <br/>
+  <a class="dense-toc-h3" href="#continue">continue</a> <br/>
+  <a class="dense-toc-h3" href="#return">return</a> <br/>
+  <a class="dense-toc-h3" href="#exit">exit</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Grouping">Grouping</a> <br/>
+  <a class="dense-toc-h3" href="#sh-func">sh-func</a> <br/>
+  <a class="dense-toc-h3" href="#sh-block">sh-block</a> <br/>
+  <a class="dense-toc-h3" href="#subshell">subshell</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Concurrency">Concurrency</a> <br/>
+  <a class="dense-toc-h3" href="#pipe">pipe</a> <br/>
+  <a class="dense-toc-h3" href="#ampersand">ampersand &amp;</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Redirects">Redirects</a> <br/>
+  <a class="dense-toc-h3" href="#redir-file">redir-file</a> <br/>
+  <a class="dense-toc-h3" href="#redir-desc">redir-desc</a> <br/>
+  <a class="dense-toc-h3" href="#here-doc">here-doc</a> <br/>
+  <a class="dense-toc-h3" href="#here-str">here-str</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-here-str">ysh-here-str</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Other-Command">Other Command</a> <br/>
+  <a class="dense-toc-h3" href="#dparen">dparen ((</a> <br/>
+  <a class="dense-toc-h3" href="#time">time</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Simple">YSH Simple</a> <br/>
+  <a class="dense-toc-h3" href="#typed-arg">typed-arg</a> <br/>
+  <a class="dense-toc-h3" href="#lazy-expr-arg">lazy-expr-arg</a> <br/>
+  <a class="dense-toc-h3" href="#block-arg">block-arg</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Cond">YSH Cond</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-case">ysh-case</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-if">ysh-if</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#YSH-Iter">YSH Iter</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-for">ysh-for</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-while">ysh-while</a> <br/>
+</div>
+</div>
+</div>
+<a name="Quick-Sketch-Whats-a-Command"></a>
+<h2>Quick Sketch: What's a Command?</h2>
+<p>OSH:</p>
+<pre><code>print-files() {
+  for name in *.py; do
+    if test -x &quot;$name&quot;; then
+      echo &quot;$name is executable&quot;
+    fi
+  done
+}
+</code></pre>
+<p>YSH:</p>
+<pre><code>proc print-files {
+  for name in *.py {
+    if test -x $name {  <span class="sh-comment"># no quotes needed</span>
+      echo &quot;$name is executable&quot;
+    }
+  }
+}
+</code></pre>
+<a name="Commands"></a>
+<h2 id="Commands">Commands</h2>
+<a name="simple-command"></a>
+<h3>simple-command</h3>
+<p>Commands are composed of words.  The first word may be the name of</p>
+<ol>
+<li>An alias</li>
+<li>A builtin command</li>
+<li>A YSH <code>proc</code></li>
+<li>A shell &quot;function&quot;</li>
+<li>An external command</li>
+</ol>
+<p>Examples:</p>
+<pre><code>echo hi               <span class="sh-comment"># a shell builtin doesn't start a process</span>
+ls /usr/bin ~/src     <span class="sh-comment"># starts a new process</span>
+myproc &quot;hello $name&quot;
+myshellfunc &quot;hello $name&quot;
+myalias -l
+</code></pre>
+
+<p>Redirects are also allowed in any part of the command:</p>
+<pre><code>echo 'to stderr' &gt;&amp;2
+echo &gt;&amp;2 'to stderr'
+
+echo 'to file' &gt; out.txt
+echo &gt; out.txt 'to file'
+</code></pre>
+<a name="command-lookup-order"></a>
+<h3>command-lookup-order</h3>
+<p>The first word in a command can mean many things.</p>
+<p>(1) An <a href="chap-builtin-cmd.html#alias">alias</a> may expand into shell code at <strong>parse</strong> time.  This includes
+keywords!</p>
+<p>Aliases are <strong>disabled</strong> in YSH (<code>shopt --unset expand_aliases</code>).</p>
+<p>(2) Shell keywords like <code>if</code> have their own <strong>parsing</strong> rules:</p>
+<pre><code>if test -d /; then  <span class="sh-comment"># OSH style</span>
+  echo yes
+fi
+
+if test --dir / {   <span class="sh-comment"># YSH style</span>
+  echo yes
+}
+</code></pre>
+<p>(3) The first word of a <a href="chap-cmd-lang.html#simple-command">simple command</a> is looked up in this
+order:</p>
+<ol>
+<li>Special builtins like <code>eval</code></li>
+<li>YSH Procs or Shell Functions</li>
+<li>Normal Builtins like <code>cd</code></li>
+<li>External Processes like <code>/bin/ls</code></li>
+</ol>
+<p>So special builtins can't be redefined as functions, but normal builtins can.</p>
+<p>YSH also adds the concept of a <strong>private</strong> builtin.  Private
+builtins like <a href="chap-builtin-cmd.html#sleep">sleep</a> are <strong>not</strong> consulted as the first word:</p>
+<pre><code>sleep 1          <span class="sh-comment"># run external command</span>
+builtin sleep 1  <span class="sh-comment"># run private builtin with explicit prefix</span>
+</code></pre>
+<p>To summarize, OSH commands are looked up in this order:</p>
+<ol>
+<li>alias</li>
+<li>keyword</li>
+<li>special builtin</li>
+<li>shell function</li>
+<li>normal builtin</li>
+<li>external</li>
+</ol>
+<p>YSH commands are looked up in this order:</p>
+<ol>
+<li>keyword</li>
+<li>special builtin</li>
+<li>YSH proc</li>
+<li>normal builtin</li>
+<li>external</li>
+</ol>
+<p>Logically separate:</p>
+<ol start="6">
+<li>private builtin (not the first word)</li>
+</ol>
+<p>Use <a href="chap-builtin-cmd.html#invoke">invoke --show</a> to see different meanings for a given name.</p>
+<a name="prefix-binding"></a>
+<h3>prefix-binding</h3>
+<p>Bindings are allowed before a simple command:</p>
+<pre><code>PYTHONPATH=. mydir/myscript.py
+</code></pre>
+<p>These bindings set a variable and mark it exported.  This binding is usually
+temporary, but when used with certain <a href="https://www.gnu.org/software/bash/manual/html_node/Special-Builtins.html">special builtins</a>, it persists.</p>
+<ul>
+<li>Related: <a href="ysh-prefix-binding">ysh-prefix-binding</a></li>
+</ul>
+<a name="ysh-prefix-binding"></a>
+<h3>ysh-prefix-binding</h3>
+<p>YSH prefix bindings look exactly like they do in shell:</p>
+<pre><code>PYTHONPATH=. mydir/myscript.py
+</code></pre>
+<p>However, they temporarily set <code>ENV.PYTHONPATH</code>, not <code>$PYTHONPATH</code>.  This is
+done by adding a new <code>Dict</code> to the prototype chain of the <code>Obj</code>.</p>
+<p>The new <code>ENV</code> then becomes the environment of the child processes for the
+command.</p>
+<p>In YSH, prefix bindings are always temporary ENV bindings, and they don't
+persist.  This is enforced by <code>shopt --set strict_env_binding</code>.</p>
+<ul>
+<li>Related: <a href="chap-special-var.html#ENV">ENV</a>, <a href="chap-cmd-lang.html#prefix-binding">prefix-binding</a></li>
+</ul>
+<a name="semicolon"></a>
+<h3 id="semicolon" class="osh-ysh-topic">semicolon ;</h3>
+<p>Run two commands in sequence like this:</p>
+<pre><code>echo one; echo two
+</code></pre>
+<p>or this:</p>
+<pre><code>echo one
+echo two
+</code></pre>
+<a name="Conditional"></a>
+<h2 id="Conditional">Conditional</h2>
+<a name="case"></a>
+<h3 id="case" class="osh-topic">case</h3>
+<p>Match a string against a series of glob patterns.  Execute code in the section
+below the matching pattern.</p>
+<pre><code>path='foo.py'
+case &quot;$path&quot; in
+  *.py)
+    echo 'python'
+    ;;
+  *.sh)
+    echo 'shell'
+    ;;
+esac
+</code></pre>
+<p>For bash compatibility, the <code>;;</code> terminator can be substituted with either:</p>
+<ul>
+<li><code>;&amp;</code>   - fall through to next arm, ignoring the condition</li>
+<li><code>;;&amp;</code>  - fall through to next arm, respecting the condition</li>
+</ul>
+<a name="if"></a>
+<h3 id="if" class="osh-topic">if</h3>
+<p>Test if a command exited with status zero (true).  If so, execute the
+corresponding block of code.</p>
+<p>Shell:</p>
+<pre><code>if test -d foo; then
+  echo 'foo is a directory'
+elif test -f foo; then
+  echo 'foo is a file'
+else
+  echo 'neither'
+fi
+</code></pre>
+<p>YSH:</p>
+<pre><code>if test -d foo {
+  echo 'foo is a directory'
+} elif test -f foo {
+  echo 'foo is a file'
+} else {
+  echo 'neither'
+}
+</code></pre>
+<a name="dbracket"></a>
+<h3 id="dbracket" class="osh-topic">dbracket [[</h3>
+<p>Statically parsed boolean expressions, from bash and other shells:</p>
+<pre><code>x=42
+if [[ $x -eq 42 ]]; then
+  echo yes
+fi  <span class="sh-comment"># =&gt; yes</span>
+</code></pre>
+<p>Compare with the <a href="chap-builtin-cmd.html#test">test</a> builtin, which is dynamically parsed.</p>
+<p>See <a href="chap-mini-lang.html#bool-expr">bool-expr</a> for the expression syntax.</p>
+<a name="bang"></a>
+<h3 id="bang" class="osh-ysh-topic">bang !</h3>
+<p>Invert an exit code:</p>
+<pre><code>if ! test -d /tmp; then   
+  echo &quot;No temp directory
+fi
+</code></pre>
+<a name="and"></a>
+<h3 id="and" class="osh-ysh-topic">and &amp;&amp;</h3>
+<pre><code>mkdir -p /tmp &amp;&amp; cp foo /tmp
+</code></pre>
+<a name="or"></a>
+<h3 id="or" class="osh-ysh-topic">or ||</h3>
+<pre><code>ls || die &quot;failed&quot;
+</code></pre>
+<a name="Iteration"></a>
+<h2 id="Iteration">Iteration</h2>
+<a name="while"></a>
+<h3 id="while" class="osh-ysh-topic">while</h3>
+<p>POSIX</p>
+<a name="until"></a>
+<h3 id="until" class="osh-topic">until</h3>
+<p>POSIX</p>
+<a name="for"></a>
+<h3 id="for" class="osh-ysh-topic">for</h3>
+<p>For loops iterate over words.</p>
+<p>YSH style:</p>
+<pre><code>var mystr = 'one'
+var myarray = :| two three |
+
+for i in $mystr @myarray *.py {
+  echo $i
+}
+</code></pre>
+<p>Shell style:</p>
+<pre><code>local mystr='one'
+local myarray=(two three)
+
+for i in &quot;mystr&quot; &quot;${myarray[@]}&quot; *.py; do
+  echo $i
+done
+</code></pre>
+<p>Both fragments output 3 lines and then Python files on remaining lines.</p>
+<a name="for-expr-sh"></a>
+<h3 id="for-expr-sh" class="osh-topic">for-expr-sh</h3>
+<p>A bash/ksh construct:</p>
+<pre><code>for (( i = 0; i &lt; 5; ++i )); do
+  echo $i
+done
+</code></pre>
+<a name="Control-Flow"></a>
+<h2 id="Control Flow">Control Flow</h2>
+<p>These are keywords in Oils, not builtins!</p>
+<a name="break"></a>
+<h3>break</h3>
+<p>Break out of a loop.  (Not used for case statements!)</p>
+<a name="continue"></a>
+<h3>continue</h3>
+<p>Continue to the next iteration of a loop.</p>
+<a name="return"></a>
+<h3>return</h3>
+<p>Return from a function.</p>
+<a name="exit"></a>
+<h3>exit</h3>
+<p>Exit the shell process with the given status:</p>
+<pre><code>exit 2
+</code></pre>
+<a name="Grouping"></a>
+<h2 id="Grouping">Grouping</h2>
+<a name="sh-func"></a>
+<h3>sh-func</h3>
+<p>POSIX:</p>
+<pre><code>f() {
+  echo args &quot;$@&quot;
+}
+f 1 2 3
+</code></pre>
+<a name="sh-block"></a>
+<h3>sh-block</h3>
+<p>POSIX:</p>
+<pre><code>{ echo one; echo two; }
+</code></pre>
+<p>The trailing <code>;</code> is necessary in OSH, but not YSH.  In YSH, <code>parse_brace</code> makes
+<code>}</code> is more of a special word.</p>
+<a name="subshell"></a>
+<h3>subshell</h3>
+<pre><code>( echo one; echo two )
+</code></pre>
+<p>In YSH, use <a href="chap-builtin-cmd.html#forkwait">forkwait</a> instead of parentheses.</p>
+<a name="Concurrency"></a>
+<h2 id="Concurrency">Concurrency</h2>
+<a name="pipe"></a>
+<h3>pipe</h3>
+<p>Pipelines are a traditional POSIX shell construct:</p>
+<pre><code>ls /tmp | grep ssh | sort
+</code></pre>
+<p>Related:</p>
+<ul>
+<li><a href=""><code>PIPESTATUS</code></a> in OSH</li>
+<li><a href=""><code>_pipeline_status</code></a> in YSH</li>
+</ul>
+<a name="ampersand"></a>
+<h3 id="ampersand" class="osh-topic">ampersand &amp;</h3>
+<p>Start a command as a background job.  Don't wait for it to finish, and return
+control to the shell.</p>
+<p>The PID of the job is recorded in the <code>$!</code> variable.</p>
+<pre><code>sleep 1 &amp;
+echo pid=$!
+{ echo two; sleep 2 } &amp;
+wait
+wait
+</code></pre>
+<p>In YSH, use the <a href="chap-builtin-cmd.html#fork">fork</a> builtin.</p>
+<a name="Redirects"></a>
+<h2 id="Redirects">Redirects</h2>
+<a name="redir-file"></a>
+<h3>redir-file</h3>
+<p>The operators <code>&gt;</code> and <code>&gt;&gt;</code> redirect the <code>stdout</code> of a process to a disk file.<br />
+The <code>&lt;</code> operator redirects <code>stdin</code> from a disk file.</p>
+<hr />
+<p>Examples of redirecting the <code>stdout</code> of a command:</p>
+<pre><code>echo foo &gt; out.txt   <span class="sh-comment"># overwrite out.txt</span>
+date &gt;&gt; stamp.txt    <span class="sh-comment"># append to stamp.txt</span>
+</code></pre>
+
+<p>Redirect to the <code>stdin</code> of a command:</p>
+<pre><code>cat &lt; in.txt
+</code></pre>
+<p>Redirects are compatible with POSIX and bash, so they take descriptor numbers
+on the left:</p>
+<pre><code>make 2&gt; stderr.txt   <span class="sh-comment"># '2&gt;' is valid, but '2 &gt;' is not</span>
+</code></pre>
+<p>Note that the word argument to <strong>file</strong> redirects is evaluated like bash, which
+is different than other arguments to other redirects:</p>
+<pre><code>tar -x -z &lt; Python*  <span class="sh-comment"># glob must expand to exactly 1 file</span>
+tar -x -z &lt; $myvar   <span class="sh-comment"># $myvar is split because it's unquoted</span>
+</code></pre>
+<p>In other words, it's evaluated <strong>as</strong> a sequence of 1 word, which <strong>produces</strong>
+zero to N strings.  But redirects are only valid when it produces exactly 1
+string.</p>
+<p>(Related: YSH uses <code>shopt --set simple_word_eval</code>, which means that globs that
+match nothing evaluate to zero strings, not themselves.)</p>
+
+<a name="redir-desc"></a>
+<h3>redir-desc</h3>
+<p>Redirect to a file descriptor:</p>
+<pre><code>echo 'to stderr' &gt;&amp;2
+</code></pre>
+
+<a name="here-doc"></a>
+<h3>here-doc</h3>
+<p>Here documents let you write the <code>stdin</code> of a process in the shell program.</p>
+<p>Specify a delimiter word (like EOF) after the redir operator (like <code>&lt;&lt;</code>).</p>
+<p>If it's unquoted, then <code>$</code> expansion happens, like a double-quoted string:</p>
+<pre><code>cat &lt;&lt;EOF
+here doc with $double ${quoted} substitution
+EOF
+</code></pre>
+<p>If the delimiter is quoted, then <code>$</code> expansion does <strong>not</strong> happen, like a
+single-quoted string:</p>
+<pre><code>cat &lt;&lt;'EOF'
+price is $3.99
+EOF
+</code></pre>
+<p>Leading tabs can be stripped with the <code>&lt;&lt;-</code> operator:</p>
+<pre><code>myfunc() {
+        cat &lt;&lt;-EOF
+        here doc with one tab leading tab stripped
+        EOF
+}
+</code></pre>
+<a name="here-str"></a>
+<h3>here-str</h3>
+<p>The <code>&lt;&lt;&lt;</code> operator means that the argument is a <code>stdin</code> string, not a
+chosen delimiter.</p>
+<pre><code>cat &lt;&lt;&lt; 'here string'
+</code></pre>
+<p>The string <strong>plus a newline</strong> is the <code>stdin</code> value, which is consistent with
+GNU bash.</p>
+<a name="ysh-here-str"></a>
+<h3>ysh-here-str</h3>
+<p>You can also use YSH multi-line strings as &quot;here strings&quot;.  For example:</p>
+<p>Double-quoted:</p>
+<pre><code>cat &lt;&lt;&lt; &quot;&quot;&quot;
+double
+quoted = $x
+&quot;&quot;&quot;
+</code></pre>
+<p>Single-quoted:</p>
+<pre><code>cat &lt;&lt;&lt; '''
+price is
+$3.99
+'''
+</code></pre>
+<p>J8-style with escapes:</p>
+<pre><code>cat &lt;&lt;&lt; u'''
+j8 style string price is
+mu = \u{3bc}
+'''
+</code></pre>
+<p>In these cases, a trailing newline is <strong>not</strong> added.  For example, the first
+example is equivalent to:</p>
+<pre><code>write --end '' -- &quot;&quot;&quot;
+double
+quoted = $x
+&quot;&quot;&quot;
+</code></pre>
+<a name="Other-Command"></a>
+<h2>Other Command</h2>
+<a name="dparen"></a>
+<h3 id="dparen" class="osh-topic">dparen ((</h3>
+<a name="time"></a>
+<h3 id="time" class="osh-ysh-topic">time</h3>
+<pre><code>time [-p] pipeline
+</code></pre>
+<p>Measures the time taken by a command / pipeline.  It uses the <code>getrusage()</code>
+function from <code>libc</code>.</p>
+<p>Note that time is a KEYWORD, not a builtin!</p>
+
+<a name="YSH-Simple"></a>
+<h2>YSH Simple</h2>
+<a name="typed-arg"></a>
+<h3>typed-arg</h3>
+<p>Internal commands (procs and builtins) accept typed arguments in parentheses:</p>
+<pre><code>json write (myobj)
+</code></pre>
+<p>Redirects can also appear after the typed args:</p>
+<pre><code>json write (myobj) &gt;out.txt
+</code></pre>
+<a name="lazy-expr-arg"></a>
+<h3>lazy-expr-arg</h3>
+<p>Expressions in brackets like this:</p>
+<pre><code>assert [42 === x]
+</code></pre>
+<p>Are syntactic sugar for:</p>
+<pre><code>assert (^[42 === x])
+</code></pre>
+<p>That is, it's single arg of type <code>value.Expr</code>.</p>
+<p>Redirects can also appear after the lazy typed args:</p>
+<pre><code>assert [42 === x] &gt;out.txt
+</code></pre>
+<ul>
+<li>Related: <a href="chap-type-method.html#Expr">Expr</a> type</li>
+</ul>
+<a name="block-arg"></a>
+<h3>block-arg</h3>
+<p>Blocks can be passed to simple commands, either literally:</p>
+<pre><code>cd /tmp {
+  echo $PWD  <span class="sh-comment"># prints /tmp</span>
+}
+echo $PWD
+</code></pre>
+<p>Or as an expression:</p>
+<pre><code>var block = ^(echo $PWD)
+cd /tmp (; ; block)
+</code></pre>
+<p>Note that <code>cd</code> has no typed or named arguments, so the two semicolons are
+preceded by nothing.</p>
+<p>When passed to procs, blocks capture the enclosing stack frame:</p>
+<pre><code>var x = 42
+myproc {
+  <span class="sh-comment"># lexical scope is respected</span>
+  echo &quot;x = $x&quot;  <span class="sh-comment"># x = 42</span>
+}
+</code></pre>
+<hr />
+<p>Redirects can appear after the block arg:</p>
+<pre><code>cd /tmp {
+  echo $PWD  <span class="sh-comment"># prints /tmp</span>
+} &gt;out.txt
+</code></pre>
+<p>Related:</p>
+<ul>
+<li><a href="#sh-block">sh-block</a> in OSH.</li>
+<li><a href="chap-type-method.html#Command">Command</a> and <a href="chap-type-method.html#CommandFrag">CommandFrag</a> types.</li>
+</ul>
+<a name="YSH-Cond"></a>
+<h2>YSH Cond</h2>
+<a name="ysh-case"></a>
+<h3>ysh-case</h3>
+<p>Like the shell case statement, the Ysh case statement has <strong>string/glob</strong> patterns.</p>
+<pre><code>var s = 'README.md'
+case (s) {
+  *.py           { echo 'Python' }
+  *.cc | *.h     { echo 'C++' }
+  *              { echo 'Other' }
+}
+<span class="sh-comment"># =&gt; Other</span>
+</code></pre>
+<p>We also generated it to <strong>typed data</strong> within <code>()</code>:</p>
+<pre><code>var x = 43
+case (x) {
+  (30 + 12)      { echo 'the integer 42' }
+  (else)         { echo 'neither' }
+}
+<span class="sh-comment"># =&gt; neither</span>
+</code></pre>
+<p>The <code>else</code> is a special keyword that matches any value.</p>
+<pre><code>case (s) {
+  / dot* '.md' / { echo 'Markdown' }
+  (else)         { echo 'neither' }
+}
+<span class="sh-comment"># =&gt; Markdown</span>
+</code></pre>
+<a name="ysh-if"></a>
+<h3>ysh-if</h3>
+<p>Like shell, you can use a command:</p>
+<pre><code>if test --file $x {
+  echo &quot;$x is a file&quot;
+}
+</code></pre>
+<p>You can also use an expression:</p>
+<pre><code>if (x &gt; 0) {
+  echo 'positive'
+}
+</code></pre>
+<a name="YSH-Iter"></a>
+<h2>YSH Iter</h2>
+<a name="ysh-for"></a>
+<h3>ysh-for</h3>
+<a name="Words"></a>
+<h4>Words</h4>
+<p>This is a shell-style loop over &quot;words&quot;:</p>
+<pre><code>for word in 'oils' $num_beans {pea,coco}nut {
+  echo $word
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># oils</span>
+<span class="sh-comment"># 13</span>
+<span class="sh-comment"># peanut</span>
+<span class="sh-comment"># coconut</span>
+</code></pre>
+<p>You can ask for the loop index with <code>i,</code>:</p>
+<pre><code>for i, name in README.md *.py {
+  echo &quot;$i $name&quot;
+}
+<span class="sh-comment"># =&gt; 0 README.md</span>
+<span class="sh-comment"># =&gt; 1 foo.py</span>
+</code></pre>
+<a name="Expressions-Over-Typed-Data"></a>
+<h4>Expressions Over Typed Data</h4>
+<p>Expressions are enclosed in <code>()</code>.  You can iterate over a <code>Range</code>, <code>List</code>,
+<code>Dict</code>, or <code>io.stdin</code>.</p>
+<p>Range:</p>
+<pre><code>for i in (3 ..&lt; 5) {  <span class="sh-comment"># range operator ..&lt;</span>
+  echo &quot;i = $i&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># i = 3</span>
+<span class="sh-comment"># i = 4</span>
+</code></pre>
+<p>List:</p>
+<pre><code>var foods = ['ale', 'bean']
+for item in (foods) {
+  echo $item
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># ale</span>
+<span class="sh-comment"># bean</span>
+</code></pre>
+<hr />
+<p>There are <strong>three</strong> ways of iterating over a <code>Dict</code>:</p>
+<pre><code>var mydict = {pea: 42, nut: 10}
+for key in (mydict) {
+  echo $key
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># pea</span>
+<span class="sh-comment"># nut</span>
+
+for key, value in (mydict) {
+  echo &quot;$key $value&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># pea - 42</span>
+<span class="sh-comment"># nut - 10</span>
+
+for i, key, value in (mydict) {
+  echo &quot;$i $key $value&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># 0 - pea - 42</span>
+<span class="sh-comment"># 1 - nut - 10</span>
+</code></pre>
+<p>That is, if you ask for two things, you'll get the key and value.  If you ask
+for three, you'll also get the index.</p>
+<p>(One way to think of it: <code>for</code> loops in YSH have the functionality Python's
+<code>enumerate()</code>, <code>items()</code>, <code>keys()</code>, and <code>values()</code>.)</p>
+<hr />
+<p>The <code>io.stdin</code> object iterates over lines:</p>
+<pre><code>for line in (io.stdin) {
+  echo $line
+}
+<span class="sh-comment"># lines are buffered, so it's much faster than `while read --raw-line`</span>
+</code></pre>
+<hr />
+<p>(This section is based on <a href="../ysh-tour.html">A Tour of YSH</a>.)</p>
+<a name="Closing-Over-the-Loop-Variable"></a>
+<h4>Closing Over the Loop Variable</h4>
+<p>Each iteration of a <code>for</code> loop creates a new frame, which may be captured.</p>
+<pre><code>var x = 42  <span class="sh-comment"># outside the loop</span>
+for i in (0 ..&lt; 3) {
+  var j = i + 2
+
+  var expr = ^&quot;$x: i = $i, j = $j&quot;  <span class="sh-comment"># captures x, i, and j</span>
+
+  my-task {
+    echo &quot;$x: i = $i, j = $j&quot;       <span class="sh-comment"># also captures x, i, and j</span>
+  }
+}
+</code></pre>
+<a name="Mutating-Containers-in-a-for-Loop"></a>
+<h4>Mutating Containers in a <code>for</code> Loop</h4>
+<ul>
+<li>If you append or remove from a <code>List</code> while iterating over it, the loop <strong>will</strong> be affected.</li>
+<li>If you mutate a <code>Dict</code> while iterating over it, the loop will <strong>not</strong> be
+affected.</li>
+</ul>
+<a name="ysh-while"></a>
+<h3>ysh-while</h3>
+<p>You can use an expression as the condition:</p>
+<pre><code>var x = 5
+while (x &lt; 0) {
+  setvar x -= 1
+}
+</code></pre>
+<p>You or a command:</p>
+<pre><code>while test -f myfile {
+  echo 'myfile'
+  sleep 1
+}
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>

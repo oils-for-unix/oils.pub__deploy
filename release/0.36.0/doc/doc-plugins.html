@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Examples of HTML Plugins</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/doc-plugins.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Examples of HTML Plugins</h1>
+<p>This file is essentially a unit test for <a href="https://github.com/oils-for-unix/oils/blob/master/doctools/oils_doc.py">doctools/oils_doc.py</a>, which
+contains all the HTML plugins.</p>
+<p>Related: <a href="doc-toolchain.html">How We Build Oils Documentation</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#link-shortcuts-with">Link Shortcuts with <code>$</code></a></div>
+  <div class="toclevel1"><a href="#syntax-highlighting-specified-in-front-matter">Syntax Highlighting Specified In Front matter</a></div>
+  <div class="toclevel1"><a href="#syntax-highlighting-with-fenced-code-blocks">Syntax Highlighting With Fenced Code Blocks</a></div>
+  <div class="toclevel2"><a href="#sh-prompt">sh-prompt</a></div>
+  <div class="toclevel2"><a href="#oils-sh">oils-sh</a></div>
+  <div class="toclevel2"><a href="#none-explicit-override">none (Explicit Override)</a></div>
+  <div class="toclevel2"><a href="#pygments-lexers">Pygments Lexers</a></div>
+  <div class="toclevel2"><a href="#plugins-we-should-have">Plugins We Should Have</a></div>
+</div>
+<a name="link-shortcuts-with"></a>
+<h2>Link Shortcuts with <code>$</code></h2>
+<ul>
+<li><code>$xref</code>: <a href="/cross-ref.html?tag=bash#bash">bash</a></li>
+<li><code>$blog-tag</code>: <a href="/blog/tags.html?tag=oils-release#oils-release">oils-release</a>
+<ul>
+<li><code>$oilshell-blog-tag</code>: <a href="https://www.oilshell.org/blog/tags.html?tag=zephyr-asdl#zephyr-asdl">zephyr-asdl</a></li>
+</ul>
+</li>
+</ul>
+<p>Links to Github:</p>
+<ul>
+<li><code>$oils-src</code>: <a href="https://github.com/oils-for-unix/oils/blob/master/INSTALL.txt">INSTALL.txt</a>, <a href="https://github.com/oils-for-unix/oils/blob/master/INSTALL.txt">INSTALL.txt</a></li>
+<li><code>$oils-blog-code-src</code>: <a href="https://github.com/oils-for-unix/blog-code/blob/master/interactive-shell/README.md">interactive-shell/README.md</a></li>
+<li><code>$oils-issue</code>: <a href="https://github.com/oils-for-unix/oils/issues/11">issue 11</a></li>
+<li><code>$oils-commit</code>: <a href="https://github.com/oils-for-unix/oils/commit/a1dad10d53b1fb94a164888d9ec277249ae98b58">this commit</a></li>
+<li><code>$oils-wiki</code>: <a href="https://github.com/oils-for-unix/oils/wiki/Surveys and Comparisons">Surveys and Comparisons</a></li>
+</ul>
+<p>Links to the Oils Refernce:</p>
+<ul>
+<li><code>$oils-doc</code>: <a href="//oils.pub/release/latest/doc/j8-notation.html">J8 Notation</a></li>
+<li><code>$chap-type-method</code>: <a href="chap-type-method.html?topic=Str#Str">Str</a></li>
+</ul>
+<a name="syntax-highlighting-specified-in-front-matter"></a>
+<h2>Syntax Highlighting Specified In Front matter</h2>
+<p>If every <code>pre</code> block in a document needs the same highlighter, you can specify
+it in the front matter like this:</p>
+<pre><code>---
+default_highlighter: oils-sh
+---
+
+My Title
+========
+</code></pre>
+<a name="syntax-highlighting-with-fenced-code-blocks"></a>
+<h2>Syntax Highlighting With Fenced Code Blocks</h2>
+<a name="sh-prompt"></a>
+<h3>sh-prompt</h3>
+<p>Highlights the <code>$</code> line.  For example, this input</p>
+<pre><code>```sh-prompt
+$ echo hi   # comment
+hi
+```
+</code></pre>
+<p>produces</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">echo hi </span>  <span class="sh-comment"># comment</span>
+hi
+</code></pre>
+<a name="oils-sh"></a>
+<h3>oils-sh</h3>
+<p>A generic formatter that works for both shell and YSH code.  It's used in
+<a href="idioms.html">idioms.html</a>, <a href="known-differences.html">known differences</a>, and is
+now the default for the Oils blog.</p>
+<p>(Detail: it's the same as <code>sh-prompt</code> for now.  We might want to do something
+smarter.)</p>
+<a name="none-explicit-override"></a>
+<h3>none (Explicit Override)</h3>
+<p>To override the default highlighter with none:</p>
+<pre><code>```none
+$ echo 'no syntax highlighting'
+```
+</code></pre>
+<p>Result:</p>
+<pre><code class="language-none">$ echo 'no syntax highlighting'
+</code></pre>
+<a name="pygments-lexers"></a>
+<h3>Pygments Lexers</h3>
+<p>Use any pygments lexer:</p>
+<pre><code>```python
+x = 42
+print(x, file=sys.stderr)
+```
+</code></pre>
+<p>produces</p>
+<pre><code class="language-python">x = 42
+print(x, file=sys.stderr)
+</code></pre>
+<a name="plugins-we-should-have"></a>
+<h3>Plugins We Should Have</h3>
+<ul>
+<li>ysh and osh.  <em>A Tour of YSH</em> could use it to show which code blocks can be
+extracted and run.</li>
+<li>Side-by-side sh and YSH</li>
+<li>Side-by-side PCRE and Eggex</li>
+<li>sh-session - How to replace the data?</li>
+</ul>
+<p>A shell session could look like this:</p>
+<pre><code>```session-bash
+$ echo one
+one
+
+$ for x in foo bar; do
+&gt;   echo $x
+&gt; done
+foo
+bar
+```
+</code></pre>
+<p>or</p>
+<pre><code>```session-ysh
+$ echo one
+one
+
+$ for x in foo bar {
+&gt;   echo $x
+&gt; }
+foo
+bar
+```
+</code></pre>
+
+<p>Embeddings:</p>
+<ul>
+<li>Embed Image Preview of Web Page?</li>
+<li>Embed Github Commit?
+<ul>
+<li>hashdiv has this for stories</li>
+</ul>
+</li>
+<li>Graphviz
+<ul>
+<li>LaTeX (although I don't really use it)</li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>

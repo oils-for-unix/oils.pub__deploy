@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Global Shell Options: Turning OSH into YSH</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/options.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Global Shell Options: Turning OSH into YSH</h1>
+<p>This document describes global shell options, which look like this:</p>
+<pre><code>shopt --set strict_backslash  <span class="sh-comment"># YSH style</span>
+shopt --set ysh:upgrade       <span class="sh-comment"># A whole group of options</span>
+set -o errexit                <span class="sh-comment"># Bourne shell style</span>
+</code></pre>
+<p>They can affect parsing or execution, and are used to gradually turn the
+<a href="/cross-ref.html?tag=OSH#OSH">OSH</a> into the <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.</p>
+<p>For example, YSH doesn't have word splitting on whitespace.  Instead, it use
+<a href="simple-word-eval.html">Simple Word Evaluation</a>.  (Blog: <a href="https://www.oilshell.org/blog/2021/04/simple-word-eval.html">Oil Doesn't Require
+Quoting
+Everywhere</a>).  (Until 2023, YSH was called the &quot;Oil language&quot;.)</p>
+<p>This isn't the <strong>only</strong> use for options, but it's an important one.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#what-every-user-should-know-2-minutes">What Every User Should Know (2 minutes)</a></div>
+  <div class="toclevel2"><a href="#strict">Strict</a></div>
+  <div class="toclevel2"><a href="#upgrade">Upgrade</a></div>
+  <div class="toclevel2"><a href="#ysh">YSH</a></div>
+  <div class="toclevel1"><a href="#using-shell-options">Using Shell Options</a></div>
+  <div class="toclevel2"><a href="#preferred-style">Preferred Style</a></div>
+  <div class="toclevel2"><a href="#bourne-shell-style">Bourne Shell Style</a></div>
+  <div class="toclevel2"><a href="#setting-options-via-command-line-flags">Setting Options Via Command Line Flags</a></div>
+  <div class="toclevel2"><a href="#inspecting-option-state">Inspecting Option State</a></div>
+  <div class="toclevel1"><a href="#kinds-of-options-with-examples">Kinds of Options, With Examples</a></div>
+  <div class="toclevel2"><a href="#naming-conventions">Naming Conventions</a></div>
+  <div class="toclevel2"><a href="#strict-options-produce-more-errors">Strict Options Produce More Errors</a></div>
+  <div class="toclevel2"><a href="#parse-options-change-syntax">Parse Options Change Syntax</a></div>
+  <div class="toclevel2"><a href="#runtime-options-change-behavior">Runtime Options Change Behavior</a></div>
+  <div class="toclevel1"><a href="#list-of-options">List of Options</a></div>
+  <div class="toclevel2"><a href="#selected-options">Selected Options</a></div>
+  <div class="toclevel2"><a href="#complete-list">Complete List</a></div>
+  <div class="toclevel1"><a href="#faq-arent-global-variables-bad">FAQ: Aren't Global Variables Bad?</a></div>
+  <div class="toclevel1"><a href="#related-documents">Related Documents</a></div>
+</div>
+<a name="what-every-user-should-know-2-minutes"></a>
+<h2>What Every User Should Know (2 minutes)</h2>
+<p>When you run <code>bin/osh</code>, the <strong>option groups</strong> <code>strict:all</code> and <code>ysh:upgrade</code> are
+&quot;canned settings&quot; that relieve you of having to know about dozens of shell
+options.</p>
+<p>Running <code>bin/ysh</code> is equivalent to using <code>shopt --set ysh:all</code> in <code>bin/osh</code>.</p>
+<p>Let's look at three examples.</p>
+<a name="strict"></a>
+<h3>Strict</h3>
+<p>If you put this line at the top of your shell script, it will still <strong>run under
+other shells</strong>, but OSH will act as sort of a &quot;runtime linter&quot;:</p>
+<pre><code><span class="sh-comment"># Abort on more errors, but fixes will still be compatible</span>
+shopt -s strict:all 2&gt;/dev/null || true 
+</code></pre>
+<a name="upgrade"></a>
+<h3>Upgrade</h3>
+<p>If you want to upgrade a script, and don't care about running under other
+shells, use this:</p>
+<pre><code><span class="sh-comment"># Start enabling YSH syntax and semantics</span>
+shopt --set ysh:upgrade
+</code></pre>
+<p>This second line may break a few things, but is designed to be an easy upgrade.
+See <a href="upgrade-breakage.html">What Breaks When You Upgrade to YSH</a>.</p>
+<a name="ysh"></a>
+<h3>YSH</h3>
+<p>If you're writing a new script, you can use <code>bin/ysh</code> to get <strong>all</strong>
+enhancements.  Typically you use a shebang line like this:</p>
+<pre><code><span class="sh-comment">#!/usr/bin/env ysh</span>
+</code></pre>
+<p>That's all most users need to know.  For more details, see the wiki page:
+<a href="https://github.com/oilshell/oil/wiki/Gradually-Upgrading-Shell-to-Oil">Gradually Upgrading Shell to Oil</a>.</p>
+<a name="using-shell-options"></a>
+<h2>Using Shell Options</h2>
+<p>There are several different ways of using shell options.</p>
+<a name="preferred-style"></a>
+<h3>Preferred Style</h3>
+<p>YSH has <strong>long flags</strong> for readability, which are preferred:</p>
+<pre><code>shopt --set errexit
+shopt --unset errexit
+</code></pre>
+<p>It also allows <strong>scoped</strong> options:</p>
+<pre><code>shopt --unset errexit {
+  false    <span class="sh-comment"># non-zero status ignored</span>
+  ls /bad
+}
+false  <span class="sh-comment"># original setting restored</span>
+</code></pre>
+<a name="bourne-shell-style"></a>
+<h3>Bourne Shell Style</h3>
+<p>For compatibility, these styles works in YSH:</p>
+<pre><code>set -e          <span class="sh-comment"># abort script on non-zero exit exit code</span>
+set +e          <span class="sh-comment"># turn it off</span>
+
+set -o errexit  <span class="sh-comment"># a more readable version of the above</span>
+set +o errexit 
+</code></pre>
+<p><a href="/cross-ref.html?tag=bash#bash">Bash</a>-style option with <code>shopt</code>:</p>
+<pre><code>shopt -s nullglob  <span class="sh-comment"># turn it on</span>
+shopt -u nullglob  <span class="sh-comment"># turn it off</span>
+</code></pre>
+<a name="setting-options-via-command-line-flags"></a>
+<h3>Setting Options Via Command Line Flags</h3>
+<p>You typically invoke the <code>shopt</code> builtin at the top of a script, but you
+can also set options at the command line:</p>
+<pre><code>osh -O errexit -c 'shopt -p -o'  <span class="sh-comment"># turn on Bourne option</span>
+osh +O errexit -c 'shopt -p -o'  <span class="sh-comment"># turn off Bourne option</span>
+
+osh -O strict_tilde -c 'shopt -p'  <span class="sh-comment"># turn on YSH option</span>
+osh +O strict_tilde -c 'shopt -p'  <span class="sh-comment"># turn off YSH option</span>
+</code></pre>
+<a name="inspecting-option-state"></a>
+<h3>Inspecting Option State</h3>
+<p>Shell has many ways to do this, like:</p>
+<pre><code>set -o                      <span class="sh-comment"># print all Bourne shell options</span>
+shopt -p                    <span class="sh-comment"># print all bash options</span>
+shopt -p nullglob failglob  <span class="sh-comment"># print selected options</span>
+shopt -p ysh:upgrade          <span class="sh-comment"># print options in the given group</span>
+</code></pre>
+<p>TODO: YSH should enable <code>shopt --print</code> for all options.  It should have a flat
+list.</p>
+<a name="kinds-of-options-with-examples"></a>
+<h2>Kinds of Options, With Examples</h2>
+<p><em>Option groups</em> like <code>ysh:upgrade</code> are baked into the interpreter.  What follows
+is an informal list of <em>kinds</em> of options, which are different categorization:</p>
+<ul>
+<li>Groups: How much of YSH do you want to use?</li>
+<li>Kinds: Does this option affect parsing behavior, runtime behavior, or
+something else?</li>
+</ul>
+<a name="naming-conventions"></a>
+<h3>Naming Conventions</h3>
+<ul>
+<li><code>parse_*</code>: Change parsing.
+<ul>
+<li>enable new features: <code>parse_at</code>, <code>parse_equals</code>.</li>
+<li>turn off to reject bad or old code: <code>no_parse_backticks</code>, <code>no_parse_backslash</code>,
+<code>no_parse_dollar</code>.</li>
+</ul>
+</li>
+<li><code>strict_*</code>: Fail at runtime instead of ignoring the bug like bash.
+<ul>
+<li><code>${#s}</code> on invalid unicode is a runtime error.</li>
+<li><code>~typo</code> is a runtime error.</li>
+</ul>
+</li>
+<li><code>simple_*</code>: Break things to improve style.
+<ul>
+<li><code>simple_eval_builtin</code>, <code>simple_echo</code>.</li>
+<li><code>simple_word_eval</code> is the most aggressive</li>
+</ul>
+</li>
+</ul>
+<a name="strict-options-produce-more-errors"></a>
+<h3>Strict Options Produce More Errors</h3>
+<p>These options produce more <strong>programming errors</strong>.  Importantly, the resulting
+program is still compatible with other shells.</p>
+<p>For example, <code>shopt -s strict_array</code> produces runtime errors when you confuse
+strings and arrays.  After you fix these problems, your program will still run
+correctly under <code>bash</code>.</p>
+<p>In contrast, if you set <code>shopt -s simple_word_eval</code> (an option that doesn't
+start with <code>strict_</code>), the semantics of your program have changed, and you can
+<strong>no longer</strong> run it under other shells.  It's considered an &quot;YSH option&quot;: by
+setting it, you're using parts of YSH.</p>
+<a name="parse-options-change-syntax"></a>
+<h3>Parse Options Change Syntax</h3>
+<p>Options that affect parsing start with <code>parse_</code>.  For example, <code>shopt -s parse_at</code> enables <strong>splicing</strong> with the <code>@</code> character:</p>
+<pre><code>var words = :| ale bean |
+write -- @words
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># ale</span>
+<span class="sh-comment"># bean</span>
+</code></pre>
+<p>and inline function calls:</p>
+<pre><code>write -- @[split('ale bean')]
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># ale</span>
+<span class="sh-comment"># bean</span>
+</code></pre>
+<p>As another example, <code>shopt --set parse_brace</code> takes over the <code>{ }</code> characters.
+Specifically, it does three things:</p>
+<ol>
+<li>Allow builtins like <code>cd</code> to take a block (discussed in a <a href="https://oilshell.zulipchat.com/#narrow/stream/121540-oil-discuss/topic/cd.20now.20takes.20a.20Ruby-like.20block">Zulip
+thread</a>)</li>
+<li>Control flow like <code>if</code>, <code>case</code>, <code>for</code>, and <code>while/until</code>, use curly brace
+delimiters instead of <code>then/fi</code>, <code>do/done</code>, etc.  See below.</li>
+<li>To remove confusion, braces must be balanced inside a word.  echo <code>foo{</code> is
+an error.  It has to be <code>echo foo\{</code> or <code>echo 'foo{'</code>.
+<ul>
+<li>In a correct brace expansion, they're always balanced: <code>{pea,coco}nut</code></li>
+<li>This is so that the syntax errors are better when you forget a space.</li>
+</ul>
+</li>
+</ol>
+
+<p>Here's idiomatic YSH syntax after <code>parse_brace</code>:</p>
+<pre><code>cd /tmp {
+  echo $PWD
+}
+
+if test -d foo {
+  echo 'dir'
+} elif test -f foo {
+  echo 'file'
+} else {
+   echo 'neither'
+}
+
+<span class="sh-comment"># Single line statements are supported:</span>
+if test -d / { echo 'dir' } else { echo 'nope' }
+
+while true {
+  echo hi
+  break
+}
+
+<span class="sh-comment"># Loop over words</span>
+for x in ale bean *.sh {
+  echo $x
+}
+
+<span class="sh-comment"># Replace 'in' with {, and 'esac' with }</span>
+case $x {
+  *.py)
+    echo python
+    ;;
+  *.sh)
+    echo shell
+    ;;
+}
+</code></pre>
+<p>What's the motivation for this?  Mainly familiarity: I hear a lot of feedback
+that nobody can remember how to write if statements in shell.  See <a href="//www.oilshell.org/blog/2020/01/simplest-explanation.html">The
+Simplest Explanation of
+Oil</a>.</p>
+
+<a name="runtime-options-change-behavior"></a>
+<h3>Runtime Options Change Behavior</h3>
+<ul>
+<li><code>simple_echo</code>.  Changes the flags accepted by the <code>echo</code> builtin, and style of flag parsing.
+See the <code>Builtins &gt; echo</code> below.</li>
+<li><code>simple_word_eval</code>.  Word evaluation consists of one stage rather than three:
+<ul>
+<li>No word splitting or empty elision.  (In other words, arity isn't data-dependent.)</li>
+<li>Static globbing, but no dynamic globbing.  (In other words, data isn't re-parsed as code.)</li>
+<li>This option is intended to be implemented by other shells.</li>
+</ul>
+</li>
+</ul>
+<p>TODO: copy examples from spec tests</p>
+<pre><code>echo $dir/*.py
+</code></pre>
+<ul>
+<li><code>command_sub_errexit</code>.  A error in a command sub can cause the <strong>parent
+shell</strong> to exit fatally.  Also see <code>inherit_errexit</code> and <code>strict_errexit</code>.</li>
+</ul>
+<a name="list-of-options"></a>
+<h2>List of Options</h2>
+<a name="selected-options"></a>
+<h3>Selected Options</h3>
+<p><code>strict_arith</code>.  Strings that don't look like integers cause a fatal error in
+arithmetic expressions.</p>
+<p><code>strict_argv</code>.  Empty <code>argv</code> arrays are disallowed (because there's no
+practical use for them).  For example, the second statement in <code>x=''; $x</code>
+results in a fatal error.</p>
+<p><code>strict_array</code>. No implicit conversions between string an array.  In other
+words, turning this on gives you a &quot;real&quot; array type.</p>
+<p><code>strict_control_flow</code>. <code>break</code> and <code>continue</code> outside of a loop are fatal
+errors.</p>
+<p><code>simple_eval_builtin</code>.  The <code>eval</code> builtin takes exactly <strong>one</strong> argument.  It
+doesn't concatenate its arguments with spaces, or accept zero arguments.</p>
+<p><code>strict_word_eval</code>.  More word evaluation errors are fatal.</p>
+<ul>
+<li>String slices with negative arguments like <code>${s: -1}</code> and <code>${s: 1 : -1}</code>
+result in a fatal error.  (NOTE: In array slices, negative start indices are
+allowed, but negative lengths are always fatal, regardless of
+<code>strict_word_eval</code>.)</li>
+<li>UTF-8 decoding errors are fatal when computing lengths (<code>${#s}</code>) and slices.</li>
+</ul>
+<p>For options affecting exit codes, see the <a href="error-handling.html">error handling
+doc</a>.</p>
+<a name="complete-list"></a>
+<h3>Complete List</h3>
+<p>See the <a href="ref/chap-option.html">Chapter on Global Shell Options</a> in the
+reference.</p>
+<a name="faq-arent-global-variables-bad"></a>
+<h2>FAQ: Aren't Global Variables Bad?</h2>
+<p>Options are technically globals, but YSH controls them in 2 ways:</p>
+<ol>
+<li>It has scoped mutation with Ruby-like <a href="proc-block-func.html">blocks</a>.
+<ul>
+<li>Example: <code>shopt --unset errexit { false }</code></li>
+</ul>
+</li>
+<li>Like all Bourne shells, YSH uses process-based concurrency.  It doesn't have
+shared memory.</li>
+</ol>
+<a name="related-documents"></a>
+<h2>Related Documents</h2>
+<ul>
+<li>Up: <a href="interpreter-state.html">Interpreter State</a>, which is under construction</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>

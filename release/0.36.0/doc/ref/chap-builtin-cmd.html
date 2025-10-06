@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Builtin Commands (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-builtin-cmd.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> — Chapter <strong>Builtin Commands</strong></p>
+</div>
+<p>This chapter in the <a href="index.html">Oils Reference</a> describes builtin commands for OSH and YSH.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Memory">Memory</a> <br/>
+  <a class="dense-toc-h3" href="#cmd/append">cmd/append</a> <br/>
+  <a class="dense-toc-h3" href="#pp">pp</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Handle-Errors">Handle Errors</a> <br/>
+  <a class="dense-toc-h3" href="#error">error</a> <br/>
+  <a class="dense-toc-h3" href="#failed">failed</a> <br/>
+  <a class="dense-toc-h3" href="#try">try</a> <br/>
+  <a class="dense-toc-h3" href="#boolstatus">boolstatus</a> <br/>
+  <a class="dense-toc-h3" href="#assert">assert</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Shell-State">Shell State</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-cd">ysh-cd</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-shopt">ysh-shopt</a> <br/>
+  <a class="dense-toc-h3" href="#shvar">shvar</a> <br/>
+  <a class="dense-toc-h3" href="#ctx">ctx</a> <br/>
+  <a class="dense-toc-h3" href="#push-registers">push-registers</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Modules">Modules</a> <br/>
+  <a class="dense-toc-h3" href="#source-guard">source-guard</a> <br/>
+  <a class="dense-toc-h3" href="#is-main">is-main</a> <br/>
+  <a class="dense-toc-h3" href="#use">use</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#I/O">I/O</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-read">ysh-read</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-echo">ysh-echo</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-test">ysh-test</a> <br/>
+  <a class="dense-toc-h3" href="#write">write</a> <br/>
+  <a class="dense-toc-h3" href="#fork">fork</a> <br/>
+  <a class="dense-toc-h3" href="#forkwait">forkwait</a> <br/>
+  <a class="dense-toc-h3" href="#redir">redir</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Private">Private</a> <br/>
+  <a class="dense-toc-h3" href="#cat">cat</a> <br/>
+  <a class="dense-toc-h3" href="#rm">rm</a> <br/>
+  <a class="dense-toc-h3" href="#sleep">sleep</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Hay-Config">Hay Config</a> <br/>
+  <a class="dense-toc-h3" href="#hay">hay</a> <br/>
+  <a class="dense-toc-h3" href="#haynode">haynode</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Data-Formats">Data Formats</a> <br/>
+  <a class="dense-toc-h3" href="#json">json</a> <br/>
+  <a class="dense-toc-h3" href="#json8">json8</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#I/O">I/O</a> <br/>
+  <a class="dense-toc-h3" href="#read">read</a> <br/>
+  <a class="dense-toc-h3" href="#echo">echo</a> <br/>
+  <a class="dense-toc-h3" href="#printf">printf</a> <br/>
+  <a class="dense-toc-h3" href="#readarray">readarray</a> <br/>
+  <a class="dense-toc-h3" href="#mapfile">mapfile</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Run-Code">Run Code</a> <br/>
+  <a class="dense-toc-h3" href="#source">source</a> <br/>
+  <a class="dense-toc-h3" href="#cmd/eval">cmd/eval</a> <br/>
+  <a class="dense-toc-h3" href="#trap">trap</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Set-Options">Set Options</a> <br/>
+  <a class="dense-toc-h3" href="#set">set</a> <br/>
+  <a class="dense-toc-h3" href="#shopt">shopt</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Working-Dir">Working Dir</a> <br/>
+  <a class="dense-toc-h3" href="#cd">cd</a> <br/>
+  <a class="dense-toc-h3" href="#chdir">chdir</a> <br/>
+  <a class="dense-toc-h3" href="#pwd">pwd</a> <br/>
+  <a class="dense-toc-h3" href="#pushd">pushd</a> <br/>
+  <a class="dense-toc-h3" href="#popd">popd</a> <br/>
+  <a class="dense-toc-h3" href="#dirs">dirs</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Completion">Completion</a> <br/>
+  <a class="dense-toc-h3" href="#complete">complete</a> <br/>
+  <a class="dense-toc-h3" href="#compgen">compgen</a> <br/>
+  <a class="dense-toc-h3" href="#compopt">compopt</a> <br/>
+  <a class="dense-toc-h3" href="#compadjust">compadjust</a> <br/>
+  <a class="dense-toc-h3" href="#compexport">compexport</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Shell-Process">Shell Process</a> <br/>
+  <a class="dense-toc-h3" href="#exec">exec</a> <br/>
+  <a class="dense-toc-h3" href="#umask">umask</a> <br/>
+  <a class="dense-toc-h3" href="#ulimit">ulimit</a> <br/>
+  <a class="dense-toc-h3" href="#times">times</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Child-Process">Child Process</a> <br/>
+  <a class="dense-toc-h3" href="#jobs">jobs</a> <br/>
+  <a class="dense-toc-h3" href="#wait">wait</a> <br/>
+  <a class="dense-toc-h3" href="#ysh-wait">ysh-wait</a> <br/>
+  <a class="dense-toc-h3" href="#fg">fg</a> <br/>
+  <a class="dense-toc-h3" href="#bg">bg</a> <br/>
+  <a class="dense-toc-h3" href="#kill">kill</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#External">External</a> <br/>
+  <a class="dense-toc-h3" href="#test">test</a> <br/>
+  <a class="dense-toc-h3" href="#getopts">getopts</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Conditional">Conditional</a> <br/>
+  <a class="dense-toc-h3" href="#cmd/true">cmd/true</a> <br/>
+  <a class="dense-toc-h3" href="#cmd/false">cmd/false</a> <br/>
+  <a class="dense-toc-h3" href="#colon">colon :</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Introspection">Introspection</a> <br/>
+  <a class="dense-toc-h3" href="#help">
+  help
+</a> <br/>
+  <a class="dense-toc-h3" href="#hash">hash</a> <br/>
+  <a class="dense-toc-h3" href="#cmd/type">cmd/type</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Word-Lookup">Word Lookup</a> <br/>
+  <a class="dense-toc-h3" href="#invoke">invoke</a> <br/>
+  <a class="dense-toc-h3" href="#runproc">runproc</a> <br/>
+  <a class="dense-toc-h3" href="#command">command</a> <br/>
+  <a class="dense-toc-h3" href="#builtin">builtin</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Interactive">Interactive</a> <br/>
+  <a class="dense-toc-h3" href="#alias">alias</a> <br/>
+  <a class="dense-toc-h3" href="#unalias">unalias</a> <br/>
+  <a class="dense-toc-h3" href="#history">history</a> <br/>
+  <a class="dense-toc-h3" href="#fc">fc</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Unsupported">Unsupported</a> <br/>
+  <a class="dense-toc-h3" href="#enable">enable</a> <br/>
+</div>
+</div>
+</div>
+<a name="Memory"></a>
+<h2>Memory</h2>
+<a name="cmd/append"></a>
+<h3>cmd/append</h3>
+<p>Append word arguments to a list:</p>
+<pre><code>var mylist = :| hello |
+
+append *.py (mylist)  <span class="sh-comment"># append all Python files</span>
+
+var myflags = []
+append -- -c 'echo hi' (myflags)  <span class="sh-comment"># -- to avoid ambiguity</span>
+</code></pre>
+<p>It's a shortcut for:</p>
+<pre><code>call myflags-&gt;append('-c')
+call myflags-&gt;append('echo hi')
+</code></pre>
+<p>Similar names: <a href="chap-index.html#append">append</a></p>
+<a name="pp"></a>
+<h3>pp</h3>
+<p>The <code>pp</code> builtin pretty prints values and interpreter state.</p>
+<p>Pretty printing expressions is the most common:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var x = 42</span>
+<span class="sh-prompt">$</span> <span class="sh-command">pp (x + 5)</span>
+myfile.ysh:1: (Int)   47   <span class="sh-comment"># print value with code location</span>
+</code></pre>
+<p>You can pass an unevaluated expression:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">pp [x + 5]</span>
+myfile.ysh:1: (Int)   47   <span class="sh-comment"># evaluate first</span>
+</code></pre>
+<p>The <code>value</code> command is a synonym for the interactive <code>=</code> operator:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">pp value (x)</span>
+(Int)   42
+
+<span class="sh-prompt">$</span> <span class="sh-command">= x </span>
+(Int)   42
+</code></pre>
+<p>Print proc names and doc comments:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">pp proc</span>  <span class="sh-comment"># subject to change</span>
+</code></pre>
+<p>You can also print low-level interpreter state.  The trailing <code>_</code> indicates
+that the exact format may change:</p>
+<p>Examples:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var x = :| one two |</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">pp asdl_ (x)</span>  <span class="sh-comment"># dump the ASDL &quot;guts&quot;</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">pp test_ (x)</span>  <span class="sh-comment"># single-line stable format, for spec tests</span>
+
+<span class="sh-comment"># dump the ASDL representation of a &quot;Cell&quot;, which is a location for a value</span>
+<span class="sh-comment"># (not the value itself)</span>
+<span class="sh-prompt">$</span> <span class="sh-command">pp cell_ x</span>
+</code></pre>
+<a name="Handle-Errors"></a>
+<h2>Handle Errors</h2>
+<a name="error"></a>
+<h3>error</h3>
+<p>The <code>error</code> builtin interrupts shell execution.</p>
+<p>If there's a surrounding <code>try</code> block, the <code>_error</code> register is set, and
+execution proceeds after the block.</p>
+<p>Otherwise, the shell exits with a non-zero status.</p>
+<p>Examples:</p>
+<pre><code>error 'Missing /tmp'            <span class="sh-comment"># program fails with status 10</span>
+
+try {
+   error 'Another problem'
+}
+echo $[error.code] # =&gt; 10
+</code></pre>
+<p>Override the default error code of <code>10</code> with a named argument:</p>
+<pre><code>error 'Missing /tmp' (code=99)  <span class="sh-comment"># program fails with status 99</span>
+</code></pre>
+<p>Named arguments add arbitrary properties to the resulting <code>_error</code> register:</p>
+<pre><code>error 'Oops' (path='foo.json')
+</code></pre>
+<p>See <a href="../ysh-error-handling.html">YSH Error Handling</a> for more examples.</p>
+<a name="failed"></a>
+<h3>failed</h3>
+<p>A shortcut for <code>(_error.code !== 0)</code>:</p>
+<pre><code>try {
+  ls /tmp
+}
+if failed {
+  echo 'ls failed'
+}
+</code></pre>
+<p>It saves you 7 punctuation characters: <code>( _ . !== )</code></p>
+<p>See <a href="../ysh-error-handling.html">YSH Error Handling</a> for more examples.</p>
+<a name="try"></a>
+<h3>try</h3>
+<p>Run a block of code, stopping at the first error.  (This is implemented with
+<code>shopt --set errexit</code>)</p>
+<p><code>try</code> sets the <code>_error</code> register to a dict, and always returns 0.</p>
+<pre><code>try {
+  ls /nonexistent
+}
+if (_error.code !== 0) {
+  echo 'ls failed'
+}
+</code></pre>
+<p>Handle expression errors:</p>
+<pre><code>try {
+  var x = 42 / 0
+}
+</code></pre>
+<p>And errors from compound commands:</p>
+<pre><code>try {
+  ls | wc -l
+  diff &lt;(sort left.txt) &lt;(sort right.txt)
+}
+</code></pre>
+<p>The case statement can be useful:</p>
+<pre><code>try {
+  grep PATTERN FILE.txt
+}
+case (_error.code) {
+  (0)    { echo 'found' }
+  (1)    { echo 'not found' }
+  (else) { echo &quot;grep returned status $[_error.code]&quot; }
+}
+</code></pre>
+<p>See <a href="../ysh-error-handling.html">YSH Error Handling</a> for more examples.</p>
+<a name="boolstatus"></a>
+<h3>boolstatus</h3>
+<p>Runs a command, and requires the exit code to be 0 or 1.</p>
+<pre><code>if boolstatus egrep '[0-9]+' myfile {  <span class="sh-comment"># e.g. aborts on status 2</span>
+  echo 'found'               <span class="sh-comment"># status 0 means found</span>
+} else {
+  echo 'not found'           <span class="sh-comment"># status 1 means not found</span>
+}
+</code></pre>
+<p>It's meant for external commands that &quot;return&quot; more than 2 values, like true /
+false / fail, rather than pass / fail.</p>
+<a name="assert"></a>
+<h3>assert</h3>
+<p>Evaluates and expression, and fails if it is not truthy.</p>
+<pre><code>assert (false)   <span class="sh-comment"># fails</span>
+assert [false]   <span class="sh-comment"># also fails (the expression is evaluated)</span>
+</code></pre>
+<p>It's common to pass an unevaluated expression with <code>===</code>:</p>
+<pre><code>func f() { return (42) }
+
+assert [43 === f()]
+</code></pre>
+<p>In this special case, you get a nicer error message:</p>
+<blockquote>
+<p>Expected: 43
+Got:      42</p>
+</blockquote>
+<p>That is, the left-hand side should be the expected value, and the right-hand
+side should be the actual value.</p>
+<a name="Shell-State"></a>
+<h2>Shell State</h2>
+<a name="ysh-cd"></a>
+<h3>ysh-cd</h3>
+<p>It takes a block:</p>
+<pre><code>cd / {
+  echo $PWD
+}
+</code></pre>
+<a name="ysh-shopt"></a>
+<h3>ysh-shopt</h3>
+<p>Sets shell options, e.g.</p>
+<pre><code>shopt --unset errexit
+shopt --set errexit
+</code></pre>
+<p>You can set or unset multiple options with the groups <code>strict:all</code>,
+<code>ysh:upgrade</code>, and <code>ysh:all</code>.  Example:</p>
+<pre><code>shopt --set ysh:upgrade
+</code></pre>
+<p>If a block is passed, then:</p>
+<ol>
+<li>the mutated options are pushed onto a stack</li>
+<li>the block is executed</li>
+<li>the options are restored to their original state (even if the block fails to
+execute)</li>
+</ol>
+<p>Example:</p>
+<pre><code>shopt --unset errexit {
+  false
+  echo 'ok'
+}
+</code></pre>
+<p>Note that setting <code>ysh:upgrade</code> or <code>ysh:all</code> may initialize the <a href="chap-special-var.html#ENV">ENV</a> dict.</p>
+<p>Related: <a href="#shopt">shopt</a></p>
+<a name="shvar"></a>
+<h3>shvar</h3>
+<p>Execute a block with a global variable set.</p>
+<pre><code>shvar IFS=/ {
+  echo &quot;ifs is $IFS&quot;
+}
+echo &quot;ifs restored to $IFS&quot;
+</code></pre>
+<a name="ctx"></a>
+<h3>ctx</h3>
+<p>Execute a block with a shared &quot;context&quot; that can be updated using the <code>ctx</code>
+built-in.</p>
+<pre><code>var mydict = {}
+ctx push (mydict) {
+   <span class="sh-comment"># = mydict =&gt; {}</span>
+   ctx set (mykey='myval')
+}
+<span class="sh-comment"># = mydict =&gt; { mykey: 'myval' }</span>
+</code></pre>
+<p>The context can be modified with <code>ctx set (key=val)</code>, which updates or inserts
+the value at the given key.</p>
+<p>The context can also be updated with <code>ctx emit field (value)</code>.</p>
+<pre><code>ctx push (mydict) {
+   <span class="sh-comment"># = mydict =&gt; {}</span>
+   ctx emit mylist (0)
+   <span class="sh-comment"># = mydict =&gt; { mylist: [0] }</span>
+   ctx emit mylist (1)
+}
+<span class="sh-comment"># = mydict =&gt; { mylist: [0, 1] }</span>
+</code></pre>
+<p>Contexts can be nested, resulting in a stack of contexts.</p>
+<pre><code>ctx push (mydict1) {
+    ctx set (dict=1)
+    ctx push (mydict2) {
+        ctx set (dict=2)
+    }
+}
+<span class="sh-comment"># = mydict1 =&gt; { dict: 1 }</span>
+<span class="sh-comment"># = mydict2 =&gt; { dict: 2 }</span>
+</code></pre>
+<p><code>ctx</code> is useful for creating DSLs, such as a mini-parseArgs.</p>
+<pre><code>proc parser (; place ; ; block_def) {
+  var p = {}
+  ctx push (p, block_def)
+  call place-&gt;setValue(p)
+}
+
+proc flag (short_name, long_name; type; help) {
+  ctx emit flag ({short_name, long_name, type, help})
+}
+
+proc arg (name) {
+  ctx emit arg ({name})
+}
+
+parser (&amp;spec) {
+  flag -t --tsv (Bool, help='Output as TSV')
+  flag -r --recursive (Bool, help='Recurse into the given directory')
+  flag -N --count (Int, help='Process no more than N files')
+  arg path
+}
+</code></pre>
+<a name="push-registers"></a>
+<h3>push-registers</h3>
+<p>Save global registers like $? on a stack.  It's useful for preventing plugins
+from interfering with user code.  Example:</p>
+<pre><code>status_42         <span class="sh-comment"># returns 42 and sets $?</span>
+push-registers {  <span class="sh-comment"># push a new frame</span>
+  status_43       <span class="sh-comment"># top of stack changed here</span>
+  echo done
+}                 <span class="sh-comment"># stack popped</span>
+echo $?           <span class="sh-comment"># 42, read from new top-of-stack</span>
+</code></pre>
+<p>Current list of registers:</p>
+<pre><code>Regex data underlying BASH_REMATCH, _group(), _start(), _end()
+$?             
+_error                <span class="sh-comment"># set by the try builtin</span>
+PIPESTATUS            <span class="sh-comment"># aka  _pipeline_status</span>
+_process_sub_status
+</code></pre>
+<a name="Modules"></a>
+<h2>Modules</h2>
+<a name="source-guard"></a>
+<h3>source-guard</h3>
+<p>Registers a name in the global &quot;module&quot; dict.  Returns 0 if it doesn't exist,
+or 1 if it does.</p>
+<p>Use it like this in executable files:</p>
+<pre><code>source-guard main || return 0   
+</code></pre>
+<p>And like this in libraries:</p>
+<pre><code>source-guard myfile.ysh || return 0   
+</code></pre>
+<a name="is-main"></a>
+<h3>is-main</h3>
+<p>The <code>is-main</code> builtin returns 1 (false) if the current file was executed with
+the <code>source</code> builtin.</p>
+<p>In the &quot;main&quot; file, including <code>-c</code> or <code>stdin</code> input, it returns 0 (true).</p>
+<p>Use it like this:</p>
+<pre><code>if is-main {
+  runproc @ARGV
+}
+</code></pre>
+<a name="use"></a>
+<h3>use</h3>
+<p>The <code>use</code> builtin evaluates a source file in a new <code>Frame</code>, and then creates an
+<code>Obj</code> that is a namespace.</p>
+<pre><code>use my-dir/mymodule.ysh
+
+echo $[mymodule.my_integer]   <span class="sh-comment"># the module Obj has attributes</span>
+mymodule my-proc              <span class="sh-comment"># the module Obj is invokable</span>
+</code></pre>
+<p>The evaluation of such files is cached, so it won't be re-evaluated if <code>use</code> is
+called again.</p>
+<p>To import a specific name, use the <code>--pick</code> flag:</p>
+<pre><code>use my-dir/mymodule.ysh --pick my-proc other-proc
+
+my-proc 1 2
+other-proc 3 4
+</code></pre>
+<p>Note: the <code>--pick</code> flag must come <em>after</em> the module, so this isn't valid:</p>
+<pre><code>use --pick my-proc mymodule.sh  <span class="sh-comment"># INVALID</span>
+</code></pre>
+
+<hr />
+<p>The <code>--extern</code> flag means that <code>use</code> does nothing.  These commands can be used
+by tools to analyze names.</p>
+<pre><code>use --extern grep sed awk
+</code></pre>
+<hr />
+<p>Notes:</p>
+<ul>
+<li>To get a reference to <code>module-with-hyphens</code>, you may need to use
+<code>getVar('module-with-hyphens')</code>.
+<ul>
+<li>TODO: consider backtick syntax as well</li>
+</ul>
+</li>
+<li><code>use</code> must be used at the top level, not within a function.
+<ul>
+<li>This behavior is unlike Python.</li>
+</ul>
+</li>
+<li>The <code>use</code> builtin populates the new module with references to these values in
+the calling module:
+<ul>
+<li><a href="chap-special-var.html#ENV">ENV</a> - to mutate and set environment vars</li>
+<li><a href="chap-plugin.html#PS4">PS4</a> - for cross-module tracing in OSH</li>
+</ul>
+</li>
+</ul>
+<p>Warnings:</p>
+<ul>
+<li><code>use</code> <strong>copies</strong> the module bindings into a new <code>Obj</code>.  This means that if
+you rebind <code>mymodule.my_integer</code>, it will <strong>not</strong> be visible to code in the
+module.
+<ul>
+<li>This behavior is unlike Python.</li>
+</ul>
+</li>
+<li><code>use</code> allows &quot;circular imports&quot;.  That is <code>A.ysh</code> can <code>use B.ysh</code>, and vice
+versa.
+<ul>
+<li>To eliminate confusion over uninitialized names, use <strong>only</strong> <code>const</code>,
+<code>func</code>, and <code>proc</code> at the top level of <code>my-module.ysh</code>.  Don't run
+commands, use <code>setvar</code>, etc.</li>
+</ul>
+</li>
+</ul>
+<a name="I/O"></a>
+<h2>I/O</h2>
+<a name="ysh-read"></a>
+<h3>ysh-read</h3>
+<p>YSH adds long flags to shell's <code>read</code>.  These two flags are fast and
+recommended:</p>
+<pre><code>read --all               <span class="sh-comment"># whole file including trailing \n, fills $_reply</span>
+read --all (&amp;x)          <span class="sh-comment"># fills $x</span>
+
+read --num-bytes 3       <span class="sh-comment"># read N bytes, fills _reply</span>
+read --num-bytes 3 (&amp;x)  <span class="sh-comment"># fills $x</span>
+</code></pre>
+<hr />
+<p>This flag replaces shell's <code>IFS= read -r</code> idiom, reading one byte a time in an
+unbuffered fashion:</p>
+<pre><code>read --raw-line             <span class="sh-comment"># unbuffered read of line, omitting trailing \n</span>
+read --raw-line (&amp;x)        <span class="sh-comment"># fills $x</span>
+
+read --raw-line --with-eol  <span class="sh-comment"># include the trailing \n</span>
+</code></pre>
+<p>A loop over <a href="chap-type-method.html#stdin">io.stdin</a> allows buffered reading of lines, which is faster.</p>
+<p>You may want to use <code>fromJson8()</code> or <code>fromJson()</code> after reading a line.</p>
+<hr />
+<p>The <code>-0</code> flag also reads one byte at a time:</p>
+<pre><code>read -0                 <span class="sh-comment"># read until NUL, synonym for read -r -d ''</span>
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li>Unlike OSH <a href="#read">read</a>, none of these features remove NUL bytes.</li>
+<li>Performance summary: <a href="../ysh-io.html#three-types-of-io">YSH Input/Output &gt; Three Types of I/O</a></li>
+</ul>
+
+
+<a name="ysh-echo"></a>
+<h3>ysh-echo</h3>
+<p>Print arguments to stdout, separated by a space.</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">echo hi there</span>
+hi there
+</code></pre>
+<p>The <a href="chap-option.html#ysh:all">simple_echo</a> option means that flags aren't accepted, and <code>--</code> is not
+accepted.</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">echo -n</span>
+-n
+</code></pre>
+<p>See the <a href="../ysh-faq.html#how-do-i-write-the-equivalent-of-echo-e-or-echo-n">YSH FAQ entry on echo</a> for details.</p>
+<a name="ysh-test"></a>
+<h3>ysh-test</h3>
+<p>The YSH <a href="#test">test</a> builtin supports these long flags:</p>
+<pre><code>--dir            same as -d
+--exists         same as -e
+--file           same as -f
+--symlink        same as -L
+
+--true           Is the argument equal to the string &quot;true&quot;?
+--false          Is the argument equal to the string &quot;false&quot;?
+</code></pre>
+<p>The <code>--true</code> and <code>--false</code> flags can be used to combine commands and
+expressions:</p>
+<pre><code>if test --file a &amp;&amp; test --true $[bool(mydict)] {
+  echo ok
+}
+</code></pre>
+<p>This works because the boolean <code>true</code> <em>stringifies</em> to <code>&quot;true&quot;</code>, and likewise
+with <code>false</code>.</p>
+<p>That is, <code>$[true] === &quot;true&quot;</code> and <code>$[false] === &quot;false&quot;</code>.</p>
+<a name="write"></a>
+<h3>write</h3>
+<p>write fixes problems with shell's <code>echo</code> builtin.</p>
+<p>The default separator is a newline, and the default terminator is a
+newline.</p>
+<p>Examples:</p>
+<pre><code>write -- ale bean         <span class="sh-comment"># write two lines</span>
+
+write -n -- ale bean      <span class="sh-comment"># synonym for --end '', like echo -n</span>
+write --sep '' --end '' -- a b        <span class="sh-comment"># write 2 bytes</span>
+write --sep $'\t' --end $'\n' -- a b  <span class="sh-comment"># TSV line</span>
+</code></pre>
+<p>You may want to use <code>toJson8()</code> or <code>toJson()</code> before writing:</p>
+<pre><code>write -- $[toJson8(mystr)]
+write -- $[toJson(mystr)]
+</code></pre>
+
+<a name="fork"></a>
+<h3>fork</h3>
+<p>Run a command, but don't wait for it to finish.</p>
+<pre><code>fork { sleep 1 }
+wait -n
+</code></pre>
+<p>In YSH, use <code>fork</code> rather than shell's <code>&amp;</code> (<a href="chap-cmd-lang.html#ampersand">ampersand</a>).</p>
+<a name="forkwait"></a>
+<h3>forkwait</h3>
+<p>The preferred alternative to shell's <code>()</code>.  Prefer <code>cd</code> with a block if possible.</p>
+<pre><code>forkwait {
+  not_mutated=zzz
+}
+echo $not_mutated
+</code></pre>
+<a name="redir"></a>
+<h3>redir</h3>
+<p>Runs a block passed to it.  It's designed to enable a <strong>prefix</strong> syntax when
+redirecting:</p>
+<pre><code>redir &gt;out.txt {
+  echo 1
+  echo 2
+}
+</code></pre>
+<p>When a block is long, it's more readable than shell's postfix style:</p>
+<pre><code>{ echo 1
+  echo 2
+} &gt;out.txt
+</code></pre>
+<a name="Private"></a>
+<h2>Private</h2>
+<p>Private builtins are not enabled by default:</p>
+<pre><code>sleep 0.1          <span class="sh-comment"># runs external process; private builtin not found</span>
+builtin sleep 0.1  <span class="sh-comment"># runs private builtin</span>
+</code></pre>
+<a name="cat"></a>
+<h3>cat</h3>
+<p><code>cat</code> is a <em>private</em> builtin that reads from files and writes to stdout.</p>
+<pre><code>cat FILE+  <span class="sh-comment"># Read from each file, and write to stdout</span>
+           <span class="sh-comment"># If the file is -, read from stdin (not the file called -)</span>
+cat        <span class="sh-comment"># equivalent to cat -</span>
+</code></pre>
+<ul>
+<li>Related: <a href="chap-option.html#rewrite_extern">rewrite_extern</a></li>
+</ul>
+<a name="rm"></a>
+<h3>rm</h3>
+<p><code>rm</code> is a <em>private</em> builtin that removes files.</p>
+<pre><code>rm FLAG* FILE*
+</code></pre>
+<p>Flags:</p>
+<pre><code>-f   Don't fail if the file exist, and don't fail if no arguments are
+     passed.
+</code></pre>
+<p>Return 0 on success, and non-zero otherwise.</p>
+<ul>
+<li>Related: <a href="chap-option.html#rewrite_extern">rewrite_extern</a></li>
+</ul>
+<a name="sleep"></a>
+<h3>sleep</h3>
+<p><code>sleep</code> is a <em>private</em> builtin that puts the shell process to sleep for the
+given number of seconds.</p>
+<p>Example:</p>
+<pre><code>builtin sleep 0.1  <span class="sh-comment"># wait 100 milliseconds</span>
+</code></pre>
+<p>It respects signals:</p>
+<ul>
+<li><code>SIGINT</code> / Ctrl-C cancels the command, with the standard behavior:
+<ul>
+<li>in an interactive shell, you return to the prompt</li>
+<li>a non-interactive shell is cancelled</li>
+</ul>
+</li>
+<li>Upon receiving other signals, Oils run pending traps, and then continues to
+sleep.</li>
+</ul>
+<p>It's compatible with the POSIX <code>sleep</code> utility:</p>
+<pre><code>sleep 2            <span class="sh-comment"># wait 2 seconds</span>
+</code></pre>
+<a name="Hay-Config"></a>
+<h2>Hay Config</h2>
+<a name="hay"></a>
+<h3>hay</h3>
+<a name="haynode"></a>
+<h3>haynode</h3>
+<a name="Data-Formats"></a>
+<h2>Data Formats</h2>
+<a name="json"></a>
+<h3>json</h3>
+<p>Write JSON:</p>
+<pre><code>var d = {name: 'bob', age: 42}
+json write (d)                     <span class="sh-comment"># default indent of 2, type errors</span>
+json write (d, space=0)            <span class="sh-comment"># no indent</span>
+json write (d, type_errors=false)  <span class="sh-comment"># non-serializable types become null</span>
+                                   <span class="sh-comment"># (e.g. Obj, Proc, Eggex)</span>
+</code></pre>
+<p>Read JSON:</p>
+<pre><code>echo hi | json read  <span class="sh-comment"># fills $_reply by default</span>
+</code></pre>
+<p>Or use an explicit place:</p>
+<pre><code>var x = ''
+json read (&amp;x) &lt; myfile.txt
+</code></pre>
+<p>Related: <a href="chap-errors.html#err-json-encode">err-json-encode</a> and <a href="chap-errors.html#err-json-decode">err-json-decode</a></p>
+<a name="json8"></a>
+<h3>json8</h3>
+<p>Like <code>json</code>, but on the encoding side:</p>
+<ul>
+<li>Falls back to <code>b'\yff'</code> instead of lossy Unicode replacement char</li>
+</ul>
+<p>On decoding side:</p>
+<ul>
+<li>Understands <code>b'' u''</code> strings</li>
+</ul>
+<p>Related: <a href="">err-json8-encode</a> and <a href="">err-json8-decode</a></p>
+<a name="I/O"></a>
+<h2>I/O</h2>
+<p>These builtins take input and output.  They're often used with redirects.</p>
+<a name="read"></a>
+<h3>read</h3>
+<pre><code>read FLAG* VAR*
+</code></pre>
+<p>Read input from <code>stdin</code>, and assign pieces of input to variables.  Without
+flags, <code>read</code> uses this algorithm:</p>
+<ol>
+<li>Read bytes from <code>stdin</code>, one at a time, until a newline <code>\n</code>.
+<ul>
+<li>Respect <code>\</code> escapes and line continuations.</li>
+<li>Any NUL bytes are removed from the input.</li>
+</ul>
+</li>
+<li>Use the <code>$IFS</code> algorithm to split the line into N pieces, where <code>N</code> is the
+number of <code>VAR</code> specified.  Each piece is assigned to the corresponding
+variable.
+<ul>
+<li>If no VARs are given, assign to the <code>$REPLY</code> var.</li>
+</ul>
+</li>
+</ol>
+<p>The <code>-r</code> flag is useful to disable backslash escapes.</p>
+<p>POSIX mandates the slow behavior of reading one byte at a time.  In YSH, you
+can avoid this by using <a href="chap-type-method.html#stdin">io.stdin</a>, or a <code>--long-flag</code> documented in
+<a href="#ysh-read">ysh-read</a>.</p>
+<p>Flags:</p>
+<pre><code>-a ARRAY  assign the tokens to elements of this array
+-d CHAR   use DELIM as delimiter, instead of newline
+-n NUM    read up to NUM characters, respecting delimiters. When -r is not
+          specified, backslash escape of the form &quot;\?&quot; is counted as one
+          character. This is the Bash behavior, but other shells such as
+          ash and mksh count the number of bytes with &quot;-n&quot; without
+          considering backslash escaping.
+-p STR    print the string PROMPT before reading input
+-r        raw mode: don't let backslashes escape characters
+-s        silent: do not echo input coming from a terminal
+-t NUM    time out and fail after TIME seconds
+          -t 0 returns whether any input is available
+-u FD     read from file descriptor FD instead of 0 (stdin)
+</code></pre>
+  
+  
+<p>Performance summary: <a href="../ysh-io.html#three-types-of-io">YSH Input/Output &gt; Three Types of I/O</a></p>
+<a name="echo"></a>
+<h3>echo</h3>
+<pre><code>echo FLAG* ARG*
+</code></pre>
+<p>Prints ARGs to stdout, separated by a space, and terminated by a newline.</p>
+<p>Flags:</p>
+<pre><code>-e  enable interpretation of backslash escapes
+-n  omit the trailing newline
+</code></pre>
+
+<p><code>echo</code> in YSH does <strong>not</strong> accept these flags.  See <a href="#ysh-echo">ysh-echo</a> and
+<a href="../ysh-faq.html#how-do-i-write-the-equivalent-of-echo-e-or-echo-n">the FAQ entry</a>.  (This is unusual because YSH doesn't usually &quot;break&quot;
+OSH.)</p>
+<p>See <a href="chap-mini-lang.html#char-escapes">char-escapes</a> to see what's supported
+when <code>-e</code> is passed.</p>
+<a name="printf"></a>
+<h3>printf</h3>
+<pre><code>printf FLAG* FMT ARG*
+</code></pre>
+<p>Formats values and prints them.  The FMT string contain three types of objects:</p>
+<ol>
+<li>Literal Characters</li>
+<li>Character escapes like <code>\t</code>.  See <a href="chap-mini-lang.html#char-escapes">char-escapes</a>.</li>
+<li>Percent codes like <code>%s</code> that specify how to format each each ARG.</li>
+</ol>
+<p>If not enough ARGS are passed, the empty string is used.  If too many are
+passed, the FMT string will be &quot;recycled&quot;.</p>
+<p>Flags:</p>
+<pre><code>-v VAR  Write output in variable VAR instead of standard output.
+</code></pre>
+<p>Format specifiers:</p>
+<pre><code>%%  Prints a single &quot;%&quot;.
+%b  Interprets backslash escapes while printing.
+%q  Prints the argument escaping the characters needed to make it reusable
+    as shell input.
+%d  Print as signed decimal number.
+%i  Same as %d.
+%o  Print as unsigned octal number.
+%u  Print as unsigned decimal number.
+%x  Print as unsigned hexadecimal number with lower-case hex-digits (a-f).
+%X  Same as %x, but with upper-case hex-digits (A-F).
+%f  Print as floating point number.
+%e  Print as a double number, in &quot;±e&quot; format (lower-case e).
+%E  Same as %e, but with an upper-case E.
+%g  Interprets the argument as double, but prints it like %f or %e.
+%G  Same as %g, but print it like %E.
+%c  Print as a single char, only the first character is printed.
+%s  Print as string
+%n  The number of characters printed so far is stored in the variable named
+    in the argument.
+%a  Interprets the argument as double, and prints it like a C99 hexadecimal
+    floating-point literal.
+%A  Same as %a, but print it like %E.
+%(FORMAT)T  Prints date and time, according to FORMAT as a format string
+            for strftime(3). The argument is the number of seconds since
+            epoch. It can also be -1 (current time, also the default value
+            if there is no argument) or -2 (shell startup time).
+</code></pre>
+<a name="readarray"></a>
+<h3>readarray</h3>
+<p>Alias for <code>mapfile</code>.</p>
+<a name="mapfile"></a>
+<h3>mapfile</h3>
+<pre><code>mapfile FLAG* ARRAY?
+</code></pre>
+<p>Reads lines from stdin into the variable named ARRAY (default
+<code>${MAPFILE[@]}</code>).</p>
+<p>Flags:</p>
+<pre><code>-t       Remove the trailing newline from every line
+</code></pre>
+
+<a name="Run-Code"></a>
+<h2>Run Code</h2>
+<p>These builtins accept shell code and run it.</p>
+<a name="source"></a>
+<h3>source</h3>
+<pre><code>source SCRIPT ARG*
+</code></pre>
+<p>Execute SCRIPT with the given ARGs, in the context of the current shell.  That is,
+existing variables will be modified.</p>
+<hr />
+<p>Oils extension: If the SCRIPT starts with <code>///</code>, we look for scripts embedded in
+the <code>oils-for-unix</code> binary.  Example:</p>
+<pre><code>source ///osh/two.sh     <span class="sh-comment"># load embedded script</span>
+
+: ${LIB_OSH=fallback/dir}
+source $LIB_OSH/two.sh   <span class="sh-comment"># same thing</span>
+</code></pre>
+<p>The <a href="chap-special-var.html#LIB_OSH">LIB_OSH</a> form is useful for writing a script that works under both bash
+and OSH.</p>
+<ul>
+<li>Related: the <a href="chap-front-end.html#cat-em">cat-em</a> tool prints embedded scripts.</li>
+</ul>
+<a name="cmd/eval"></a>
+<h3>cmd/eval</h3>
+<pre><code>eval ARG+
+</code></pre>
+<p>Creates a string by joining ARGs with a space, then runs it as a shell command.</p>
+<p>Example:</p>
+<pre><code> # Create the string echo &quot;hello $name&quot; and run it.
+ a='echo'
+ b='&quot;hello $name&quot;'
+ eval $a $b
+</code></pre>
+<p>Tips:</p>
+<ul>
+<li>Using <code>eval</code> can confuse code and user-supplied data, leading to <a href="https://mywiki.wooledge.org/BashFAQ/048">security
+issues</a>.</li>
+<li>Prefer passing single string ARG to <code>eval</code>.</li>
+</ul>
+<a name="trap"></a>
+<h3>trap</h3>
+<pre><code>trap FLAG* CMD SIGNAL*
+</code></pre>
+<p>Registers the shell string CMD to be run after the SIGNALs are received.  If
+the CMD is empty, then the signal is ignored.</p>
+<p>Flags:</p>
+<pre><code>-l  Lists all signals and their signal number
+-p  Prints a list of the installed signal handlers
+</code></pre>
+<p>Tip:</p>
+<p>Prefer passing the name of a shell function to <code>trap</code>.</p>
+<p>See <a href="chap-plugin.html#Traps">Chapter: Plugins and Hooks &gt; Traps</a> for a list of
+traps, like <code>trap '' EXIT</code>.</p>
+<a name="Set-Options"></a>
+<h2>Set Options</h2>
+<p>The <code>set</code> and <code>shopt</code> builtins set global shell options.  YSH code should use
+the more natural <code>shopt</code>.</p>
+<a name="set"></a>
+<h3>set</h3>
+<pre><code>set FLAG* ARG*
+</code></pre>
+<p>Sets global shell options. Short style:</p>
+<pre><code>set -e
+</code></pre>
+<p>Long style:</p>
+<pre><code>set -o errexit
+</code></pre>
+<p>Set the arguments array:</p>
+<pre><code>set -- 1 2 3
+</code></pre>
+<p>See <a href="chap-option.html">Chapter: Global Shell Options</a> for a list of options.</p>
+<a name="shopt"></a>
+<h3>shopt</h3>
+<pre><code>shopt FLAG* OPTION* BLOCK?
+</code></pre>
+<p>Sets global shell options.</p>
+<p>Flags:</p>
+<pre><code>-s --set    Turn the named options on
+-u --unset  Turn the named options off
+-p          Print option values, and 1 if any option is unset
+-o          Use older set of options, normally controlled by 'set -o'
+-q          Return 0 if the option is true, else 1
+</code></pre>
+<p>This command is compatible with <code>shopt</code> in bash.  See <a href="#ysh-shopt">ysh-shopt</a> for
+details on YSH enhancements.</p>
+<p>See <a href="chap-option.html">Chapter: Global Shell Options</a> for a list of options.</p>
+<a name="Working-Dir"></a>
+<h2>Working Dir</h2>
+<p>These 5 builtins deal with the working directory of the shell.</p>
+<a name="cd"></a>
+<h3>cd</h3>
+<pre><code>cd FLAG* DIR
+</code></pre>
+<p>Changes the working directory of the current shell process to DIR.</p>
+<p>If DIR isn't specified, change to <code>$HOME</code>.  If DIR is <code>-</code>, change to <code>$OLDPWD</code>
+(a variable that the sets to the previous working directory.)</p>
+<p>Flags:</p>
+<pre><code>-L  Follow symbolic links, i.e. change to the TARGET of the symlink.
+    (default).
+-P  Don't follow symbolic links.
+</code></pre>
+<a name="chdir"></a>
+<h3>chdir</h3>
+<p><code>chdir</code> is a synonym for <code>cd</code>.  Shells like <code>busybox ash</code> support it, so OSH
+does too.</p>
+<a name="pwd"></a>
+<h3>pwd</h3>
+<pre><code>pwd FLAG*
+</code></pre>
+<p>Prints the current working directory.</p>
+<p>Flags:</p>
+<pre><code>-L  Follow symbolic links if present (default)
+-P  Don't follow symbolic links.  Print the link instead of the target.
+</code></pre>
+<a name="pushd"></a>
+<h3>pushd</h3>
+
+<pre><code>pushd DIR
+</code></pre>
+
+<p>Add DIR to the directory stack, then change the working directory to DIR.
+Typically used with <code>popd</code> and <code>dirs</code>.</p>
+
+<a name="popd"></a>
+<h3>popd</h3>
+<pre><code>popd
+</code></pre>
+<p>Removes a directory from the directory stack, and changes the working directory
+to it.  Typically used with <code>pushd</code> and <code>dirs</code>.</p>
+<a name="dirs"></a>
+<h3>dirs</h3>
+<pre><code>dirs FLAG*
+</code></pre>
+<p>Shows the contents of the directory stack.  Typically used with <code>pushd</code> and
+<code>popd</code>.</p>
+<p>Flags:</p>
+<pre><code>-c  Clear the dir stack.
+-l  Show the dir stack, but with the real path instead of ~.
+-p  Show the dir stack, but formatted as one line per entry.
+-v  Like -p, but numbering each line.
+</code></pre>
+<a name="Completion"></a>
+<h2>Completion</h2>
+<p>These builtins implement our bash-compatible autocompletion system.</p>
+<a name="complete"></a>
+<h3>complete</h3>
+<p>Registers completion policies for different commands.</p>
+<a name="compgen"></a>
+<h3>compgen</h3>
+<p>Generates completion candidates inside a user-defined completion function.</p>
+<p>It can also be used in scripts, i.e. outside a completion function.</p>
+<a name="compopt"></a>
+<h3>compopt</h3>
+<p>Changes completion options inside a user-defined completion function.</p>
+<a name="compadjust"></a>
+<h3>compadjust</h3>
+<p>Adjusts <code>COMP_ARGV</code> according to specified delimiters, and optionally set
+variables cur, prev, words (an array), and cword.  May also set 'split'.</p>
+<p>This is an OSH extension that makes it easier to run the bash-completion
+project.</p>
+<a name="compexport"></a>
+<h3>compexport</h3>
+<p>Complete an entire shell command string.  For example,</p>
+<pre><code>compexport -c 'echo $H'
+</code></pre>
+<p>will complete variables like <code>$HOME</code>.  And</p>
+<pre><code>compexport -c 'ha'
+</code></pre>
+<p>will complete builtins like <code>hay</code>, as well as external commands.</p>
+<a name="Shell-Process"></a>
+<h2>Shell Process</h2>
+<p>These builtins mutate the state of the shell process.</p>
+<a name="exec"></a>
+<h3>exec</h3>
+<pre><code>exec BIN_PATH ARG*
+</code></pre>
+<p>Replaces the running shell with the binary specified, which is passed ARGs.
+BIN_PATH must exist on the file system; i.e. it can't be a shell builtin or
+function.</p>
+<a name="umask"></a>
+<h3>umask</h3>
+<pre><code>umask MODE?
+</code></pre>
+<p>Sets the bit mask that determines the permissions for new files and
+directories.  The mask is subtracted from 666 for files and 777 for
+directories.</p>
+<p>Oils currently supports writing masks in octal.</p>
+<p>If no MODE, show the current mask.</p>
+<a name="ulimit"></a>
+<h3>ulimit</h3>
+<pre><code>ulimit --all
+ulimit -a
+ulimit FLAGS* -RESOURCE_FLAG VALUE?
+
+ulimit FLAGS* VALUE?  <span class="sh-comment"># discouraged</span>
+</code></pre>
+<p>Show and modify process resource limits.</p>
+<p>Flags:</p>
+<pre><code>-S  for soft limit
+-H  for hard limit
+
+-c -d -f ...  <span class="sh-comment"># ulimit --all shows all resource flags</span>
+</code></pre>
+<p>Show a table of resources:</p>
+<pre><code>ulimit --all
+ulimit -a
+</code></pre>
+<p>For example, the table shows that <code>-n</code> is the flag that controls the number
+file descriptors, the soft and hard limit for <code>-n</code>, and the multiplication
+&quot;factor&quot; for the integer VALUE you pass.</p>
+<hr />
+<p>Here are examples of using resource flags.</p>
+<p>Get the soft limit for the number of file descriptors:</p>
+<pre><code>ulimit -S -n
+ulimit -n     <span class="sh-comment"># same thing</span>
+</code></pre>
+<p>Get the hard limit:</p>
+<pre><code>ulimit -H -n
+</code></pre>
+<p>Set the soft or hard limit:</p>
+<pre><code>ulimit -S -n 100
+ulimit -H -n 100
+</code></pre>
+<p>Set both limits:</p>
+<pre><code>ulimit -n 100
+</code></pre>
+<p>A special case that's discouraged: with no resource flag, <code>-f</code> is assumed:</p>
+<pre><code>ulimit      <span class="sh-comment"># equivalent to ulimit -f</span>
+ulimit 100  <span class="sh-comment"># equivalent to ulimit -f 100</span>
+</code></pre>
+<a name="times"></a>
+<h3>times</h3>
+<pre><code>times
+</code></pre>
+<p>Shows the user and system time used by the shell and its child processes.</p>
+<a name="Child-Process"></a>
+<h2>Child Process</h2>
+<a name="jobs"></a>
+<h3>jobs</h3>
+<pre><code>jobs
+</code></pre>
+<p>Shows all jobs running in the shell and their status.</p>
+<a name="wait"></a>
+<h3>wait</h3>
+<p>Wait for jobs to finish, in a few different ways.  (A job is a process or a
+pipeline.)</p>
+<pre><code>wait  <span class="sh-comment"># no arguments</span>
+</code></pre>
+<p>Wait for all jobs to terminate.  The exit status is 0, unless a signal occurs.</p>
+<pre><code>wait -n
+</code></pre>
+<p>Wait for the next job to terminate, and return its status.</p>
+<pre><code>wait $pid1 $pid2 ...
+</code></pre>
+<p>Wait for the jobs specified by PIDs to terminate.  Return the status of the
+last one.</p>
+<pre><code>wait %3 %2 ...
+</code></pre>
+<p>Wait for the jobs specified by &quot;job specs&quot; to terminate.  Return the status of
+the last one.</p>
+<hr />
+<p>If wait is interrupted by a signal, the exit status is the signal number + 128.</p>
+<hr />
+<p>When using <code>set -e</code> aka <code>errexit</code>, <code>wait --all</code> is useful.  See topic
+<a href="#ysh-wait">ysh-wait</a>.</p>
+
+<a name="ysh-wait"></a>
+<h3>ysh-wait</h3>
+<p>YSH extends the <code>wait</code> builtin with 2 flags:</p>
+<pre><code>wait --all      <span class="sh-comment"># wait for all jobs, like 'wait'</span>
+                <span class="sh-comment"># but exit 1 if any job exits non-zero</span>
+
+wait --verbose  <span class="sh-comment"># show a message on each job completion</span>
+
+wait --all --verbose  <span class="sh-comment"># show a message, and also respect failure</span>
+</code></pre>
+<a name="fg"></a>
+<h3>fg</h3>
+<pre><code>fg JOB?
+</code></pre>
+<p>Continues a stopped job in the foreground.  This means it can receive signals
+from the keyboard, like Ctrl-C and Ctrl-Z.</p>
+<p>If no JOB is specified, use the latest job.</p>
+<a name="bg"></a>
+<h3>bg</h3>
+<p>UNIMPLEMENTED</p>
+<pre><code>bg JOB?
+</code></pre>
+<p>Continues a stopped job, while keeping it in the background.  This means it
+<strong>can't</strong> receive signals from the keyboard, like Ctrl-C and Ctrl-Z.</p>
+<p>If no JOB is specified, use the latest job.</p>
+<a name="kill"></a>
+<h3>kill</h3>
+<p>UNIMPLEMENTED</p>
+
+<a name="External"></a>
+<h2>External</h2>
+<a name="test"></a>
+<h3>test</h3>
+<pre><code>test OP ARG
+test ARG OP ARG
+[ OP ARG ]      <span class="sh-comment"># [ is an alias for test that requires closing ]</span>
+[ ARG OP ARG ]
+</code></pre>
+<p>Evaluates a conditional expression and returns 0 (true) or 1 (false).</p>
+<p>Note that <code>[</code> is the name of a builtin, not an operator in the language.  Use
+<code>test</code> to avoid this confusion.</p>
+<p>String expressions:</p>
+<pre><code>-n STR           True if STR is not empty.
+                 'test STR' is usually equivalent, but discouraged.
+-z STR           True if STR is empty.
+STR1 = STR2      True if the strings are equal.
+STR1 != STR2     True if the strings are not equal.
+STR1 &lt; STR2      True if STR1 sorts before STR2 lexicographically.
+STR1 &gt; STR2      True if STR1 sorts after STR2 lexicographically.
+                 Note: &lt; and &gt; should be quoted like \&lt; and \&gt;
+</code></pre>
+<p>File expressions:</p>
+<pre><code>-a FILE          Synonym for -e.
+-b FILE          True if FILE is a block special file.
+-c FILE          True if FILE is a character special file.
+-d FILE          True if FILE is a directory.
+-e FILE          True if FILE exists.
+-f FILE          True if FILE is a regular file.
+-g FILE          True if FILE has the sgid bit set.
+-G FILE          True if current user's group is also FILE's group.
+-h FILE          True if FILE is a symbolic link.
+-L FILE          True if FILE is a symbolic link.
+-k FILE          True if FILE has the sticky bit set.
+-O FILE          True if current user is the file owner.
+-p FILE          True if FILE is a named pipe (FIFO).
+-r FILE          True if FILE is readable.
+-s FILE          True if FILE has size bigger than 0.
+-S FILE          True if FILE is a socket file.
+-t FD            True if file descriptor FD is open and refers to a terminal.
+-u FILE          True if FILE has suid bit set.
+-w FILE          True if FILE is writable.
+-x FILE          True if FILE is executable.
+FILE1 -nt FILE2  True if FILE1 is newer than FILE2 (mtime).
+FILE1 -ot FILE2  True if FILE1 is older than FILE2 (mtime).
+FILE1 -ef FILE2  True if FILE1 is a hard link to FILE2.
+</code></pre>
+
+<p>Arithmetic expressions coerce arguments to integers, then compare:</p>
+<pre><code>INT1 -eq INT2    True if they're equal.
+INT1 -ne INT2    True if they're not equal.
+INT1 -lt INT2    True if INT1 is less than INT2.
+INT1 -le INT2    True if INT1 is less or equal than INT2.
+INT1 -gt INT2    True if INT1 is greater than INT2.
+INT1 -ge INT2    True if INT1 is greater or equal than INT2.
+</code></pre>
+<p>Other expressions:</p>
+<pre><code>-o OPTION        True if the shell option OPTION is set.
+-v VAR           True if the variable VAR is set.
+</code></pre>
+<p>The test builtin also supports POSIX conditionals like -a, -o, !, and ( ), but
+these are discouraged.</p>
+
+<hr />
+<p>See <a href="#ysh-test">ysh-test</a> for log flags like <code>--file</code> and <code>--true</code>.</p>
+<a name="getopts"></a>
+<h3>getopts</h3>
+<pre><code>getopts SPEC VAR ARG*
+</code></pre>
+<p>A single iteration of flag parsing.  The SPEC is a sequence of flag characters,
+with a trailing <code>:</code> to indicate that the flag takes an argument:</p>
+<pre><code>ab    <span class="sh-comment"># accept  -a and -b</span>
+xy:z  <span class="sh-comment"># accept -x, -y arg, and -z</span>
+</code></pre>
+<p>The input is <code>&quot;$@&quot;</code> by default, unless ARGs are passed.</p>
+<p>On each iteration, the flag character is stored in VAR.  If the flag has an
+argument, it's stored in <code>$OPTARG</code>.  When an error occurs, VAR is set to <code>?</code>
+and <code>$OPTARG</code> is unset.</p>
+<p>Returns 0 if a flag is parsed, or 1 on end of input or another error.</p>
+<p>Example:</p>
+<pre><code>while getopts &quot;ab:&quot; flag; do
+    case $flag in
+        a)   flag_a=1 ;;
+        b)   flag_b=$OPTARG&quot; ;;
+        '?') echo 'Invalid Syntax'; break ;;
+    esac
+done
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li><code>$OPTIND</code> is initialized to 1 every time a shell starts, and is used to
+maintain state between invocations of <code>getopts</code>.</li>
+<li>The characters <code>:</code> and <code>?</code> can't be flags.</li>
+</ul>
+<a name="Conditional"></a>
+<h2>Conditional</h2>
+<a name="cmd/true"></a>
+<h3>cmd/true</h3>
+<p>Do nothing and return status 0.</p>
+<pre><code>if true; then
+  echo hello
+fi
+</code></pre>
+<a name="cmd/false"></a>
+<h3>cmd/false</h3>
+<p>Do nothing and return status 1.</p>
+<pre><code>if false; then
+  echo 'not reached'
+else
+  echo hello
+fi
+</code></pre>
+<a name="colon"></a>
+<h3 id="colon" class="osh-topic">colon :</h3>
+<p>Like <code>true</code>: do nothing and return status 0.</p>
+<a name="Introspection"></a>
+<h2>Introspection</h2>
+<a name="help"></a>
+<h3 id="help" class="osh-topic ysh-topic" oils-embed="1">
+  help
+</h3>
+
+<pre><code>Usage: help TOPIC?
+
+Examples:
+
+    help               <span class="sh-comment"># this help</span>
+    help echo          <span class="sh-comment"># help on the 'echo' builtin</span>
+    help command-sub   <span class="sh-comment"># help on command sub $(date)</span>
+
+    help oils-usage    <span class="sh-comment"># identical to oils-for-unix --help</span>
+    help osh-usage     <span class="sh-comment">#              osh --help</span>
+    help ysh-usage     <span class="sh-comment">#              ysh --help</span>
+</code></pre>
+<a name="hash"></a>
+<h3>hash</h3>
+<pre><code>hash
+</code></pre>
+<p>Display information about remembered commands.</p>
+<pre><code>hash FLAG* CMD+
+</code></pre>
+<p>Determine the locations of commands using <code>$PATH</code>, and remember them.</p>
+<p>Flag:</p>
+<pre><code>-r       Discard all remembered locations.
+</code></pre>
+
+<a name="cmd/type"></a>
+<h3>cmd/type</h3>
+<pre><code>type FLAG* NAME+
+</code></pre>
+<p>Print the type of each NAME, if it were the first word of a command.  Is it a
+shell keyword, builtin command, shell function, alias, or executable file on
+$PATH?</p>
+<p>Flags:</p>
+<pre><code>-a  Show all possible candidates, not just the first one
+-f  Don't search for shell functions
+-P  Only search for executable files
+-t  Print a single word: alias, builtin, file, function, proc, keyword
+</code></pre>
+<p>Note: <a href="chap-builtin-cmd.html#invoke"><code>invoke --show</code></a> is more general than <code>type</code>.</p>
+<p>Similar names: <a href="chap-index.html#type">type</a></p>
+
+<p>Modeled after the <a href="https://www.gnu.org/software/bash/manual/bash.html#index-type">bash <code>type</code>
+builtin</a>.</p>
+<a name="Word-Lookup"></a>
+<h2>Word Lookup</h2>
+<a name="invoke"></a>
+<h3>invoke</h3>
+<p>The <code>invoke</code> builtin allows more control over name lookup than <a href="chap-cmd-lang.html#simple-command">simple
+commands</a>.</p>
+<p>Usage:</p>
+<pre><code>invoke --show NAME*          <span class="sh-comment"># Show info about EACH name</span>
+invoke NAMESPACE_FLAG+ ARG*  <span class="sh-comment"># Run a single command with this arg array</span>
+</code></pre>
+<p>Namespace flags:</p>
+<pre><code>--proc      Run YSH procs 
+            including invokable obj
+--sh-func   Run shell functions
+--builtin   Run builtin commands (of any kind)
+            eval : POSIX special
+            cd   : normal
+            sleep: private (Oils)
+--extern    Run external commands, like /bin/ls
+</code></pre>
+<p>Multiple namespace flags may be passed.  They are searched in that order:
+procs, shell functions, builtins, then extern.  The first one wins.  (This is
+different than <a href="chap-cmd-lang.html#command-lookup-order">command-lookup-order</a>.)</p>
+<p>If the name isn't found, then <code>invoke</code> returns status 127.</p>
+<hr />
+<p>Run <code>invoke --show NAME</code> to see all categories a name is found in.</p>
+<ul>
+<li>The <code>--show</code> flag respects the <a href="chap-cmd-lang.html#command-lookup-order">command-lookup-order</a></li>
+<li>Shell keywords and aliases are shown, but <code>invoke</code> doesn't run them.</li>
+</ul>
+<hr />
+<p>Examples:</p>
+<pre><code>invoke ls                          <span class="sh-comment"># usage error: no namespace flags</span>
+
+invoke --builtin          echo hi  <span class="sh-comment"># like builtin echo hi</span>
+invoke --builtin --extern ls /tmp  <span class="sh-comment"># like command ls /tmp (no function lookup)</span>
+
+invoke --show true sleep ls        <span class="sh-comment"># similar to type -a true sleep ls</span>
+</code></pre>
+<p>Related:</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#builtin">builtin</a> - like <code>--builtin</code></li>
+<li><a href="chap-builtin-cmd.html#command">command</a> - like <code>--builtin --extern</code></li>
+<li><a href="chap-builtin-cmd.html#runproc">runproc</a> - like <code>--proc --sh-func</code></li>
+<li><a href="chap-builtin-cmd.html#cmd/type">type</a> - like <code>--show</code></li>
+</ul>
+<a name="runproc"></a>
+<h3>runproc</h3>
+<p>Runs a named proc with the given arguments.  It's often useful as the only top
+level statement in a &quot;task file&quot;:</p>
+<pre><code>proc p {
+  echo hi
+}
+runproc @ARGV
+</code></pre>
+<p>Like 'builtin' and 'command', it affects the lookup of the first word.</p>
+<a name="command"></a>
+<h3>command</h3>
+<pre><code>command FLAG* CMD ARG*
+</code></pre>
+<p>Look up CMD as a shell builtin or executable file, and execute it with the
+given ARGs.</p>
+<p>Flags:</p>
+<pre><code>-v  Instead of executing CMD, print a description of it.
+</code></pre>
+
+<p>Note: <a href="chap-builtin-cmd.html#invoke"><code>invoke --show</code></a> is more general than <code>command -v</code>.</p>
+<a name="builtin"></a>
+<h3>builtin</h3>
+<pre><code>builtin CMD ARG*
+</code></pre>
+<p>Look up CMD as a shell builtin, and execute it with the given ARGs.</p>
+<a name="Interactive"></a>
+<h2>Interactive</h2>
+<a name="alias"></a>
+<h3>alias</h3>
+<pre><code>alias NAME=CODE
+</code></pre>
+<p>Make NAME a shortcut for executing CODE, e.g. <code>alias hi='echo hello'</code>.</p>
+<pre><code>alias NAME
+</code></pre>
+<p>Show the value of this alias.</p>
+<pre><code>alias
+</code></pre>
+<p>Show a list of all aliases.</p>
+<p>Tips:</p>
+<p>Prefer shell functions like:</p>
+<pre><code>ls() {
+  command ls --color &quot;$@&quot;
+}
+</code></pre>
+<p>to aliases like:</p>
+<pre><code>alias ls='ls --color'
+</code></pre>
+<p>Functions are less likely to cause parsing problems.</p>
+<ul>
+<li>Quoting like <code>\ls</code> or <code>'ls'</code> disables alias expansion</li>
+<li>To remove an existing alias, use <a href="chap-builtin-cmd.html#unalias">unalias</a>.</li>
+</ul>
+<a name="unalias"></a>
+<h3>unalias</h3>
+<pre><code>unalias NAME
+</code></pre>
+<p>Remove the alias NAME.</p>
+
+<a name="history"></a>
+<h3>history</h3>
+<pre><code>history FLAG*
+</code></pre>
+<p>Display and manipulate the shell's history entries.</p>
+<pre><code>history NUM
+</code></pre>
+<p>Show the last NUM history entries.</p>
+<p>Flags:</p>
+<pre><code>-c      Clears the history.
+-d POS  Deletes the history entry at position POS.
+</code></pre>
+
+<a name="fc"></a>
+<h3>fc</h3>
+<pre><code>fc FLAG* FIRST? LAST?
+</code></pre>
+<p>&quot;Fix a command&quot; from the shell's history.</p>
+<p><code>fc -l</code> displays commands.  FIRST and LAST specify a range of command numbers,
+where:</p>
+<ul>
+<li>A positive number is an index into the history list.</li>
+<li>A negative number is an offset from the current command.</li>
+<li>If FIRST is omitted, the value <code>-16</code> is used.</li>
+<li>If LAST is omitted, the current command is used.</li>
+</ul>
+<p>Flags:</p>
+<pre><code>-l  List commands (rather than editing)
+-n  Omit line numbers
+-r  Use reverse order (newest first)
+</code></pre>
+
+<a name="Unsupported"></a>
+<h2>Unsupported</h2>
+<a name="enable"></a>
+<h3>enable</h3>
+<p>Bash has this, but OSH won't implement it.</p>
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>

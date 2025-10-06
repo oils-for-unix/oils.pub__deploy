@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Reference</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/ref-index.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/index.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><strong>Oils Reference</strong> —
+<a href="toc-osh.html">OSH</a> | <a href="toc-ysh.html">YSH</a> | <a href="toc-data.html">Data Notation</a></p>
+</div>
+<style>
+  .highlight {
+      background-color: #eee;
+      padding-top: 0.1em;
+      padding-bottom: 0.1em;
+      padding-left: 1em;
+      padding-right: 1em;
+      /*
+      font-size: 1.2em;
+      */
+  }
+</style>
+<p>This reference has <strong>three</strong> tables of contents.  They link to topics within 16
+chapters.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div class="highlight">
+<p><a href="toc-data.html"><strong>Data Notation Table of Contents</strong></a></p>
+</div>
+<ol>
+<li><a href="chap-j8.html">JSON / J8 Notation</a></li>
+<li><a href="chap-errors.html">Errors</a></li>
+</ol>
+<div class="highlight">
+<p><a href="toc-osh.html"><strong>OSH Table of Contents</strong></a> - Compatible</p>
+<p><a href="toc-ysh.html"><strong>YSH Table of Contents</strong></a> - New and Powerful</p>
+</div>
+<ol start="3">
+<li><a href="chap-type-method.html">Types and Methods</a></li>
+<li><a href="chap-builtin-func.html">Builtin Functions</a></li>
+<li><a href="chap-builtin-cmd.html">Builtin Commands</a></li>
+<li><a href="chap-front-end.html">Front End</a></li>
+<li><a href="chap-cmd-lang.html">Command Language</a></li>
+<li><a href="chap-stdlib.html">Standard Library</a></li>
+<li><a href="chap-osh-assign.html">OSH Assignment</a></li>
+<li><a href="chap-ysh-cmd.html">YSH Command Language Keywords</a></li>
+<li><a href="chap-word-lang.html">Word Language</a></li>
+<li><a href="chap-expr-lang.html">YSH Expression Language</a></li>
+<li><a href="chap-mini-lang.html">Mini Languages</a></li>
+<li><a href="chap-option.html">Global Shell Options</a></li>
+<li><a href="chap-special-var.html">Special Variables</a></li>
+<li><a href="chap-plugin.html">Plugins and Hooks</a></li>
+</ol>
+<div class="highlight">
+<p><a href="chap-index.html"><strong>Index</strong></a> - resolves topic name conflicts</p>
+</div>
+<p><a href="feature-index.html">Topics By Feature</a> - topics for modules, env vars, etc.</p>
+<h2><code>help</code> command</h2>
+<p>When you type <a href="chap-builtin-cmd.html#help"><code>help</code></a> in OSH or YSH, it shows a URL to this reference,
+or text extracted from it.</p>
+<h2>About</h2>
+<p><a href="https://github.com/oils-for-unix/oils/blob/master/doc/">The source files</a> for this reference are in Markdown:</p>
+<pre><code>REPO/
+  doc/
+    release-index.md     <span class="sh-comment"># /release/$VERSION/</span>
+
+    index.md             <span class="sh-comment"># All Docs on Oils, /release/$VERSION/doc/</span>
+    getting-started.md
+    ...
+
+    ref/
+      index.md           <span class="sh-comment"># this page, the Oils Reference</span>
+      toc-osh.md         <span class="sh-comment"># OSH topics</span>
+      toc-ysh.md         <span class="sh-comment"># YSH topics</span>
+      toc-data.md        <span class="sh-comment"># Data language topics</span>
+
+      chap-cmd-lang.md   <span class="sh-comment"># chapter on the command language</span>
+      chap-front-end.md
+      ...
+</code></pre>
+<p>The URLs mirror the source, with minor differences:</p>
+<pre><code>/release/$VERSION/
+  index.html
+  doc/
+    index.html
+    getting-started.html
+    ...
+
+    ref/
+      index.html
+      toc-osh.html
+      toc-ysh.html
+      toc-data.html
+
+      chap-cmd-lang.html
+      chap-front-end.html
+      ...
+</code></pre>
+<p>You can link to topics with internal anchors:</p>
+<ul>
+<li><a href="chap-cmd-lang.html#simple-command">chap-cmd-lang.html#simple-command</a></li>
+<li><a href="chap-builtin-cmd.html#compgen">chap-builtin-cmd.html#compgen</a></li>
+</ul>
+<h3>Terminology</h3>
+<p>This reference has a 3-level structure:</p>
+<ol>
+<li><em>Chapter</em> - A big HTML page.
+<ul>
+<li>A chapter may apply to OSH, YSH, or both.</li>
+</ul>
+</li>
+<li><em>Section</em> - An <code>&lt;h2&gt;</code> heading in a chapter</li>
+<li><em>Topic</em> - An <code>&lt;h3&gt;</code> heading in a chapter.
+<ul>
+<li>It has a <strong>globally unique</strong> name like <code>doc-comment</code>, which is used in the
+<code>help</code> builtin.</li>
+<li>A topic may apply to OSH, YSH, or both.</li>
+</ul>
+</li>
+</ol>
+<p>More terminology:</p>
+<ul>
+<li><em>Table of Contents</em> - a doc with a dense list of topic links.</li>
+<li><em>Card</em> - Some topics are exported as <code>help</code> builtin &quot;cards&quot;.  They can be
+inline text, or a URL pointer.  A card may also link to POSIX or bash docs.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>

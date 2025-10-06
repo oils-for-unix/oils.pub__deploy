@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OSH Assignment (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-osh-assign.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.36.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>OSH Assignment</strong></p>
+</div>
+<p>This chapter describes OSH assignment, which looks like <code>x=value</code>.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Operators">Operators</a> <br/>
+  <a class="dense-toc-h3" href="#sh-assign">sh-assign</a> <br/>
+  <a class="dense-toc-h3" href="#sh-append">sh-append</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Compound-Assignment">Compound Assignment</a> <br/>
+  <a class="dense-toc-h3" href="#sh-init-list">sh-init-list</a> <br/>
+  <a class="dense-toc-h3" href="#sh-array">sh-array</a> <br/>
+  <a class="dense-toc-h3" href="#sh-assoc">sh-assoc</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Builtins">Builtins</a> <br/>
+  <a class="dense-toc-h3" href="#local">local</a> <br/>
+  <a class="dense-toc-h3" href="#readonly">readonly</a> <br/>
+  <a class="dense-toc-h3" href="#export">export</a> <br/>
+  <a class="dense-toc-h3" href="#unset">unset</a> <br/>
+  <a class="dense-toc-h3" href="#shift">shift</a> <br/>
+  <a class="dense-toc-h3" href="#declare">declare</a> <br/>
+  <a class="dense-toc-h3" href="#typeset">typeset</a> <br/>
+</div>
+</div>
+</div>
+<a name="Operators"></a>
+<h2>Operators</h2>
+<a name="sh-assign"></a>
+<h3>sh-assign</h3>
+<a name="sh-append"></a>
+<h3>sh-append</h3>
+<a name="Compound-Assignment"></a>
+<h2>Compound Assignment</h2>
+<a name="sh-init-list"></a>
+<h3>sh-init-list</h3>
+<p>Indexed and associative arrays may be initialized by an assignment of an
+initializer list.</p>
+<pre><code>arr=(1 2 3 4)
+dict=([apple]=red [banana]=yellow [orange]=orange)
+</code></pre>
+<p>An initializer list does <em>NOT</em> provide a new value that will be assigned to the
+LHS of the assignment.  The initializer list is rather considered <em>a set of
+instructions to modify the existing value of the LHS</em>.</p>
+<p>When the assignment is performed with <code>=</code>, the content of the LHS value is
+cleared before starting the modifications.  When the assignment is performed
+with <code>+=</code>, the modifications are applied to the existing content of the LHS
+value.</p>
+<p>An initializer list has the following form: <code>'(' ITEMS* ')'</code>, where each item
+has one of the following forms:</p>
+<ul>
+<li><code>[KEY]=VALUE</code> ... This assigns <code>VALUE</code> to an element of the LHS specified by
+<code>KEY</code>.  The <code>VALUE</code> is not subject to word splitting and pathname expansions
+as if it is the RHS of an assignment.</li>
+<li><code>[KEY]+=VALUE</code> ... This appends <code>VALUE</code> to an element of the LHS specified by
+<code>KEY</code>.  If the corresponding element does not exist, it simply assigns
+<code>VALUE</code> to a new element associated with <code>KEY</code>.  The <code>VALUE</code> is not subject
+to word splitting and pathname expansions.</li>
+<li><code>VALUE</code> ... If the item does not have the above two forms, it is considered a
+normal word.  In this case, this assigns <code>VALUE</code> to the <em>next</em> element, where
+the next element is determined by the LHS.  Unlike the previous two forms,
+the <code>VALUE</code> is subject to word splitting and pathname expansions as if it is
+a normal argument to a command.</li>
+</ul>
+<p>The above three forms can be mixed within one initializer list, though there
+may be additional limitations depending on the type of the LHS of the
+assignment.</p>
+<p>The details of the actual modification depends on the type of the LHS.  The
+assignment of an initializer list can be understood in two phases: the type of
+the LHS is first adjusted, and then the modifications to the LHS variable are
+applied.</p>
+<p>In the first phase, the type adjustment is performed in the following way:</p>
+<ul>
+<li>When the LHS variable is unset, the assignment creates an empty indexed array
+(BashArray).  If the
+assignment is performed through an assignment builtin and flag <code>-A</code> is
+supplied to the builtin, an empty associative array (BashAssoc) is created
+instead of an empty BashArray.</li>
+<li>When the LHS is a scalar string, the assignment creates a BashArray with one
+element, where the original value is stored at index <code>0</code>.  If the assignment
+is performed through an assignment builtin and flag <code>-A</code> is supplied to the
+builtin, the assignment creates a BashAssoc with one element, where the
+original value is stored at key <code>&quot;0&quot;</code>, instead of a BashArray.</li>
+<li>When the LHS is an indexed or associative arrays, the original array is
+directly used for the modification target.  If the
+assignment is performed through an assignment builtin and mismatching flag
+(i.e., <code>-A</code> and <code>-a</code> for BashArray and BashAssoc, respectively) is supplied,
+OSH discards the original array and creates a new empty BashArray (for flag
+<code>-a</code>) or BashAssoc (for flag <code>-A</code>), while Bash issues an error preserving the
+original array.</li>
+<li>Otherwise, it is an error.</li>
+</ul>
+<p>These rules are summarized in the following table.</p>
+<table>
+<thead>
+<tr>
+  <th>Original LHS type</th>
+  <th>Flags</th>
+  <th>Result</th>
+  <th>Remarks</th>
+</tr>
+</thead>
+<tr>
+  <td>Undef</td>
+  <td>(none)</td>
+  <td>an empty BashArray</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-a</code></td>
+  <td>an empty BashArray</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-A</code></td>
+  <td>an empty BashAssoc</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>Str</td>
+  <td>(none)</td>
+  <td>BashArray with one element, with the original string at index 0</td>
+  <td>Error with <code>strict_array</code></td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-a</code></td>
+  <td>BashArray with one element, with the original string at index 0</td>
+  <td>Error with <code>strict_array</code></td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-A</code></td>
+  <td>BashAssoc with one element, with the original string at key <code>&quot;0&quot;</code></td>
+  <td>Error with <code>strict_array</code></td>
+</tr>
+<tr>
+  <td>BashArray</td>
+  <td>(none)</td>
+  <td>the original BashArray</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-a</code></td>
+  <td>the original BashArray</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-A</code></td>
+  <td>N/A</td>
+  <td>Error</td>
+</tr>
+<tr>
+  <td>BashAssoc</td>
+  <td>(none)</td>
+  <td>the original BashAssoc</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-a</code></td>
+  <td>N/A</td>
+  <td>Error</td>
+</tr>
+<tr>
+  <td>
+
+</td>
+  <td><code>-A</code></td>
+  <td>the original BashAssoc</td>
+  <td>
+
+</td>
+</tr>
+<tr>
+  <td>(others)</td>
+  <td>
+
+</td>
+  <td>N/A</td>
+  <td>Error</td>
+</tr>
+</table>
+<p>In the second phase, the modifications are applied depending on the result of
+the first phase.  When the result is BashArray, see <a href="#sh-array">sh-array</a>.
+When the result is BashAssoc, see <a href="#sh-assoc">sh-assoc</a>.</p>
+<a name="sh-array"></a>
+<h3>sh-array</h3>
+<p>When an initializer list is assigned to <a href="chap-type-method.html#BashArray">BashArray</a>, the values will be set
+to elements of the array.  For example, one may store any sequence of words,
+just like a command does:</p>
+<pre><code>ls $mystr &quot;$@&quot; *.py
+
+<span class="sh-comment"># Put it in an array</span>
+a=(ls $mystr &quot;$@&quot; *.py)
+</code></pre>
+<p>To explain the initialization/mutation in more detail, the array is first
+cleared if the assignment operator is <code>=</code>.  Then, an element of the array is
+modified for each item in the initializer list in order.  The index of the
+element to be modified is determined in the following way:</p>
+<ul>
+<li>When the first initializer item does not have <code>[KEY]=</code> or <code>[KEY]+=</code>, the
+index is the maximum existing index in the array plus one, or <code>0</code> if the
+array is empty.</li>
+<li>When the second or later initializer item does not have <code>[KEY]=</code> or
+<code>[KEY]+=</code>, the index is larger by one than the one modified by the previous
+initializer item.</li>
+<li>When the initializer item has <code>[KEY]=</code> or <code>[KEY]+=</code>, an arithmetic evaluation
+is applied to <code>KEY</code> to obtain the index in <code>BigInt</code></li>
+</ul>
+<p>Here are examples:</p>
+<pre><code>declare -a a            <span class="sh-comment"># This creates an empty array (OSH)</span>
+declare -a a=()         <span class="sh-comment"># This creates an empty array</span>
+declare -a a=(1 2)      <span class="sh-comment"># This creates an array with two elements: (1 2)</span>
+
+k=10
+declare -a a=([k]=v 2)  <span class="sh-comment"># This creates a sparse array with two elements,</span>
+                        <span class="sh-comment"># ([10]=v [11]=2)</span>
+
+a+=(3 4)                <span class="sh-comment"># This appends two values to the existing array:</span>
+                        <span class="sh-comment"># ([10]=v [11]=2 [12]=3 [13]=4)</span>
+a+=([k]=5 6)            <span class="sh-comment"># This overwrites two elements in the existing</span>
+                        <span class="sh-comment"># array: ([10]=5 [11]=6 [12]=3 [13]=4)</span>
+</code></pre>
+<p>In YSH, use a <a href="chap-expr-lang.html#list-literal">list-literal</a> to create a <a href="chap-type-method.html#List">List</a> instance.</p>
+<a name="sh-assoc"></a>
+<h3>sh-assoc</h3>
+<p>When an initializer list is assigned to <a href="chap-type-method.html#BashAssoc">BashAssoc</a>, an associative array
+mapping a string into another string, the values will be set to elements of the
+associative array.  For example, an associative array can be initialized in the
+following way:</p>
+<pre><code>declare -A assoc=(['k']=v ['k2']=v2)
+</code></pre>
+<p>The initialization/mutation of BashAssoc is performed in a manner similar to
+BashArray.  The associative array is first cleared if the assignment operator
+is <code>=</code>.  Then, the modification of an element is performed for each initializer
+item in order.  An item in the initializer list must be in the forms
+<code>[KEY]=VALUE</code> or <code>[KEY]=VALUE</code>.  The element to be modified is specified by
+<code>KEY</code>.</p>
+<pre><code>declare -A a                <span class="sh-comment"># This creates an empty BashAssoc (OSH)</span>
+declare -A a=()             <span class="sh-comment"># This creates an empty BashAssoc</span>
+declare -A a=([a]=1 [b]=2)  <span class="sh-comment"># This creates a BashAssoc with two elements</span>
+
+k=10
+declare -A a=([k]=v)        <span class="sh-comment"># This creates a BashAssoc with one element,</span>
+                            <span class="sh-comment"># (['k']=1).  Unlike BashArray, &quot;k&quot; is not</span>
+                            <span class="sh-comment"># processed by arithmetic expansion.</span>
+a+=([a]=3 [b]=4)            <span class="sh-comment"># This adds two elements to the original array.</span>
+                            <span class="sh-comment"># The result is ([a]=3 [b]=4 [k]=v)</span>
+a+=([k]=5)                  <span class="sh-comment"># This overwrites an element in the original</span>
+                            <span class="sh-comment"># array. The result is ([a]=3 [b]=4 [k]=5).</span>
+</code></pre>
+<p>As a special rule, when the first initializer form does not have <code>[KEY]=</code> or
+<code>[KEY]+=</code>, the initializer items are treated as a sequence of <code>KEY1 VALUE1 KEY2 VALUE2 KEY3 VALUE3 ...</code>.  OSH disables this feature when <code>strict_array</code> is set.</p>
+<pre><code>declare -A a=(1 2 3 4)       <span class="sh-comment"># This creates a BashAssoc with two elements,</span>
+                             <span class="sh-comment"># ([1]=2 [3]=4)</span>
+</code></pre>
+<p>In YSH, use a <a href="chap-expr-lang.html#dict-literal">dict-literal</a> to create a <a href="chap-type-method.html#Dict">Dict</a> instance.</p>
+<a name="Builtins"></a>
+<h2>Builtins</h2>
+<a name="local"></a>
+<h3>local</h3>
+<a name="readonly"></a>
+<h3>readonly</h3>
+<a name="export"></a>
+<h3>export</h3>
+<a name="unset"></a>
+<h3>unset</h3>
+<a name="shift"></a>
+<h3>shift</h3>
+<a name="declare"></a>
+<h3>declare</h3>
+<a name="typeset"></a>
+<h3>typeset</h3>
+<p>Another name for the <a href="#declare">declare</a> builtin.</p>
+    <div id="build-timestamp">
+      <i>Generated on Mon, 06 Oct 2025 00:25:38 -0400</i>
+    </div>
+  </body>
+</html>
