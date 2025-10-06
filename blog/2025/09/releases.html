@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eight Releases of Oils in 6 Months</title>
+  <meta name="twitter:title" content="Eight Releases of Oils in 6 Months">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Eight Releases of Oils in 6 Months</h1>
+<div class="date">
+  2025-09-26
+</div>
+<p>I haven't published anything in <strong>four</strong> months!  The last two posts were in May:</p>
+<ul>
+<li><a href="../05/release-0.27.0.html">Oils 0.27.0 - Contributors and Notable Changes</a></li>
+<li><a href="../05/status-update.html">What's Happened Since December?</a> - This post summarized <em>months</em> of work.</li>
+</ul>
+<p>Why so quiet?</p>
+<p>Well, we received a <strong>fourth grant from <a href="https://nlnet.nl">NLnet</a></strong>, and I've been busy kicking it off.  I want existing contributors to have a smooth way of working, and then ask for more help from readers like you.</p>
+<p>In the meantime, let's update the blog:</p>
+<ol>
+<li>This post reviews <strong>8 releases</strong>, with a focus on crediting <strong>contributors</strong>.
+<ul>
+<li>I also summarize notable changes, but not all bug fixes.</li>
+</ul>
+</li>
+<li>The next post will have <a href="/">Links to Explain Oils in 2025</a>.</li>
+</ol>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#releases">Releases</a></div>
+  <div class="toclevel2"><a href="#two-releases-before-may">Two Releases Before May</a></div>
+  <div class="toclevel2"><a href="#four-releases-in-a-week-in-june">Four Releases in a Week in June</a></div>
+  <div class="toclevel2"><a href="#kicking-off-the-4th-grant">Kicking Off the 4th Grant</a></div>
+  <div class="toclevel1"><a href="#notable-improvements">Notable Improvements</a></div>
+  <div class="toclevel2"><a href="#ysh">YSH</a></div>
+  <div class="toclevel2"><a href="#osh">OSH</a></div>
+  <div class="toclevel2"><a href="#common-infrastructure">Common Infrastructure</a></div>
+  <div class="toclevel2"><a href="#docs">Docs</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel1"><a href="#appendix-metrics-for-the-0350-release">Appendix: Metrics for the 0.35.0 Release</a></div>
+  <div class="toclevel2"><a href="#docs">Docs</a></div>
+  <div class="toclevel2"><a href="#spec-tests">Spec Tests</a></div>
+  <div class="toclevel2"><a href="#benchmarks">Benchmarks</a></div>
+</div>
+<a name="releases"></a>
+<h2>Releases</h2>
+<p>Let's look through the change logs!</p>
+<a name="two-releases-before-may"></a>
+<h3>Two Releases Before May</h3>
+<p>I have blog post drafts for these releases, but didn't get around to publishing them.</p>
+<ul>
+<li>
+<p><a href="https://oils.pub/release/0.28.0/">Oils 0.28.0</a> - March 16th - <a href="https://oils.pub/release/0.28.0/changelog.html">changelog</a></p>
+<p>I mentioned Koichi Murase's excellent work in the <a href="../05/release-0.27.0.html">Oils 0.27.0 announcement</a>, and there was even more in this release.  He continued the overhaul of bash-style <strong>arrays</strong> in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, and fixed many bugs along the way.</p>
+<p>I appreciate when contributors go above and beyond, making the project better for everyone!</p>
+</li>
+<li>
+<p><a href="https://oils.pub/release/0.29.0/">Oils 0.29.0</a> - May 2nd - <a href="https://oils.pub/release/0.29.0/changelog.html">changelog</a></p>
+<p>Matthew Davidson landed the initial implementation of <code>bind -x</code>, a commonly used interactive shell feature. Samuel Hierholzer added <code>io.captureAll()</code>, which captures <code>stdout</code> and <code>stderr</code> simultaneously.</p>
+</li>
+</ul>
+<a name="four-releases-in-a-week-in-june"></a>
+<h3>Four Releases in a Week in June</h3>
+<p>These four releases were motivated by <strong>performance</strong>!  That wasn't planned, but I like to keep track of benchmarks on the <a href="https://oils.pub/release/0.35.0/quality.html">release quality page</a> when there are notable changes.</p>
+<hr />
+<ul>
+<li>
+<p><a href="https://oils.pub/release/0.30.0/">Oils 0.30.0</a> - June 20th - <a href="https://oils.pub/release/0.30.0/changelog.html">changelog</a></p>
+<p>Thanks to Adam Bannister and Matthew Davidson for adding spec tests.</p>
+<p>I implemented features for <a href="/cross-ref.html?tag=ble.sh#ble.sh">ble.sh</a>, including the &quot;private&quot; <code>builtin sleep</code>, and the ability to print source code with <code>declare -f</code>.</p>
+<p>I fixed a subtle bug with respect to <code>$PWD</code>, which Samuel found.  It deserves its own &quot;bug post-mortem&quot;, but for now you can see it mentioned it at the end of this comment:</p>
+</li>
+</ul>
+<div class="link-box">
+<p><a href="https://news.ycombinator.com/item?id=44381542">My comment</a> on</p>
+<p><a href="https://sigma-star.at/blog/2025/06/deep-down-the-rabbit-hole-bash-overlayfs-and-a-30-year-old-surprise/">Deep Down the Rabbit Hole: Bash, OverlayFS, and a 30-Year-Old Surprise</a> (<code>sigma-star.at</code> via Hacker News) <br/>    86 points, <a href="https://news.ycombinator.com/item?id=44377274">22 comments</a> - 3 months ago</p>
+<p>This post describes an interesting bash bug, unrelated to OSH.</p>
+</div>
+<ul>
+<li>
+<p><a href="https://oils.pub/release/0.31.0/">Oils 0.31.0</a> - June 21st  - <a href="https://oils.pub/release/0.31.0/changelog.html">changelog</a></p>
+<p>I reverted the implementation of <code>declare -f</code>, because it caused a performance <strong>regression</strong>!  I re-implemented it with a simpler data structure.</p>
+</li>
+<li>
+<p><a href="https://oils.pub/release/0.32.0/">Oils 0.32.0</a> - June 24th - <a href="https://oils.pub/release/0.32.0/changelog.html">changelog</a></p>
+<p>The regression created a &quot;bug up my ass&quot; regarding performance.  For <strong>years</strong>, we've been tracking an autotools <code>configure</code> workload, on which we are slower than <a href="/cross-ref.html?tag=bash#bash">bash</a>.</p>
+<p>So I profiled the workload, and came up with the solution of &quot;private&quot; builtins <a href="https://oils.pub/release/0.35.0/doc/ref/chap-builtin-cmd.html#rm">rm</a> and <a href="https://oils.pub/release/0.35.0/doc/ref/chap-builtin-cmd.html#cat">cat</a>, controlled by <code>shopt --set</code> <a href="https://oils.pub/release/0.35.0/doc/ref/chap-option.html#rewrite_extern">rewrite_extern</a>.  This (sound) optimization makes <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> faster than <a href="/cross-ref.html?tag=bash#bash">bash</a> on autotools and other <strong>I/O-bound</strong> workloads!   I will write more about this.</p>
+</li>
+</ul>
+<ul>
+<li>
+<p><a href="https://oils.pub/release/0.33.0/">Oils 0.33.0</a> - June 25th - <a href="https://oils.pub/release/0.33.0/changelog.html">changelog</a></p>
+<p>I was encouraged by the progress, so I also turned on the Souffle GC optimizations that Melvin Walls implemented last year.  This makes <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> faster than <a href="/cross-ref.html?tag=bash#bash">bash</a> on <strong>compute-bound</strong> workloads.</p>
+<p>Unfortunately, we later reverted this because of a bug.  We should write about this after it's re-enabled.</p>
+</li>
+</ul>
+<a name="kicking-off-the-4th-grant"></a>
+<h3>Kicking Off the 4th Grant</h3>
+<ul>
+<li>
+<p><a href="https://oils.pub/release/0.34.0/">Oils 0.34.0</a> - July 17th - <a href="https://oils.pub/release/0.34.0/changelog.html">changelog</a></p>
+<p>James Chen-Smith landed the initial implementation of <code>fc -l</code>.</p>
+<p>Will Clardy improved <code>args.ysh</code> to respect <code>--</code>.</p>
+<p>Koichi Murase fixed the printing of shell variables, multiple word splitting bugs, and fixed an adjacent bug in the <code>read</code> builtin.</p>
+</li>
+<li>
+<p><a href="https://oils.pub/release/0.35.0/">Oils 0.35.0</a> - August 30th - <a href="https://oils.pub/release/0.35.0/changelog.html">changelog</a></p>
+<p>I did a ton of work on <code>regtest/aports</code>, a batch job that builds all Alpine Linux packages in <code>aports/main</code> with <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.  More on this in the next post.</p>
+<p>Aidan Olsen fixed the evaluation order of redirects in simple commands — a great bug that Samuel found with the <a href="https://github.com/Melkor333/oily-pine">oily-pine</a> test harness.  (The fourth grant, including <code>regtest/aports</code>, was inspired by that work.)</p>
+<p>Koichi Murase did an amazing <strong>overhaul of our word splitting algorithm</strong>, fixing 5 or more bugs in the process, including the most common one surfaced by <code>regtest/aports</code>.  This was essential!</p>
+</li>
+</ul>
+<a name="notable-improvements"></a>
+<h2>Notable Improvements</h2>
+<p>I focused on crediting <strong>contributors</strong> above, because I wanted to keep this post short.  But now it feels incomplete!</p>
+<a name="ysh"></a>
+<h3>YSH</h3>
+<p>Let me at least remind myself of all the <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> improvements:</p>
+<ul>
+<li>Improved the &quot;debug stack&quot; for stack traces, prompted by a user question on <a href="/cross-ref.html?tag=zulip#zulip">Zulip</a>
+<ul>
+<li>e.g. <code>io-&gt;evalExpr()</code> creates an entry in the stack</li>
+</ul>
+</li>
+<li>Some work on <a href="/cross-ref.html?tag=hay#hay">Hay</a>.
+<ul>
+<li>This is probably the biggest open design issue in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, which Samuel has been helping with.</li>
+<li>Implemented <code>io-&gt;evalInFrame()</code>, and then replaced it with a more orthogonal <code>io-&gt;eval(in_captured_frame=true)</code></li>
+</ul>
+</li>
+<li>Added the <code>--eval</code> and <code>--eval-pure</code> flags
+<ul>
+<li>Work on a pure interpeter, for both pure functions and <code>--eval-pure</code></li>
+</ul>
+</li>
+<li>Added dynamic control flow builtins (<code>break continue ...</code>)
+<ul>
+<li>The rule could be that <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> has static control flow, while <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> has dynamic control flow</li>
+</ul>
+</li>
+<li>First pass of <code>quote.ysh</code> in the stdlib
+<ul>
+<li>Motivated by a question from Julian Brown.  I want to get back to this.</li>
+</ul>
+</li>
+<li><code>shopt --set parse_ysh_string</code> disallows <code>--flag=r'foo'</code>
+<ul>
+<li>I noticed this YSH quirk when writing the Vim highlighter for YSH: <a href="https://github.com/oils-for-unix/oils.vim">oils.vim</a></li>
+</ul>
+</li>
+<li>Added the <a href="https://oils.pub/release/0.35.0/doc/ref/chap-builtin-cmd.html#invoke">invoke</a> builtin, to generalize the non-orthogonal <code>builtin</code> and <code>command</code>
+<ul>
+<li><code>invoke --show</code> is also better than <code>type -a</code></li>
+<li>private <code>builtin sleep</code>, mentioned above</li>
+<li>private <code>builtin rm</code> and <code>cat</code>, mentioned above</li>
+</ul>
+</li>
+<li>Added <code>Proc.docComment()</code>
+<ul>
+<li>We still need <code>__sh_function__</code>, which I believe replaced <code>getShFunction()</code></li>
+<li>We probably need a notion of read-only <code>Obj</code> instances, so that mutating <code>__sh_function__</code> can't corrupt the interpreter state</li>
+</ul>
+</li>
+<li>Disallow <code>test foo</code> in favor of <code>test -n foo</code>
+<ul>
+<li>based on feedback from <code>bar-g</code></li>
+</ul>
+</li>
+<li>Make Unicode in Eggex consistent with the rest of <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>
+<ul>
+<li><code>\y01</code> is now the syntax for bytes, not <code>\x01</code></li>
+<li>thanks again to <code>bar-g</code> for feedback</li>
+</ul>
+</li>
+<li>Fixed many bugs reported by users</li>
+</ul>
+<a name="osh"></a>
+<h3>OSH</h3>
+<p>Selected changes:</p>
+<ul>
+<li>Fixed cross-process tracing with <code>export SHELLOPTS</code></li>
+<li>In shell, the <code>read</code> builtin omits <code>NUL</code> bytes in the input, which surprised me.  <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> now does this.</li>
+<li>I noticed that shell doesn't have a good idiom for running multiple processes in parallel, while respecting <code>errexit</code>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/How.20to.20run.20processes.20in.20parallel.2C.20and.20check.20for.20errors/with/529742294">#blog-ideas &gt; How to run processes in parallel, and check for errors</a></li>
+<li>I fixed bugs in this area, so OSH is more compatible</li>
+</ul>
+</li>
+</ul>
+<a name="common-infrastructure"></a>
+<h3>Common Infrastructure</h3>
+<ul>
+<li>Got a minimal <code>bin/hello</code> working under Win32
+<ul>
+<li>I've come around to the fact that a Windows build is useful, though we'll need contributions here</li>
+</ul>
+</li>
+<li>Experimented with a bytecode-like representation, to fix the &quot;<code>break</code> as C++ exception&quot; problem</li>
+<li>Added a script to create a statically linked <code>oils-for-unix</code>
+<ul>
+<li>We're using this with <code>musl</code> libc, and even <code>glibc</code></li>
+</ul>
+</li>
+<li>Various build and C++ portability fixes, motivated by user reports</li>
+</ul>
+<a name="docs"></a>
+<h3>Docs</h3>
+<ul>
+<li>Document mixing of OSH and YSH code, a common <a href="https://oils.pub/release/latest/doc/ysh-faq.html">FAQ</a></li>
+<li>Document buffered versus unbuffered I/O</li>
+</ul>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>OK, now I feel reasonably caught up on the last 6 months!  I briefly reviewed 8 releases, with a focus on crediting contributors.</p>
+<p>Then I summarized notable changes in OSH, YSH, common infrastructure, and docs.</p>
+<p>Upon reflection, it does seem like there weren't many big <strong>features</strong> in the last 6 months.  The biggest <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> feature was probably <a href="https://github.com/oils-for-unix/oils.vim">oils.vim</a>, the Vim syntax highlighter.  (I wrote about <a href="https://github.com/oils-for-unix/oils.vim/blob/main/doc/algorithms.md">Three Algorithms for YSH Syntax Highlighting</a>, including <strong>coarse parsing</strong>.)</p>
+<p>But there are good signs of progress in the next post: <a href="/">Links to Explain Oils in 2025</a>.</p>
+<p>Feel free to ask questions <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Eight.20Releases.20of.20Oils.20in.206.20Months/with/541774227">in the comments</a>!</p>
+<a name="appendix-metrics-for-the-0350-release"></a>
+<h2>Appendix: Metrics for the 0.35.0 Release</h2>
+<p>Let's review release metrics, which help me keep track of the project.  The last review was in May, in <a href="../05/metrics.html">Metrics for the 0.29.0 Release</a>.</p>
+<a name="docs"></a>
+<h3>Docs</h3>
+<p>We continue to improve the <a href="/release/0.35.0/doc/ref/">Oils Reference</a>.  In addition to adding new topics, I polished existing topics.  Thanks to <code>bar-g</code> for feedback on the docs.</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/doc/metrics.txt">Doc Metrics for 0.29.0</a> - <strong>428</strong> topics with first pass, <strong>455</strong> marked implemented, <strong>496</strong> unique</li>
+<li><a href="//oils.pub/release/0.35.0/doc/metrics.txt">Doc Metrics for 0.35.0</a> - <strong>442</strong> topics with first pass, <strong>466</strong> marked implemented, <strong>510</strong> unique</li>
+</ul>
+<a name="spec-tests"></a>
+<h3>Spec Tests</h3>
+<p><a href="/cross-ref.html?tag=OSH#OSH">OSH</a> made good progress, with <strong>91</strong> new passing spec tests.</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/osh-py/index.html">OSH spec tests for 0.29.0</a>: <strong>2517</strong> tests, <strong>2248</strong> passing, <strong>134</strong> failing</li>
+<li><a href="//oils.pub/release/0.35.0/test/spec.wwz/osh-py/index.html">OSH spec tests for 0.35.0</a>: <strong>2608</strong> tests, <strong>2328</strong> passing, <strong>156</strong> failing</li>
+</ul>
+<p>But it also feels like there are too many failing tests.  (Many of them are related to the missing <code>GLOBIGNORE</code> feature.)  We're now prioritizing bug fixes with <code>regtest/aports</code>.</p>
+<p>Let's look at the C++ translation:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/osh-cpp/compare.html">C++ spec tests for 0.29.0</a> - <strong>2240</strong> of <strong>2248</strong> passing - delta <strong>8</strong></li>
+<li><a href="//oils.pub/release/0.35.0/test/spec.wwz/osh-cpp/compare.html">C++ spec tests for 0.35.0</a> - <strong>2322</strong> of <strong>2328</strong> passing - delta <strong>6</strong></li>
+</ul>
+<p>The delta is due to the <code>bind</code> builtin, which we're working on in Python first.  There's also a new anomaly related to new <code>history</code> spec tests, which I want to look into.</p>
+<hr />
+<p><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> has <strong>40</strong> more tests passing:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/ysh-py/index.html">YSH spec tests for 0.29.0</a>: <strong>1090</strong> tests, <strong>1022</strong> passing, <strong>68</strong> failing</li>
+<li><a href="//oils.pub/release/0.35.0/test/spec.wwz/ysh-py/index.html">YSH spec tests for 0.35.0</a>: <strong>1133</strong> tests, <strong>1062</strong> passing, <strong>71</strong> failing</li>
+</ul>
+<p>They all pass in the C++ translation:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/test/spec.wwz/ysh-cpp/compare.html">YSH C++ spec tests for 0.29.0</a>: <strong>1020</strong> of <strong>1022</strong> passing, delta <strong>2</strong></li>
+<li><a href="//oils.pub/release/0.35.0/test/spec.wwz/ysh-cpp/compare.html">YSH C++ spec tests for 0.35.0</a>: <strong>1060</strong> of <strong>1062</strong> passing, delta <strong>2</strong></li>
+</ul>
+<p>(The delta is again due to a <code>Dict</code> ordering issue in <a href="/cross-ref.html?tag=hay#hay">Hay</a>, which is harmless right now)</p>
+<a name="benchmarks"></a>
+<h3>Benchmarks</h3>
+<p>No significant changes in parser speed:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/osh-parser/">Parser Performance for 0.29.0</a>: <strong>12.9</strong> thousand irefs per line</li>
+<li><a href="//oils.pub/release/0.35.0/benchmarks.wwz/osh-parser/">Parser Performance for 0.35.0</a>: <strong>12.3</strong>
+thousand irefs per line</li>
+</ul>
+<p>Or memory usage:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/gc/">benchmarks/gc for 0.29.0</a>: <code>parse.configure-coreutils</code> <strong>1.65 M</strong> objects comprising <strong>41.0 MB</strong>, max RSS <strong>46.6 MB</strong></li>
+<li><a href="//oils.pub/release/0.35.0/benchmarks.wwz/gc/">benchmarks/gc for 0.35.0</a>: <code>parse.configure-coreutils</code> <strong>1.65 M</strong> objects comprising <strong>44.6 MB</strong>, max RSS <strong>50.8 MB</strong></li>
+</ul>
+<a name="runtime"></a>
+<h4>Runtime</h4>
+<p>A compute-bound workload is the same speed:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/gc-cachegrind/">benchmarks/gc-cachegrind for 0.29.0</a> - <code>fib</code> takes <strong>25.4</strong> million irefs, mut+alloc+free+gc</li>
+<li><a href="//oils.pub/release/0.35.0/benchmarks.wwz/gc-cachegrind/">benchmarks/gc-cachegrind for 0.35.0</a> - <code>fib</code> takes <strong>25.4</strong> million irefs, mut+alloc+free+gc</li>
+</ul>
+<p>This is the <strong>infamous</strong> autotools <code>configure</code> workload, which unfortunately has <strong>noisy</strong> measurements:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/osh-runtime/">Runtime Performance for 0.29.0</a> on 2 machines
+<ul>
+<li><strong>0.96x</strong> and <strong>1.05x</strong> the speed of bash on <code>configure.cpython</code></li>
+<li><strong>1.04x</strong> and <strong>1.10x</strong> the speed of bash on <code>configure.util-linux</code></li>
+</ul>
+</li>
+<li><a href="//oils.pub/release/0.35.0/benchmarks.wwz/osh-runtime/">Runtime Performance for 0.35.0</a> on 2 machines
+<ul>
+<li><strong>0.95x</strong> and <strong>0.87x</strong> the speed of bash on <code>configure.cpython</code></li>
+<li><strong>1.04x</strong> and <strong>1.00x</strong> the speed of bash on <code>configure.util-linux</code></li>
+</ul>
+</li>
+</ul>
+<p>It improved due to the <a href="https://oils.pub/release/0.35.0/doc/ref/chap-option.html#rewrite_extern">rewrite_extern</a> optimization, but it's not super clear on this particular run.  It's more clear in the previous release:</p>
+<ul>
+<li><a href="//oils.pub/release/0.34.0/benchmarks.wwz/osh-runtime/">Runtime Performance for 0.34.0</a> on 2 machines
+<ul>
+<li><strong>0.96x</strong> and <strong>0.93x</strong> the speed of bash on <code>configure.cpython</code></li>
+<li><strong>0.96x</strong> and <strong>0.93x</strong> the speed of bash on <code>configure.util-linux</code></li>
+</ul>
+</li>
+</ul>
+<p>So here, we're beating bash on 2 workloads, measured on 2 different machines.  (The statically-linked <code>oils-for-unix</code> beats <a href="/cross-ref.html?tag=bash#bash">bash</a> by an even larger margin.)</p>
+<p>At first I thought that the <code>0.35.0</code> release could be slower because I temporarily disabled the Souffle GC rooting optimizations.  But,  now that I look, that happened in <code>0.34.0</code>.  So I think it's just benchmark noise.</p>
+<a name="code-size"></a>
+<h4>Code Size</h4>
+<p>Even though many new tests pass, our code is still short:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/pub/metrics.wwz/line-counts/cloc-report.txt">cloc for 0.29.0</a>
+<ul>
+<li><strong>25,185</strong> significant lines in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, <strong>6,380</strong> in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, <strong>1,691</strong> in data languages</li>
+<li><strong>6,112</strong> lines of hand-written C++</li>
+</ul>
+</li>
+<li><a href="//oils.pub/release/0.35.0/pub/metrics.wwz/line-counts/cloc-report.txt">cloc for 0.35.0</a>
+<ul>
+<li><strong>25,594</strong> significant lines in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, <strong>6,617</strong> in <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, <strong>1,690</strong> in data languages</li>
+<li><strong>6,401</strong> lines of hand-written C++</li>
+</ul>
+</li>
+</ul>
+<p>The generated C++ is proportional:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/pub/metrics.wwz/line-counts/oils-cpp.txt">oils-cpp for 0.29.0</a> - <strong>128,449</strong> physical lines</li>
+<li><a href="//oils.pub/release/0.35.0/pub/metrics.wwz/line-counts/oils-cpp.txt">oils-cpp for 0.35.0</a> - 193,303 - 62,484 = <strong>130,819</strong> physical lines (accounting another source file)</li>
+</ul>
+<p>And compiled binary size is proportional:</p>
+<ul>
+<li><a href="//oils.pub/release/0.29.0/benchmarks.wwz/ovm-build/">ovm-build for 0.29.0</a>:
+<strong>2.40 MB</strong> of native code (hoover, under GCC, on Debian 12)</li>
+<li><a href="//oils.pub/release/0.35.0/benchmarks.wwz/ovm-build/">ovm-build for 0.35.0</a>:
+<strong>2.42 MB</strong> of native code (hoover, under GCC, on Debian 12)</li>
+</ul>
+
+<p> </p>
+
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Eight.20Releases.20of.20Oils.20in.206.20Months/with/541774227">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=oils-release#oils-release">oils-release</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=comments#comments">comments</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>
