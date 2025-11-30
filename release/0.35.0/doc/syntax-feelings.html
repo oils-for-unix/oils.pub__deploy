@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>A Feel For YSH Syntax</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/syntax-feelings.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>A Feel For YSH Syntax</h1>
+<p>A short way to describe the <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> language:</p>
+<blockquote>
+<p>A Unix shell that's familiar to people who know Python, JavaScript, or Ruby.</p>
+</blockquote>
+<p>This document gives you a feel for that, with brief examples.  It's not a
+comprehensive or precise guide.  Roughly speaking, YSH code has more
+punctuation than those 3 languages, but less than shell and Perl.</p>
+<p>If you're totally unfamiliar with the language, read <a href="//www.oilshell.org/blog/2020/01/simplest-explanation.html">The Simplest Explanation
+of Oil</a> first.  (Oil
+was renamed <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> in 2023.)</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#preliminaries">Preliminaries</a></div>
+  <div class="toclevel1"><a href="#sigils">Sigils</a></div>
+  <div class="toclevel2"><a href="#very-common">Very Common</a></div>
+  <div class="toclevel2"><a href="#less-common">Less Common</a></div>
+  <div class="toclevel1"><a href="#opening-and-closing-delimiters">Opening and Closing Delimiters</a></div>
+  <div class="toclevel2"><a href="#braces-command-blocks-and-dict-literal-expressions">Braces: Command Blocks and Dict Literal Expressions</a></div>
+  <div class="toclevel2"><a href="#parens-expression">Parens: Expression</a></div>
+  <div class="toclevel2"><a href="#parens-with-sigil-command-interpolation">Parens with Sigil: Command Interpolation</a></div>
+  <div class="toclevel2"><a href="#brackets-sequence-subscript">Brackets: Sequence, Subscript</a></div>
+  <div class="toclevel2"><a href="#brackets-with-a-sigil-expression">Brackets with a Sigil: Expression</a></div>
+  <div class="toclevel1"><a href="#spaces-around">Spaces Around <code>=</code> ?</a></div>
+  <div class="toclevel1"><a href="#naming-conventions-for-identifiers">Naming Conventions for Identifiers</a></div>
+  <div class="toclevel1"><a href="#other-punctuation-usage">Other Punctuation Usage</a></div>
+  <div class="toclevel1"><a href="#related-docs-links">Related Docs / Links</a></div>
+  <div class="toclevel1"><a href="#appendix-table-of-sigil-pairs">Appendix: Table of Sigil Pairs</a></div>
+</div> 
+<a name="preliminaries"></a>
+<h2>Preliminaries</h2>
+<p>Different parts of YSH are parsed in either <strong>command</strong> or <strong>expression</strong> mode.
+Command mode is like shell:</p>
+<pre><code>echo $x 
+</code></pre>
+<p>Expression mode looks like Python or JavaScript, and appears on right-hand side
+of <code>=</code>:</p>
+<pre><code>var x = 42 + array[i]
+</code></pre>
+<p>The examples below aren't organized along those lines, but they use <code>var</code> and
+<code>echo</code> to remind you of the context.  Some constructs are valid in both modes.</p>
+<a name="sigils"></a>
+<h2>Sigils</h2>
+<p>Sigils are punctuation characters that precede a name, e.g. the <code>$</code> in
+<code>$mystr</code>.</p>
+<p>Unlike Perl and PHP, YSH doesn't use sigils on the LHS of assignments, or in
+expression mode.  The <a href="syntactic-concepts.html">syntactic concepts</a> doc
+explains this difference.</p>
+<a name="very-common"></a>
+<h3>Very Common</h3>
+<p>The <code>$</code> and <code>@</code> sigils mean roughly what they do in shell, Perl, and
+PowerShell.</p>
+<p><code>$</code> means <em>string</em> / <em>scalar</em>.  These shell constructs are idiomatic in YSH:</p>
+<pre><code>$mvar   ${myvar}
+$(hostname)
+</code></pre>
+<p>And these YSH language extensions also use <code>$</code>:</p>
+<pre><code>echo $[42 + a[i]]            <span class="sh-comment"># string interpolation of expression</span>
+grep $/ digit+ /             <span class="sh-comment"># inline eggex (not implemented yet)</span>
+</code></pre>
+<p><code>@</code> means <em>array</em> / <em>splice an array</em>:</p>
+<pre><code>echo &quot;$@&quot;                    <span class="sh-comment"># Legacy syntax; prefer @ARGV</span>
+</code></pre>
+<p>YSH:</p>
+<pre><code>echo @strs                   <span class="sh-comment"># splice array</span>
+
+echo @[split(x)] @[glob(x)]  <span class="sh-comment"># splice expressions that returns arrays</span>
+
+for i in @(seq 3) {          <span class="sh-comment"># split command sub</span>
+  echo $i
+}   
+
+proc p(first, @rest) {       <span class="sh-comment"># named varargs in proc signatures</span>
+  write -- $first            <span class="sh-comment"># (procs are shell-like functions)</span>
+  write -- @rest
+}
+</code></pre>
+<a name="less-common"></a>
+<h3>Less Common</h3>
+<p>The colon means &quot;unquoted word&quot; in these two lines:</p>
+<pre><code>var mysymbol = :key               <span class="sh-comment"># string, not implemented yet</span>
+var myarray = :| one two three |  <span class="sh-comment"># array</span>
+</code></pre>
+<p>It's also used to pass the name of a variable to a builtin:</p>
+<pre><code>echo hi | read :myvar
+</code></pre>
+<p>A caret means &quot;unevaluated&quot;:</p>
+<pre><code>var cmd = ^(cd /tmp; ls *.txt)
+var expr = ^[42 + a[i]]  <span class="sh-comment"># unimplemented</span>
+var template = ^&quot;var = $var&quot;  <span class="sh-comment"># unimplemented</span>
+</code></pre>
+
+<a name="opening-and-closing-delimiters"></a>
+<h2>Opening and Closing Delimiters</h2>
+<p>The <code>{}</code> <code>[]</code> and <code>()</code> characters have several different meanings, but we try
+our best to make them consistent.  They're subject to legacy constraints from
+Bourne shell, Korn shell, and <a href="/cross-ref.html?tag=bash#bash">bash</a>.</p>
+<a name="braces-command-blocks-and-dict-literal-expressions"></a>
+<h3>Braces: Command Blocks and Dict Literal Expressions</h3>
+<p>In expression mode, <code>{}</code> are used for dict literals (aka hash
+tables, associative arrays), which makes YSH look like JavaScript:</p>
+<pre><code>var d = {name: 'Bob', age: 10}
+
+while (x &gt; 0) {
+  setvar x -= 1
+}
+</code></pre>
+<p>In command mode, they're used for blocks of code:</p>
+<pre><code>cd /tmp {
+  echo $PWD
+}
+</code></pre>
+<p>Blocks are also used for &quot;declarative&quot; configuration:</p>
+<pre><code>server www.example.com {
+  port = 80
+  root = '/home/www'
+  section bar {
+    ...
+  }
+}
+</code></pre>
+<a name="parens-expression"></a>
+<h3>Parens: Expression</h3>
+<p>Parens are used in expressions:</p>
+<pre><code>var x = (42 + a[i]) * myfunc(42, 'foo')
+
+if (x &gt; 0) {         <span class="sh-comment"># compare with if test -d /tmp</span>
+  echo 'positive'
+}
+</code></pre>
+<p>And signatures:</p>
+<pre><code>proc p(x, y) {
+  echo $x $y
+}
+</code></pre>
+<p>In <a href="eggex.html">Eggex</a>, they mean <strong>grouping</strong> and not capture, which is
+consistent with other YSH expressions:</p>
+<pre><code>var p = / digit+ ('seconds' | 'minutes' | 'hours' ) /
+</code></pre>
+
+<a name="parens-with-sigil-command-interpolation"></a>
+<h3>Parens with Sigil: Command Interpolation</h3>
+<p>The &quot;sigil pairs&quot; with parens enclose commands:</p>
+<pre><code>echo $(ls | wc -l)             <span class="sh-comment"># command sub</span>
+echo @(seq 3)                  <span class="sh-comment"># split command sub</span>
+
+var myblock = ^(echo $PWD)     <span class="sh-comment"># block literal in expression mode</span>
+
+diff &lt;(sort left.txt) &lt;(sort right.txt)  <span class="sh-comment"># bash syntax</span>
+</code></pre>
+<p>Unlike brackets and braces, the <code>()</code> characters can't appear in shell commands,
+which makes them useful as delimiters.</p>
+<a name="brackets-sequence-subscript"></a>
+<h3>Brackets: Sequence, Subscript</h3>
+<p>In expression mode, <code>[]</code> means sequence:</p>
+<pre><code>var mylist = ['one', 'two', 'three']
+</code></pre>
+<p>or subscript:</p>
+<pre><code>var item = mylist[1]
+var item = mydict['foo']
+</code></pre>
+<a name="brackets-with-a-sigil-expression"></a>
+<h3>Brackets with a Sigil: Expression</h3>
+<p>The sigil pair <code>$[]</code> is common in command mode:</p>
+<pre><code>echo $[42 + a[i]]
+</code></pre>
+<p>Quotations are valid in expression mode:</p>
+<pre><code>var my_expr = ^[42 + a[i]]
+</code></pre>
+<p>Pass lazy arg lists to commands with <code>[]</code>.  They're syntactic sugar for <code>^[]</code>:</p>
+<pre><code>assert [42 === x]     <span class="sh-comment"># short version</span>
+
+assert (^[42 === x])  <span class="sh-comment"># same thing</span>
+</code></pre>
+
+<a name="spaces-around"></a>
+<h2>Spaces Around <code>=</code> ?</h2>
+<p>In YSH, <em>your own</em> variables look like this:</p>
+<pre><code>const x = 42
+var s = 'foo'
+setvar s = 'bar'
+</code></pre>
+<p>In contrast, special shell variables are written with a single <code>NAME=value</code>
+argument:</p>
+<pre><code>shvar PATH=/tmp {
+  temporary
+}
+</code></pre>
+<p>Which is similar to the syntax of the <code>env</code> command:</p>
+<pre><code>env PYTHONPATH=/tmp ./myscript.py
+</code></pre>
+<a name="naming-conventions-for-identifiers"></a>
+<h2>Naming Conventions for Identifiers</h2>
+<p>See the <a href="style-guide.html">Style Guide</a>.</p>
+
+<a name="other-punctuation-usage"></a>
+<h2>Other Punctuation Usage</h2>
+<p>Here are other usages of the punctuation discussed:</p>
+<pre><code>echo *.[ch]                    <span class="sh-comment"># glob char and char classes</span>
+echo {alice,bob}@example.com   <span class="sh-comment"># brace expansion</span>
+</code></pre>
+<p>Eggex:</p>
+<pre><code>/ [a-f A-F 0-9] /         <span class="sh-comment"># char classes use []</span>
+
+/ digit+ ('ms' | 'us') /  <span class="sh-comment"># non-capturing group</span>
+&lt; digit+ &gt;                <span class="sh-comment"># capturing group</span>
+&lt; digit+ :hour &gt;          <span class="sh-comment"># named capture</span>
+
+dot{3,4} a{+ N}           <span class="sh-comment"># repetition</span>
+</code></pre>
+<p>The <code>~</code> character is used in operators that mean &quot;pattern&quot; or &quot;approximate&quot;:</p>
+<pre><code>if (s ~ /d+/) {
+  echo 'number'
+}   
+
+if (s ~~ '*.py') {
+  echo 'Python'
+}
+
+if (mystr ~== myint) {
+  echo 'string equals number'
+}
+</code></pre>
+<p>Extended globs are discouraged in YSH because they're a weird way of writing
+regular expressions.  But they also use &quot;sigil pairs&quot; with parens:</p>
+<pre><code>,(*.py|*.sh)   <span class="sh-comment"># preferred synonym for @(*.py|*.sh)</span>
++(...)         <span class="sh-comment"># bash/ksh-compatible</span>
+*(...)
+?(...)
+!(...)
+</code></pre>
+<p>Shell arithmetic is also discouraged in favor of YSH arithmetic:</p>
+<pre><code>echo $((1 + 2))  <span class="sh-comment"># shell: confusing coercions, dynamically parsed</span>
+echo $[1 + 2]    <span class="sh-comment"># YSH: types, statically parsed</span>
+</code></pre>
+
+<a name="related-docs-links"></a>
+<h2>Related Docs / Links</h2>
+<ul>
+<li><a href="syntactic-concepts.html">Syntactic Concepts in the YSH Language</a></li>
+<li><a href="language-influences.html">Language Influences</a></li>
+<li><a href="https://github.com/oils-for-unix/oils.vim/blob/main/checklist.md">YSH Syntax Highlighting
+Checklist</a>
+in the <code>oils.vim</code> repo</li>
+</ul>
+<a name="appendix-table-of-sigil-pairs"></a>
+<h2>Appendix: Table of Sigil Pairs</h2>
+<p>This table is mainly for YSH language designers.  Some constructs aren't
+implemented, but we reserve space for them.  The <a href="ref/index.html">Oils
+Reference</a> is more complete.</p>
+<pre><code>Example      Description        What's Inside  Where Valid  Notes
+
+$(hostname)  Command Sub        Command        cmd,expr,dq
+@(seq 3)     Split Command Sub  Command        cmd,expr     should decode J8
+                                                            strings
+
+{ echo hi }  Block Literal      Command        cmd          shell requires ;
+^(echo hi)   Unevaluated Block  Command        expr         rare
+
+&gt;(sort -n)   Process Sub        Command        cmd          rare
+&lt;(echo hi)   Process Sub        Command        cmd          rare
+
+:|foo $bar|  Array Literal      Words          expr
+
+$[42 + a[i]] Stringify Expr     Expression     cmd,expr,dq
+@[glob(x)]   Array-ify Expr     Expression     cmd,expr
+^[42 + a[i]] Unevaluated Expr   Expression     expr
+
+^&quot;$1 $2&quot;     value.Expr         DQ String      expr 
+
+pp (x)       Typed Arg List     Argument       cmd
+                                Expressions
+
+pp [x]       Lazy Arg list      Argument       cmd
+                                Expressions
+
+$/d+/        Inline Eggex       Eggex Expr     cmd          not implemented
+
+$&quot;x is $x&quot;   Interpolated       DQ string      cmd,expr     usually &quot;x is $x&quot;
+             string                                         $ is optional
+</code></pre>
+<p>Non-recursive constructs:</p>
+<pre><code>r'foo\bar'   Raw String         String         cmd,expr     shopt -s
+             Literal                                        parse_raw_string
+
+u''   b''    J8 Literals        String         cmd,expr,data
+
+j&quot;&quot;          JSON8 String       String         data
+             Literal
+
+${x %2d}     Var Sub            Formatting     cmd,expr,dq  not implemented
+${x|html}    Var Sub            Formatting     cmd,expr,dq  not implemented
+</code></pre>
+<p>Discouraged / Deprecated</p>
+<pre><code>`echo x`     Shell Backticks    Command        cmd,dq       deprecated
+
+${x%%pre}    Shell Var Sub      Shell          cmd,expr     mostly deprecated
+$((1+2))     Shell Arith Sub    Shell Arith    cmd          deprecated
+
+@(*.py|*.sh) Extended Glob      Glob Words     cmd          deprecated
++(...)
+*(...)
+?(...)
+!(...)
+
+,(*.py|*.sh) Extended Glob      Glob Words     cmd          break conflict
+                                                            with split command
+                                                            sub
+</code></pre>
+<p>Key to &quot;where valid&quot; column:</p>
+<ul>
+<li><code>cmd</code> means <code>lex_mode_e.ShCommand</code></li>
+<li><code>expr</code> means <code>lex_mode_e.Expr</code></li>
+<li><code>data</code> means it's valid in J8 Notation</li>
+</ul>
+<p>Some unused sigil pairs:</p>
+<pre><code>~()   -()   =()   /()   _()   .()
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

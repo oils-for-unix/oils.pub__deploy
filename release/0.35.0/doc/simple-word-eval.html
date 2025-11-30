@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simple Word Evaluation in Unix Shell</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/simple-word-eval.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Simple Word Evaluation in Unix Shell</h1>
+<p>This document describes the YSH word evaluation semantics (<code>shopt -s simple_word_eval</code>) for experienced shell users.  It may also be useful to
+those who want to implement this behavior in another shell.</p>
+<p>The main idea is that YSH behaves like a traditional programming language:</p>
+<ol>
+<li>It's <strong>parsed</strong> from start to end <a href="https://www.oilshell.org/blog/2019/02/07.html">in a single pass</a>.</li>
+<li>It's <strong>evaluated</strong> in a single step too.</li>
+</ol>
+<p>That is, parsing and evaluation aren't interleaved, and code and data aren't
+confused.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#an-analogy-word-expressions-should-be-like-arithmetic-expressions">An Analogy: Word Expressions Should Be Like Arithmetic Expressions</a></div>
+  <div class="toclevel1"><a href="#design-goals">Design Goals</a></div>
+  <div class="toclevel1"><a href="#examples">Examples</a></div>
+  <div class="toclevel2"><a href="#no-implicit-splitting-dynamic-globbing-or-empty-elision">No Implicit Splitting, Dynamic Globbing, or Empty Elision</a></div>
+  <div class="toclevel2"><a href="#splicing-static-globbing-and-brace-expansion">Splicing, Static Globbing, and Brace Expansion</a></div>
+  <div class="toclevel1"><a href="#where-these-rules-apply">Where These Rules Apply</a></div>
+  <div class="toclevel1"><a href="#opt-in-to-the-old-behavior-with-explicit-expressions">Opt In to the Old Behavior With Explicit Expressions</a></div>
+  <div class="toclevel1"><a href="#more-word-evaluation-issues">More Word Evaluation Issues</a></div>
+  <div class="toclevel2"><a href="#more-shopt-options">More <code>shopt</code> Options</a></div>
+  <div class="toclevel2"><a href="#arithmetic-is-statically-parsed">Arithmetic Is Statically Parsed</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#notes">Notes</a></div>
+  <div class="toclevel2"><a href="#related-documents">Related Documents</a></div>
+  <div class="toclevel2"><a href="#tip-view-the-syntax-tree-with-n">Tip: View the Syntax Tree With <code>-n</code></a></div>
+</div>
+<a name="an-analogy-word-expressions-should-be-like-arithmetic-expressions"></a>
+<h2>An Analogy: Word Expressions Should Be Like Arithmetic Expressions</h2>
+<p>In YSH, &quot;word expressions&quot; like</p>
+<pre><code>$x
+&quot;hello $name&quot;
+$(hostname)
+'abc'$x${y:-${z//pat/replace}}&quot;$(echo hi)$((a[i] * 3))&quot;
+</code></pre>
+<p>are parsed and evaluated in a straightforward way, like this expression when <code>x == 2</code>:</p>
+<pre><code class="language-sh-prompt">1 + x / 2 + x * 3        → 8  <span class="sh-comment"># Python, JS, Ruby, etc. work this way</span>
+</code></pre>
+<p>In contrast, in shell, words are &quot;expanded&quot; in multiple stages, like this:</p>
+<pre><code class="language-sh-prompt">1 + &quot;x / 2 + \&quot;x * 3\&quot;&quot;  → 8  <span class="sh-comment"># Hypothetical, confusing language</span>
+</code></pre>
+<p>That is, it would be odd if Python looked <em>inside a program's strings</em> for
+expressions to evaluate, but that's exactly what shell does!  There are
+multiple places where there's a silent <code>eval</code>, and you need <strong>quoting</strong> to
+inhibit it.  Neglecting this can cause security problems due to confusing code
+and data (links below).</p>
+<p>In other words, the <strong>defaults are wrong</strong>.  Programmers are surprised by shell's
+behavior, and it leads to incorrect programs.</p>
+<p>So in YSH, you can opt out of the multiple &quot;word expansion&quot; stages described in
+the <a href="https://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06">POSIX shell spec</a>.  Instead, there's only <strong>one stage</strong>:
+evaluation.</p>
+<a name="design-goals"></a>
+<h2>Design Goals</h2>
+<p>The new semantics should be easily adoptable by existing shell scripts.</p>
+<ul>
+<li>Importantly, <code>bin/osh</code> is POSIX-compatible and runs real <a href="/cross-ref.html?tag=bash#bash">bash</a>
+scripts.  You can gradually opt into <strong>stricter and saner</strong> behavior with
+<code>shopt</code> options (or by running <code>bin/ysh</code>).  The most important one is
+<a href="osh-help.html?topic=simple_word_eval#simple_word_eval">simple_word_eval</a>, and the others are listed below.</li>
+<li>Even after opting in, the new syntax shouldn't break many scripts.  If it
+does break, the change to fix it should be small.  For example, <code>echo @foo</code>
+is not too common, and it can be made bash-compatible by quoting it: <code>echo '@foo'</code>.</li>
+</ul>
+
+<a name="examples"></a>
+<h2>Examples</h2>
+<p>In the following examples, the <a href="https://github.com/oils-for-unix/oils/blob/master/spec/bin/argv.py">argv</a> command prints the <code>argv</code> array it
+receives in a readable format:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">argv one &quot;two three&quot;</span>
+['one', 'two three']
+</code></pre>
+<p>I also use the YSH <a href="osh-help.html?topic=var#var">var</a> keyword for assignments.  <em>(TODO: This could be
+rewritten with shell assignment for the benefit of shell implementers)</em></p>
+<a name="no-implicit-splitting-dynamic-globbing-or-empty-elision"></a>
+<h3>No Implicit Splitting, Dynamic Globbing, or Empty Elision</h3>
+<p>In YSH, the following constructs always evaluate to <strong>one argument</strong>:</p>
+<ul>
+<li>Variable / &quot;parameter&quot; substitution: <code>$x</code>, <code>${y}</code></li>
+<li>Command sub: <code>$(echo hi)</code> or backticks</li>
+<li>Arithmetic sub: <code>$(( 1 + 2 ))</code></li>
+</ul>
+
+<p>That is, quotes aren't necessary to avoid:</p>
+<ul>
+<li><strong>Word Splitting</strong>, which uses <code>$IFS</code>.</li>
+<li><strong>Empty Elision</strong>.  For example, <code>x=''; ls $x</code> passes <code>ls</code> no arguments.</li>
+<li><strong>Dynamic Globbing</strong>.  Globs are <em>dynamic</em> when the pattern comes from
+program data rather than the source code.</li>
+</ul>
+
+<p>Here's an example showing that each construct evaluates to one arg in YSH:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">ysh$</span> <span class="sh-command">var pic = 'my pic.jpg'</span>  <span class="sh-comment"># filename with spaces</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var empty = ''</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">var pat = '*.py'      </span>  <span class="sh-comment"># pattern stored in a string</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">argv ${pic} $empty $pat $(cat foo.txt) $((1 + 2))</span>
+['my pic.jpg', '', '*.py', 'contents of foo.txt', '3']
+</code></pre>
+<p>In contrast, shell applies splitting, globbing, and empty elision after the
+substitutions.  Each of these operations returns an indeterminate number of
+strings:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">sh$</span> <span class="sh-command">pic='my pic.jpg'</span>  <span class="sh-comment"># filename with spaces</span>
+<span class="sh-prompt">sh$</span> <span class="sh-command">empty=</span>
+<span class="sh-prompt">sh$</span> <span class="sh-command">pat='*.py'      </span>  <span class="sh-comment"># pattern stored in a string</span>
+
+<span class="sh-prompt">sh$</span> <span class="sh-command">argv ${pic} $empty $pat $(cat foo.txt) $((1 + 2))</span>
+['my', 'pic.jpg', 'a.py', 'b.py', 'contents', 'of', 'foo.txt', '3']
+</code></pre>
+<p>To get the desired behavior, you have to use double quotes:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">sh$</span> <span class="sh-command">argv &quot;${pic}&quot; &quot;$empty&quot; &quot;$pat&quot;, &quot;$(cat foo.txt)&quot; &quot;$((1 + 2))&quot;</span>
+['my pic.jpg', '', '*.py', 'contents of foo.txt', '3']
+</code></pre>
+<a name="splicing-static-globbing-and-brace-expansion"></a>
+<h3>Splicing, Static Globbing, and Brace Expansion</h3>
+<p>The constructs in the last section evaluate to a <strong>single argument</strong>.  In
+contrast, these three constructs evaluate to <strong>0 to N arguments</strong>:</p>
+<ol>
+<li><strong>Splicing</strong> an array: <code>&quot;$@&quot;</code> and <code>&quot;${myarray[@]}&quot;</code></li>
+<li><strong>Static Globbing</strong>: <code>echo *.py</code>.  Globs are <em>static</em> when they occur in the
+program text.</li>
+<li><strong>Brace expansion</strong>: <code>{alice,bob}@example.com</code></li>
+</ol>
+<p>In YSH, <code>shopt -s parse_at</code> enables these shortcuts for splicing:</p>
+<ul>
+<li><code>@myarray</code> for <code>&quot;${myarray[@]}&quot;</code></li>
+<li><code>@ARGV</code> for <code>&quot;$@&quot;</code></li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">ysh$</span> <span class="sh-command">var myarray = :| 'a b' c |</span>  <span class="sh-comment"># array with 2 elements</span>
+<span class="sh-prompt">ysh$</span> <span class="sh-command">set -- 'd e' f            </span>  <span class="sh-comment"># 2 arguments</span>
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">argv @myarray @ARGV *.py {ian,jack}@sh.com</span>
+['a b', 'c', 'd e', 'f', 'g.py', 'h.py', 'ian@sh.com', 'jack@sh.com']
+</code></pre>
+<p>is just like:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">bash$</span> <span class="sh-command">myarray=('a b' c)</span>
+<span class="sh-prompt">bash$</span> <span class="sh-command">set -- 'd e' f</span>
+
+<span class="sh-prompt">bash$</span> <span class="sh-command">argv &quot;${myarray[@]}&quot; &quot;$@&quot; *.py {ian,jack}@sh.com</span>
+['a b', 'c', 'd e', 'f', 'g.py', 'h.py', 'ian@sh.com', 'jack@sh.com']
+</code></pre>
+<p>Unchanged: quotes disable globbing and brace expansion:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">echo *.py</span>
+foo.py bar.py
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;*.py&quot;          </span>  <span class="sh-comment"># globbing disabled with quotes</span>
+*.py
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo {spam,eggs}.sh</span>
+spam.sh eggs.sh
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo &quot;{spam,eggs}.sh&quot;</span>  <span class="sh-comment"># brace expansion disabled with quotes</span>
+{spam,eggs}.sh
+</code></pre>
+
+<a name="where-these-rules-apply"></a>
+<h2>Where These Rules Apply</h2>
+<p>These rules apply when a <strong>sequence</strong> of words is being evaluated, exactly as
+in shell:</p>
+<ol>
+<li><a href="osh-help.html?topic=simple-command#simple-command">Command</a>: <code>echo $x foo</code></li>
+<li><a href="osh-help.html?topic=for#for">For loop</a>: <code>for i in $x foo; do ...</code></li>
+<li><a href="osh-help.html?topic=array#array">Array Literals</a>: <code>a=($x foo)</code> and <code>var a = :| $x foo |</code> (<a href="osh-help.html?topic=ysh-array#ysh-array">ysh-array</a>)</li>
+</ol>
+<p>Shell has other word evaluation contexts like:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">sh$</span> <span class="sh-command">x=&quot;${not_array[@]}&quot;</span>
+<span class="sh-prompt">sh$</span> <span class="sh-command">echo hi &gt; &quot;${not_array[@]}&quot;</span>
+</code></pre>
+<p>which aren't affected by <a href="osh-help.html?topic=simple_word_eval#simple_word_eval">simple_word_eval</a>.</p>
+
+<a name="opt-in-to-the-old-behavior-with-explicit-expressions"></a>
+<h2>Opt In to the Old Behavior With Explicit Expressions</h2>
+<p>YSH can express everything that shell can.</p>
+<ul>
+<li>Split with <code>@[split(mystr, IFS?)]</code></li>
+<li>Glob with <code>@[glob(mypat)]</code></li>
+<li>Elision with <code>@[maybe(s)]</code></li>
+</ul>
+<a name="more-word-evaluation-issues"></a>
+<h2>More Word Evaluation Issues</h2>
+<a name="more-shopt-options"></a>
+<h3>More <code>shopt</code> Options</h3>
+<ul>
+<li><a href="osh-help.html?topic=nullglob#nullglob">nullglob</a> - Globs matching nothing don't evaluate to code.</li>
+<li><a href="osh-help.html?topic=dashglob#dashglob">dashglob</a> is true by default, but <strong>disabled</strong> when YSH is enabled, so that
+files that begin with <code>-</code> aren't returned.  This avoids <a href="https://www.oilshell.org/blog/2020/02/dashglob.html">confusing flags and
+files</a>.</li>
+</ul>
+<p>Strict options cause fatal errors:</p>
+<ul>
+<li><a href="osh-help.html?topic=strict_tilde#strict_tilde">strict_tilde</a> - Failed tilde expansions don't evaluate to code.</li>
+<li><a href="osh-help.html?topic=strict_word_eval#strict_word_eval">strict_word_eval</a> - Invalid slices and invalid UTF-8 aren't ignored.</li>
+</ul>
+<a name="arithmetic-is-statically-parsed"></a>
+<h3>Arithmetic Is Statically Parsed</h3>
+<p>This is an intentional incompatibility described in the <a href="known-differences.html#static-parsing">Known
+Differences</a> doc.</p>
+
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>YSH word evaluation is enabled with <code>shopt -s simple_word_eval</code>, and proceeds
+in a single step.</p>
+<p>Variable, command, and arithmetic substitutions predictably evaluate to a
+<strong>single argument</strong>, regardless of whether they're empty or have spaces.
+There's no implicit splitting, globbing, or elision of empty words.</p>
+<p>You can opt into those behaviors with explicit expressions like
+<code>@[split(mystr)]</code>, which evaluates to an array.</p>
+<p>YSH also supports shell features that evaluate to <strong>0 to N arguments</strong>:
+splicing, globbing, and brace expansion.</p>
+<p>There are other options that &quot;clean up&quot; word evaluation.  All options are
+designed to be gradually adopted by other shells, shell scripts, and eventually
+POSIX.</p>
+<a name="notes"></a>
+<h2>Notes</h2>
+<a name="related-documents"></a>
+<h3>Related Documents</h3>
+<ul>
+<li><a href="http://www.oilshell.org/blog/2020/01/simplest-explanation.html">The Simplest Explanation of
+Oil</a>.  Some
+color on the rest of the language.</li>
+<li><a href="known-differences.html">Known Differences Between OSH and Other Shells</a>.
+Mentioned above: Arithmetic is statically parsed.  Arrays and strings are
+kept separate.</li>
+<li><a href="https://github.com/oils-for-unix/oils/wiki/OSH-Word-Evaluation-Algorithm">OSH Word Evaluation Algorithm</a> on the Wiki.  Informally
+describes the data structures, and describes legacy constructs.</li>
+<li><a href="https://unix.stackexchange.com/questions/171346/security-implications-of-forgetting-to-quote-a-variable-in-bash-posix-shells">Security implications of forgetting to quote a variable in bash/POSIX
+shells</a>
+by Stéphane Chazelas.  Describes the &quot;implicit split+glob&quot; operator, which
+YSH word evaluation removes.
+<ul>
+<li>This is essentially the same <a href="http://www.oilshell.org/blog/2019/01/18.html#a-story-about-a-30-year-old-security-problem">security
+issue</a>
+I rediscovered in January 2019.  It appears in all <a href="/cross-ref.html?tag=ksh#ksh">ksh</a>-derived shells, and some shells
+recently patched it.  I wasn't able to exploit in a &quot;real&quot; context;
+otherwise I'd have made more noise about it.</li>
+<li>Also described by the Fedora Security team: <a href="https://docs.fedoraproject.org/en-US/Fedora_Security_Team/1/html/Defensive_Coding/sect-Defensive_Coding-Shell-Double_Expansion.html">Defensive Coding: Shell Double Expansion</a></li>
+</ul>
+</li>
+</ul>
+<a name="tip-view-the-syntax-tree-with-n"></a>
+<h3>Tip: View the Syntax Tree With <code>-n</code></h3>
+<p>This gives insight into <a href="https://www.oilshell.org/blog/2019/02/07.html">how Oils parses shell</a>:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">osh -n -c 'echo ${x:-default}$(( 1 + 2 ))'</span>
+(C {&lt;echo&gt;} 
+  {
+    (braced_var_sub
+      token: &lt;Id.VSub_Name x&gt;
+      suffix_op: (suffix_op.Unary op_id:Id.VTest_ColonHyphen arg_word:{&lt;default&gt;})
+    ) 
+    (word_part.ArithSub
+      anode: 
+        (arith_expr.Binary
+          op_id: Id.Arith_Plus
+          left: (arith_expr.ArithWord w:{&lt;Id.Lit_Digits 1&gt;})
+          right: (arith_expr.ArithWord w:{&lt;Id.Lit_Digits 2&gt;})
+        )
+    )
+  }
+)
+</code></pre>
+<p>You can pass <code>--ast-format text</code> for more details.</p>
+<p>Evaluation of the syntax tree is a single step.</p>
+
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Interpreter State</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/interpreter-state.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Interpreter State</h1>
+<p>The Oils project has a single interpreter that supports both the OSH and YSH
+languages.</p>
+<p>In other words, It's useful to think of Unix shell in historical layers:</p>
+<ul>
+<li><a href="/cross-ref.html?tag=OSH#OSH">OSH</a>: A compatible but cleaned-up shell language.
+<ol>
+<li>Thompson Shell (pipelines, exit status)</li>
+<li>Bourne Shell (variables, functions)</li>
+<li><a href="/cross-ref.html?tag=ksh#ksh">Korn Shell</a> (indexed arrays)</li>
+<li><a href="/cross-ref.html?tag=bash#bash">Bash</a> (<code>shopt</code>, associative arrays)</li>
+</ol>
+</li>
+<li><a href="/cross-ref.html?tag=YSH#YSH">YSH</a>: A new shell language that manipulates the same interpreter
+state in a cleaner way.</li>
+</ul>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#example">Example</a></div>
+  <div class="toclevel1"><a href="#design-goals">Design Goals</a></div>
+  <div class="toclevel2"><a href="#simplify-and-rationalize-bash">Simplify and Rationalize bash</a></div>
+  <div class="toclevel2"><a href="#add-new-features-and-types">Add New Features and Types</a></div>
+  <div class="toclevel1"><a href="#high-level-description">High Level Description</a></div>
+  <div class="toclevel2"><a href="#memory-is-a-stack">Memory Is a Stack</a></div>
+  <div class="toclevel2"><a href="#environment-variables-become-global-variables">Environment Variables Become Global Variables</a></div>
+  <div class="toclevel2"><a href="#functions-and-variables-are-separate">Functions and Variables Are Separate</a></div>
+  <div class="toclevel2"><a href="#variable-name-lookup-with-dynamic-scope">Variable Name Lookup with &quot;Dynamic Scope&quot;</a></div>
+  <div class="toclevel2"><a href="#limitations-of-arrays-and-compound-data-structures">Limitations of Arrays And Compound Data Structures</a></div>
+  <div class="toclevel2"><a href="#integers-and-coercion">Integers and Coercion</a></div>
+  <div class="toclevel2"><a href="#unix-fork-has-copy-on-write-semantics">Unix <code>fork()</code> Has Copy-On-Write Semantics</a></div>
+  <div class="toclevel1"><a href="#key-data-types">Key Data Types</a></div>
+  <div class="toclevel2"><a href="#cell"><code>cell</code></a></div>
+  <div class="toclevel2"><a href="#value"><code>value</code></a></div>
+  <div class="toclevel2"><a href="#cmd_value-for-shell-builtins"><code>cmd_value</code> for shell builtins</a></div>
+  <div class="toclevel1"><a href="#printing-state">Printing State</a></div>
+  <div class="toclevel2"><a href="#shell-builtins">Shell Builtins</a></div>
+  <div class="toclevel2"><a href="#pp-in-oils">pp in Oils</a></div>
+  <div class="toclevel1"><a href="#modifying-state">Modifying State</a></div>
+  <div class="toclevel2"><a href="#ysh-keywords">YSH Keywords</a></div>
+  <div class="toclevel2"><a href="#shell-assignment-builtins-declaretypeset-readonly-export">Shell Assignment Builtins: declare/typeset, readonly, export</a></div>
+  <div class="toclevel2"><a href="#unset">unset</a></div>
+  <div class="toclevel2"><a href="#other-builtins">Other Builtins</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+  <div class="toclevel1"><a href="#appendix-bash-issues">Appendix: Bash Issues</a></div>
+  <div class="toclevel2"><a href="#strings-and-arrays-are-confused">Strings and Arrays Are Confused</a></div>
+  <div class="toclevel2"><a href="#indexed-arrays-and-associative-arrays-are-confused">Indexed Arrays and Associative Arrays Are Confused</a></div>
+  <div class="toclevel2"><a href="#empty-and-unset-are-confused">Empty and Unset Are Confused</a></div>
+</div>
+<a name="example"></a>
+<h2>Example</h2>
+<p>Shell has many syntaxes for the same semantics, which can be confusing.  For
+example, in bash, these four statements do similar things:</p>
+<pre><code class="language-sh-prompt"><span class="sh-prompt">$</span> <span class="sh-command">foo='bar'</span>
+<span class="sh-prompt">$</span> <span class="sh-command">declare -g foo=bar</span>
+<span class="sh-prompt">$</span> <span class="sh-command">x='foo=bar'; typeset $x</span>
+<span class="sh-prompt">$</span> <span class="sh-command">printf -v foo bar</span>
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo $foo</span>
+bar
+</code></pre>
+<p>In addition, YSH adds JavaScript-like syntax:</p>
+<pre><code>var foo = 'bar'
+</code></pre>
+<p>YSH syntax can express more data types, but it may also confuse new users.</p>
+<p>So the sections below describe the shell from a <strong>semantic</strong> perspective, which
+should help users reason about their programs.</p>
+<p>Quick tip: Use the <a href="osh-help.html?topic=pp#pp">pp</a> builtin to inspect shell variables.</p>
+<a name="design-goals"></a>
+<h2>Design Goals</h2>
+<a name="simplify-and-rationalize-bash"></a>
+<h3>Simplify and Rationalize bash</h3>
+<p>POSIX shell has a fairly simple model: everything is a string, and <code>&quot;$@&quot;</code> is a
+special case.</p>
+<p>Bash adds many features on top of POSIX, including arrays and associative
+arrays.  Oils implements those features, and a few more.</p>
+<p>However, it also significantly simplifies the model.</p>
+<p>A primary difference is mentioned in <a href="known-differences.html">Known Differences</a>:</p>
+<ul>
+<li>In bash, the <em>locations</em> of values are tagged with types, e.g. <code>declare -A unset_assoc_array</code>.</li>
+<li>In Oils, <em>values</em> are tagged with types.  This is how common dynamic languages
+like Python and JavaScript behave.</li>
+</ul>
+<p>In other words, Oils &quot;salvages&quot; the confusing semantics of bash and produces
+something simpler, while still being very compatible.</p>
+<a name="add-new-features-and-types"></a>
+<h3>Add New Features and Types</h3>
+<p>TODO</p>
+<ul>
+<li>eggex type</li>
+<li>later: floating point type</li>
+</ul>
+<a name="high-level-description"></a>
+<h2>High Level Description</h2>
+<a name="memory-is-a-stack"></a>
+<h3>Memory Is a Stack</h3>
+<ul>
+<li>Shell has a stack but no heap.  The stack stores:
+<ul>
+<li>Variables that are local to a function.</li>
+<li>The <strong>arguments array</strong> which is spelled <code>&quot;$@&quot;</code> in shell, and <code>@ARGV</code> in
+YSH.</li>
+</ul>
+</li>
+<li>Shell's memory has values and locations, but <strong>no</strong> references/pointers.</li>
+</ul>
+
+<a name="environment-variables-become-global-variables"></a>
+<h3>Environment Variables Become Global Variables</h3>
+<p>On initialization, environment variables like <code>PYTHONPATH=.</code> are copied into
+the shell's memory as global variables, with the <code>export</code> flag set.</p>
+<p>Global variables are stored in the first stack frame, i.e. the one at index
+<code>0</code>.</p>
+<a name="functions-and-variables-are-separate"></a>
+<h3>Functions and Variables Are Separate</h3>
+<p>There are two distinct namespaces.  For example:</p>
+<pre><code>foo() {
+  echo 'function named foo'
+}
+foo=bar   # a variable; doesn't affect the function
+</code></pre>
+<a name="variable-name-lookup-with-dynamic-scope"></a>
+<h3>Variable Name Lookup with &quot;Dynamic Scope&quot;</h3>
+<p>OSH has it, but YSH limits it.</p>
+<a name="limitations-of-arrays-and-compound-data-structures"></a>
+<h3>Limitations of Arrays And Compound Data Structures</h3>
+<p>Shell is a value-oriented language.</p>
+<ul>
+<li>Can't Be Nested</li>
+<li>Can't Be Passed to Functions or Returned From Functions</li>
+<li>Can't Take References; Must be Copied</li>
+</ul>
+<p>Example:</p>
+<pre><code>declare -a myarray=(&quot;${other_array[@]}&quot;)   # shell
+
+var myarray = :| @other_array |            # Oils
+</code></pre>
+<p>Reason: There's no Garbage collection.</p>
+<a name="integers-and-coercion"></a>
+<h3>Integers and Coercion</h3>
+<ul>
+<li>Strings are coerced to integers to do math.</li>
+<li>What about <code>-i</code> in bash?</li>
+</ul>
+<a name="unix-fork-has-copy-on-write-semantics"></a>
+<h3>Unix <code>fork()</code> Has Copy-On-Write Semantics</h3>
+<p>See the <a href="process-model.html">Process Model</a> document.</p>
+<a name="key-data-types"></a>
+<h2>Key Data Types</h2>
+<p>TODO: <a href="https://github.com/oils-for-unix/oils/blob/master/core/runtime.asdl">core/runtime.asdl</a></p>
+
+<a name="cell"></a>
+<h3><code>cell</code></h3>
+<p>TODO</p>
+<ul>
+<li><a href="osh-help.html?topic=export#export">export</a> only applies to <strong>strings</strong></li>
+</ul>
+<a name="value"></a>
+<h3><code>value</code></h3>
+<p>Undef, Str, Sequential/Indexed Arrays, Associative Array</p>
+<ul>
+<li>OSH has <code>value.BashArray</code>, and YSH has <code>value.List</code>.</li>
+<li>no integers, but there is (( ))</li>
+<li>&quot;$@&quot; is an array, and &quot;${a[@]}&quot; too
+<ul>
+<li>not true in bash -- it's fuzzy there</li>
+<li>but $@ and ${a[@]}  are NOT arrays</li>
+</ul>
+</li>
+<li>flags: readonly and exported (but arrays/assoc arrays shouldn't be exported)
+<ul>
+<li>TODO: find that</li>
+</ul>
+</li>
+</ul>
+<a name="cmd_value-for-shell-builtins"></a>
+<h3><code>cmd_value</code> for shell builtins</h3>
+<p>Another important type:</p>
+<pre><code>  assign_arg = (lvalue lval, value? rval, int spid)
+
+  cmd_value =
+    Argv(string* argv, int* arg_spids, command__BraceGroup? block)
+  | Assign(builtin builtin_id,
+           string* argv, int* arg_spids,
+           assign_arg* pairs)
+</code></pre>
+<a name="printing-state"></a>
+<h2>Printing State</h2>
+<a name="shell-builtins"></a>
+<h3>Shell Builtins</h3>
+<p>Oils supports various shell and bash operations to view the interpreter state.</p>
+<ul>
+<li><code>set</code> prints variables and their values</li>
+<li><code>set -o</code> prints options</li>
+<li><code>declare/typeset/readonly/export -p</code> prints a subset of variables</li>
+<li><code>test -v</code> tests if a variable is defined.</li>
+</ul>
+<a name="pp-in-oils"></a>
+<h3><a href="osh-help.html?topic=pp#pp">pp</a> in Oils</h3>
+<p>Pretty prints a cell.</p>
+<p>This is cleaner!</p>
+<p>TODO: What about functions</p>
+<a name="modifying-state"></a>
+<h2>Modifying State</h2>
+<a name="ysh-keywords"></a>
+<h3>YSH Keywords</h3>
+<p>TODO: See YSH Keywords doc.</p>
+<a name="shell-assignment-builtins-declaretypeset-readonly-export"></a>
+<h3>Shell Assignment Builtins: declare/typeset, readonly, export</h3>
+<p>...</p>
+<a name="unset"></a>
+<h3><a href="osh-help.html?topic=unset#unset">unset</a></h3>
+<p>You can't unset an array in OSH?  But you can in bash.</p>
+<a name="other-builtins"></a>
+<h3>Other Builtins</h3>
+<ul>
+<li><a href="osh-help.html?topic=read#read">read</a>.  Sometimes sets the magic <code>$REPLY</code> variable.</li>
+<li><a href="osh-help.html?topic=getopts#getopts">getopts</a></li>
+</ul>
+<a name="links"></a>
+<h2>Links</h2>
+<ul>
+<li><a href="process-mode.html">Process Model</a></li>
+<li><a href="https://opensource.com/article/18/5/you-dont-know-bash-intro-bash-arrays">https://opensource.com/article/18/5/you-dont-know-bash-intro-bash-arrays</a></li>
+<li><a href="https://www.thegeekstuff.com/2010/06/bash-array-tutorial">https://www.thegeekstuff.com/2010/06/bash-array-tutorial</a></li>
+</ul>
+<a name="appendix-bash-issues"></a>
+<h2>Appendix: Bash Issues</h2>
+
+<a name="strings-and-arrays-are-confused"></a>
+<h3>Strings and Arrays Are Confused</h3>
+<pre><code>Horrible
+
+a=('1 2' 3)
+b=(1 '2 3')  # two different elements
+
+[[ $a == $b ]]
+[[ ${a[0]} == ${b[0]} ]]
+
+[[ ${a[@]} == ${b[@]} ]]
+</code></pre>
+<p>Associative arrays and being undefined</p>
+<ul>
+<li>half an array type
+<ul>
+<li>strict_array removes this</li>
+<li>case $x in &quot;$@&quot;</li>
+</ul>
+</li>
+<li>half an associative array type</li>
+</ul>
+<a name="indexed-arrays-and-associative-arrays-are-confused"></a>
+<h3>Indexed Arrays and Associative Arrays Are Confused</h3>
+<a name="empty-and-unset-are-confused"></a>
+<h3>Empty and Unset Are Confused</h3>
+<ul>
+<li>empty array conflicts with <code>set -o nounset</code> (in bash 4.3).  I can't recommend
+in good faith.</li>
+</ul>
+
+
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

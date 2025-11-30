@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Types and Methods (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-type-method.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> — Chapter <strong>Types and Methods</strong></p>
+</div>
+<p>This chapter describes YSH types and methods.  There are also two OSH types for
+bash compatibility.</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#OSH">OSH</a> <br/>
+  <a class="dense-toc-h3" href="#BashArray">BashArray</a> <br/>
+  <a class="dense-toc-h3" href="#BashAssoc">BashAssoc</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Atoms">Atoms</a> <br/>
+  <a class="dense-toc-h3" href="#Null">Null</a> <br/>
+  <a class="dense-toc-h3" href="#null">null</a> <br/>
+  <a class="dense-toc-h3" href="#Bool">Bool</a> <br/>
+  <a class="dense-toc-h3" href="#expr/true">expr/true</a> <br/>
+  <a class="dense-toc-h3" href="#expr/false">expr/false</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Numbers">Numbers</a> <br/>
+  <a class="dense-toc-h3" href="#Int">Int</a> <br/>
+  <a class="dense-toc-h3" href="#Float">Float</a> <br/>
+  <a class="dense-toc-h3" href="#Range">Range</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#String">String</a> <br/>
+  <a class="dense-toc-h3" href="#Str">Str</a> <br/>
+  <a class="dense-toc-h3" href="#find">find()</a> <br/>
+  <a class="dense-toc-h3" href="#replace">replace()</a> <br/>
+  <a class="dense-toc-h3" href="#startsWith">startsWith()</a> <br/>
+  <a class="dense-toc-h3" href="#endsWith">endsWith()</a> <br/>
+  <a class="dense-toc-h3" href="#trim">trim()</a> <br/>
+  <a class="dense-toc-h3" href="#trimStart">trimStart()</a> <br/>
+  <a class="dense-toc-h3" href="#trimEnd">trimEnd()</a> <br/>
+  <a class="dense-toc-h3" href="#upper">upper()</a> <br/>
+  <a class="dense-toc-h3" href="#lower">lower()</a> <br/>
+  <a class="dense-toc-h3" href="#search">search()</a> <br/>
+  <a class="dense-toc-h3" href="#leftMatch">leftMatch()</a> <br/>
+  <a class="dense-toc-h3" href="#split">split()</a> <br/>
+  <a class="dense-toc-h3" href="#lines">lines()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Patterns">Patterns</a> <br/>
+  <a class="dense-toc-h3" href="#Eggex">Eggex</a> <br/>
+  <a class="dense-toc-h3" href="#Match">Match</a> <br/>
+  <a class="dense-toc-h3" href="#group">group()</a> <br/>
+  <a class="dense-toc-h3" href="#start">start()</a> <br/>
+  <a class="dense-toc-h3" href="#end">end()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Containers">Containers</a> <br/>
+  <a class="dense-toc-h3" href="#List">List</a> <br/>
+  <a class="dense-toc-h3" href="#List/append">List/append()</a> <br/>
+  <a class="dense-toc-h3" href="#pop">pop()</a> <br/>
+  <a class="dense-toc-h3" href="#extend">extend()</a> <br/>
+  <a class="dense-toc-h3" href="#indexOf">indexOf()</a> <br/>
+  <a class="dense-toc-h3" href="#insert">insert()</a> <br/>
+  <a class="dense-toc-h3" href="#lastIndexOf">lastIndexOf()</a> <br/>
+  <a class="dense-toc-h3" href="#remove">remove()</a> <br/>
+  <a class="dense-toc-h3" href="#reverse">reverse()</a> <br/>
+  <a class="dense-toc-h3" href="#List/clear">List/clear()</a> <br/>
+  <a class="dense-toc-h3" href="#Dict">Dict</a> <br/>
+  <a class="dense-toc-h3" href="#erase">erase()</a> <br/>
+  <a class="dense-toc-h3" href="#accum">accum()</a> <br/>
+  <a class="dense-toc-h3" href="#Dict/clear">Dict/clear()</a> <br/>
+  <a class="dense-toc-h3" href="#Place">Place</a> <br/>
+  <a class="dense-toc-h3" href="#setValue">setValue()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Code-Types">Code Types</a> <br/>
+  <a class="dense-toc-h3" href="#Func">Func</a> <br/>
+  <a class="dense-toc-h3" href="#BuiltinFunc">BuiltinFunc</a> <br/>
+  <a class="dense-toc-h3" href="#BoundFunc">BoundFunc</a> <br/>
+  <a class="dense-toc-h3" href="#Proc">Proc</a> <br/>
+  <a class="dense-toc-h3" href="#docComment">docComment()</a> <br/>
+  <a class="dense-toc-h3" href="#BuiltinProc">BuiltinProc</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Objects">Objects</a> <br/>
+  <a class="dense-toc-h3" href="#Obj">Obj</a> <br/>
+  <a class="dense-toc-h3" href="#__invoke__"><code>__invoke__</code></a> <br/>
+  <a class="dense-toc-h3" href="#new">new</a> <br/>
+  <a class="dense-toc-h3" href="#__call__"><code>__call__</code></a> <br/>
+  <a class="dense-toc-h3" href="#__index__"><code>__index__</code></a> <br/>
+  <a class="dense-toc-h3" href="#__str__"><code>__str__</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Reflection">Reflection</a> <br/>
+  <a class="dense-toc-h3" href="#Command">Command</a> <br/>
+  <a class="dense-toc-h3" href="#sourceCode">sourceCode</a> <br/>
+  <a class="dense-toc-h3" href="#Expr">Expr</a> <br/>
+  <a class="dense-toc-h3" href="#Frame">Frame</a> <br/>
+  <a class="dense-toc-h3" href="#DebugFrame">DebugFrame</a> <br/>
+  <a class="dense-toc-h3" href="#toString">toString()</a> <br/>
+  <a class="dense-toc-h3" href="#io">io</a> <br/>
+  <a class="dense-toc-h3" href="#stdin">stdin</a> <br/>
+  <a class="dense-toc-h3" href="#io/eval">io/eval()</a> <br/>
+  <a class="dense-toc-h3" href="#io/evalExpr">io/evalExpr()</a> <br/>
+  <a class="dense-toc-h3" href="#captureStdout">captureStdout()</a> <br/>
+  <a class="dense-toc-h3" href="#captureAll">captureAll()</a> <br/>
+  <a class="dense-toc-h3" href="#promptVal">promptVal()</a> <br/>
+  <a class="dense-toc-h3" href="#time">time()</a> <br/>
+  <a class="dense-toc-h3" href="#strftime">strftime()</a> <br/>
+  <a class="dense-toc-h3" href="#glob">glob()</a> <br/>
+  <a class="dense-toc-h3" href="#vm">vm</a> <br/>
+  <a class="dense-toc-h3" href="#getFrame">getFrame()</a> <br/>
+  <a class="dense-toc-h3" href="#getDebugStack">getDebugStack()</a> <br/>
+  <a class="dense-toc-h3" href="#id">id()</a> <br/>
+</div>
+</div>
+</div>
+<a name="OSH"></a>
+<h2>OSH</h2>
+<p>These two types are for OSH code only.</p>
+<a name="BashArray"></a>
+<h3>BashArray</h3>
+<p>A bash array holds a sequence of strings.  Some entries may be <strong>unset</strong> (not
+an empty string).</p>
+<p>See <a href="chap-osh-assign.html#sh-init-list">sh-init-list</a> and <a href="chap-osh-assign.html#sh-array">sh-array</a> for creation/mutation of BashArray.
+In YSH, prefer to use <a href="#List">List</a> instances.</p>
+<a name="BashAssoc"></a>
+<h3>BashAssoc</h3>
+<p>A bash associative array is a mapping from strings to strings.</p>
+<p>See <a href="chap-osh-assign.html#sh-init-list">sh-init-list</a> and <a href="chap-osh-assign.html#sh-assoc">sh-assoc</a> for creation/mutation of BashAssoc.  In
+YSH, prefer to use <a href="#Dict">Dict</a> instances.</p>
+<a name="Atoms"></a>
+<h2>Atoms</h2>
+
+<a name="Null"></a>
+<h3>Null</h3>
+<p>An <code>Obj</code> instance representing the <code>Null</code> type.</p>
+<p>The <code>Null</code> type has a single value spelled <code>null</code>.  (Related:
+<a href="chap-expr-lang.html#atom-literal">atom-literal</a>).</p>
+<a name="null"></a>
+<h3>null</h3>
+<p>A value that's not equal to any other.  Values that aren't explicitly
+initialized are <code>null</code>, e.g.</p>
+<pre><code>var x
+= x  <span class="sh-comment"># =&gt; (Null)   null</span>
+</code></pre>
+<p>Its type is <code>Null</code>.</p>
+<a name="Bool"></a>
+<h3>Bool</h3>
+<p>An <code>Obj</code> instance representing the boolean type.</p>
+<p>This type has 2 values: <code>true</code> and <code>false</code>.  (Related: <a href="chap-expr-lang.html#atom-literal">atom-literal</a>).</p>
+<a name="expr/true"></a>
+<h3>expr/true</h3>
+<p>A single value representing truth, e.g.</p>
+<pre><code>= 42 === 42  <span class="sh-comment"># =&gt; true</span>
+</code></pre>
+<a name="expr/false"></a>
+<h3>expr/false</h3>
+<p>A single value representing the opposite of truth, e.g.</p>
+<pre><code>= 42 === 3  <span class="sh-comment"># =&gt; false</span>
+</code></pre>
+<a name="Numbers"></a>
+<h2>Numbers</h2>
+<a name="Int"></a>
+<h3>Int</h3>
+<p>Integers are currently 64-bit signed integers (on all platforms).  TODO: they
+should be arbitrary precision.</p>
+<p>There are many way of writing integers; see <a href="chap-expr-lang.html#int-literal">int-literal</a>.</p>
+<p>In shell, ASCII strings like <code>'42'</code> are often used for calculations on
+integers.  But you can use a &quot;real&quot; integer type in YSH.</p>
+<a name="Float"></a>
+<h3>Float</h3>
+<p>YSH has 64-bit floating point numbers.  See <a href="chap-expr-lang.html#float-literal">float-literal</a> for how to denote
+them.</p>
+<a name="Range"></a>
+<h3>Range</h3>
+<p>A <code>Range</code> is a pair of two numbers, used for iteration.  See <a href="chap-expr-lang.html#range">range</a> for how
+to denote them.</p>
+<p>Ranges are used for iteration; see <a href="chap-cmd-lang.html#ysh-for">ysh-for</a>.</p>
+<a name="String"></a>
+<h2>String</h2>
+<p>In Oils, strings may contains any sequence of bytes, which may be UTF-8
+encoded.</p>
+<p>Internal NUL bytes (<code>0x00</code>) are allowed.</p>
+<p>When passing such strings to say the <a href="chap-builtin-cmd.html#cd">cd</a> builtin, the string will be
+truncated before the NUL.  This is because most C functions like <code>chdir()</code> take
+NUL-terminated strings.</p>
+<a name="Str"></a>
+<h3>Str</h3>
+<p>An <code>Obj</code> instance representing the string type.  Let's use this definition:</p>
+<pre><code>var mystr = 'mystr'
+</code></pre>
+<a name="find"></a>
+<h3>find()</h3>
+<p>TODO:</p>
+<pre><code class="language-raw">var i = mystr.find('y')
+</code></pre>
+<p>This is similar to</p>
+<pre><code class="language-raw">= mystr.contains('y')
+</code></pre>
+<p>Both of them do substring search.  Also similar to <code>mystr.search(/ 'y' /)</code>.</p>
+
+<a name="replace"></a>
+<h3>replace()</h3>
+<p>Replace substrings with a given string.</p>
+<pre><code>= mystr.replace('OSH', 'YSH')
+</code></pre>
+<p>Or replace an Eggex with a string or function.</p>
+<pre><code>= mystr.replace(/ d+ /, &quot;&lt;redacted&gt;&quot;)  <span class="sh-comment"># =&gt; &quot;code is &lt;redacted&gt;&quot;</span>
+</code></pre>
+<p>Refer to Eggex captures with replacement expressions. Captured values can be
+referenced with <code>$1</code>, <code>$2</code>, etc.</p>
+<pre><code>var mystr = '1989-06-08'
+var pat = / &lt;capture d{4}&gt; '-' &lt;capture d{2}&gt; '-' &lt;capture d{2}&gt; /
+= mystr.replace(pat, ^&quot;Year: $1, Month: $2, Day: $3&quot;)
+</code></pre>
+<p>Captures can also be named.</p>
+<pre><code>= mystr.replace(/ &lt;capture digit{4} as year : int&gt; /, ^&quot;$[year + 1]&quot;)
+</code></pre>
+<p><code>$0</code> refers to the entire capture itself in a substitution string.</p>
+<pre><code>var mystr = &quot;replace with mystr.replace()&quot;
+= mystr.replace(/ alpha+ '.' alpha+ '()' /, ^&quot;&lt;code&gt;$0&lt;/code&gt;&quot;)
+<span class="sh-comment"># =&gt; &quot;replace with &lt;code&gt;mystr.replace()&lt;/code&gt;&quot;</span>
+</code></pre>
+<p>In addition to captures, other variables can be referenced within a replacement
+expression.</p>
+<pre><code>var myvar = 'zz'
+= mystr.replace(/ &lt;capture alpha+&gt; /, ^&quot;$1 and $myvar&quot;)
+</code></pre>
+<p>To limit the number of replacements, pass in a named count argument. By default
+the count is <code>-1</code>. For any count in [0, <code>MAX_INT</code>], there will be at most count
+replacements. Any negative count means &quot;replace all&quot; (i.e. <code>count=-2</code> behaves
+exactly like <code>count=-1</code>).</p>
+<pre><code>var mystr = &quot;bob has a friend named bob&quot;
+= mystr.replace(&quot;bob&quot;, &quot;Bob&quot;, count=1)   <span class="sh-comment"># =&gt; &quot;Bob has a friend named bob&quot;</span>
+= mystr.replace(&quot;bob&quot;, &quot;Bob&quot;, count=-1)  <span class="sh-comment"># =&gt; &quot;Bob has a friend named Bob&quot;</span>
+</code></pre>
+<p>The following matrix of signatures are supported by <code>replace()</code>:</p>
+<pre><code class="language-raw">= mystr.replace(string_val, subst_str)
+= mystr.replace(string_val, subst_expr)
+= mystr.replace(eggex_val, subst_str)
+= mystr.replace(eggex_val, subst_expr)
+</code></pre>
+<p>Replacing by an <code>Eggex</code> has some limitations:</p>
+<ul>
+<li>If a <code>search()</code> results in an empty string match, eg.
+<code>'abc'.split(/ space* /)</code>, then we raise an error to avoid an infinite loop.</li>
+<li>The string to replace on cannot contain NUL bytes because we use the libc
+regex engine.</li>
+</ul>
+<a name="startsWith"></a>
+<h3>startsWith()</h3>
+<p>Checks if a string starts with a pattern, returning true if it does or false if
+it does not.</p>
+<pre><code>= b'YSH123'.startsWith(b'YSH')  <span class="sh-comment"># =&gt; true</span>
+= b'123YSH'.startsWith(b'YSH')  <span class="sh-comment"># =&gt; false</span>
+= b'123YSH'.startsWith(/ d+ /)  <span class="sh-comment"># =&gt; true</span>
+= b'YSH123'.startsWith(/ d+ /)  <span class="sh-comment"># =&gt; false</span>
+</code></pre>
+<p>Matching is done based on bytes, not runes.</p>
+<pre><code>= b'\yce\ya3'                 <span class="sh-comment"># =&gt; (Str)   &quot;Σ&quot;</span>
+= 'Σ'.startsWith(b'\yce')     <span class="sh-comment"># =&gt; true</span>
+= 'Σ'.endsWith(b'\ya3')       <span class="sh-comment"># =&gt; true</span>
+</code></pre>
+<a name="endsWith"></a>
+<h3>endsWith()</h3>
+<p>Like <code>startsWith()</code> but returns true if the <em>end</em> of the string matches.</p>
+<pre><code>= b'123YSH'.endsWith('YSH')   <span class="sh-comment"># =&gt; true</span>
+= b'YSH123'.endsWith(/ d+ /)  <span class="sh-comment"># =&gt; true</span>
+</code></pre>
+<a name="trim"></a>
+<h3>trim()</h3>
+<p>Removes text from the start and end of a <code>Str</code>.</p>
+<p>To specify what to remove, pass either a <code>Str</code> argument:</p>
+<pre><code>= 'xxxYSHxxx'.trim('xxx')      <span class="sh-comment"># =&gt; 'YSH'</span>
+= 'xxxYSH   '.trim('xxx')      <span class="sh-comment"># =&gt; 'YSH   '</span>
+= '   YSHxxx'.trim('xxx')      <span class="sh-comment"># =&gt; '   YSH'</span>
+= '   YSH   '.trim('xxx')      <span class="sh-comment"># =&gt; '   YSH   '</span>
+</code></pre>
+<p>Or an <code>Eggex</code> argument:</p>
+<pre><code>= '123YSH456'.trim(/ d+ /)     <span class="sh-comment"># =&gt; 'YSH'</span>
+</code></pre>
+<p>If no arguments are passed, whitespace is removed:</p>
+<pre><code>= b' YSH\n'.trim()             <span class="sh-comment"># =&gt; 'YSH'</span>
+</code></pre>
+<p>These code points are considered whitespace:</p>
+<ul>
+<li><code>U+0009</code> - Horizontal tab <code>\t</code></li>
+<li><code>U+000A</code> - Newline <code>\n</code></li>
+<li><code>U+000B</code> - Vertical tab <code>\u{b}</code></li>
+<li><code>U+000C</code> - Form feed <code>\f</code></li>
+<li><code>U+000D</code> - Carriage return <code>\r</code></li>
+<li><code>U+0020</code> - Normal space <code>' '</code></li>
+<li><code>U+00A0</code> - No-break space (NBSP) <code>\u{a0}</code></li>
+<li><code>U+FEFF</code> - Zero-width no-break space (ZWNBSP) <code>\u{feff}</code></li>
+</ul>
+<p>To obtain code points, Oils decodes the string as UTF-8.  Bytes that are not
+valid UTF-8 cause a fatal error.</p>
+<p>Other code points are considered whitespace in the Unicode standard, but we use
+only the ones above, so that these methods have a stable specification.</p>
+<hr />
+<p>Note that Eggex patterns compile to POSIX extended regular expressions (ERE),
+which have a different notion of whitespace:</p>
+<ul>
+<li><code>/blank/</code> - matches <code>\t</code>, normal space</li>
+<li><code>/space/</code> - matches <code>\t \n</code>, vertical tab, <code>\f \r</code>, normal space, and
+possibly Unicode separators <code>\p{Z}</code></li>
+</ul>
+
+<a name="trimStart"></a>
+<h3>trimStart()</h3>
+<p>Like <code>trim()</code> but only removes characters from the <em>start</em> of the string.</p>
+<pre><code>= b' YSH\n'   .trimStart()        <span class="sh-comment"># =&gt; b'YSH\n'</span>
+= b'xxxYSHxxx'.trimStart('xxx')   <span class="sh-comment"># =&gt;  'YSHxxx'</span>
+= b'123YSH456'.trimStart(/ d+ /)  <span class="sh-comment"># =&gt;  'YSH456'</span>
+</code></pre>
+<a name="trimEnd"></a>
+<h3>trimEnd()</h3>
+<p>Like <code>trim()</code> but only removes characters from the <em>end</em> of the string.</p>
+<pre><code>= b' YSH\n'   .trimEnd()          <span class="sh-comment"># =&gt; ' YSH'</span>
+= b'xxxYSHxxx'.trimEnd('xxx')     <span class="sh-comment"># =&gt; 'xxxYSH'</span>
+= b'123YSH456'.trimEnd(/ d+ /)    <span class="sh-comment"># =&gt; '123YSH'</span>
+</code></pre>
+<a name="upper"></a>
+<h3>upper()</h3>
+<p>Respects unicode.</p>
+<a name="lower"></a>
+<h3>lower()</h3>
+<p>Respects unicode.</p>
+<a name="search"></a>
+<h3>search()</h3>
+<p>Search for a regex in the string.  Return a <a href="#Match">Match</a> value for the first
+occurrence, or <code>null</code> if no match is found.</p>
+<pre><code>var m = 'hi world'.search(/[a e i o u]/)  <span class="sh-comment"># search for vowels</span>
+= m.start(0)  <span class="sh-comment"># =&gt; index 1, matching 'i'</span>
+
+var m = 'hi world'.search(/'foo'/)
+= m           <span class="sh-comment"># =&gt; null</span>
+</code></pre>
+<p>The <code>pos</code> parameter lets you start searching in the middle of the string:</p>
+<pre><code>var m = 'hi world'.search(/[a e i o u]/, pos=3)
+= m.start(0)  <span class="sh-comment"># =&gt; index 4, matching 'o'</span>
+
+var m = 'hi world'.search(/[a e i o u]/, pos=5)
+= m           <span class="sh-comment"># =&gt; null, no more matches</span>
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li><code>%start</code> aka <code>^</code> will match only when <code>pos === 0</code>.</li>
+<li>This method behaves like Python's <code>re.search()</code>.</li>
+</ul>
+<a name="leftMatch"></a>
+<h3>leftMatch()</h3>
+<p>Test whether the regex matches the string at the given <code>pos</code>, which is <code>0</code> by
+default.  That is, it does <strong>not</strong> look ahead for matches, unlike the
+<code>search()</code> method.</p>
+<p>Returns a <a href="#Match">Match</a> value, or <code>null</code> if it doesn't match.</p>
+<pre><code>var m = 'ale'.leftMatch(/[a e i o u]/)
+= m.start(0)  <span class="sh-comment"># =&gt; index 0 for 'a'</span>
+
+var m = 'hi world'.leftMatch(/[a e i o u]/)
+= m           <span class="sh-comment"># =&gt; null, because 'h' is not a vowel</span>
+</code></pre>
+<p>The <code>pos</code> parameter lets you match in the middle of the string:</p>
+<pre><code>var m = 'hi world'.leftMatch(/[a e i o u]/, pos=1)
+= m.start(0)  <span class="sh-comment"># =&gt; index 1, matching 'i'</span>
+
+var m = 'hi world'.leftMatch(/[a e i o u]/, pos=3)
+= m           <span class="sh-comment"># null, because 'w' is not a vowel</span>
+</code></pre>
+<p><code>leftMatch()</code> and <code>pos</code> can be used to implement iterative lexers.  See <a href="../ysh-regex-api.html">YSH
+Regex API</a>.</p>
+<p>Notes:</p>
+<ul>
+<li>The difference between <code>leftMatch()</code> and <code>search()</code> is like Python's
+<code>re.match()</code> versus <code>re.search()</code>.</li>
+<li>Unlike <code>search()</code>, <code>%start</code> aka <code>^</code> may match when <code>pos !== 0</code>.
+<ul>
+<li>This is a quirk compared to Python: under the hood, <code>leftMatch()</code> is
+implemented with <code>^</code>.</li>
+</ul>
+</li>
+<li>The eggex flag <code>reg_newline</code> (libc <code>REG_NEWLINE</code>) affects the meaning of <code>^</code>.
+Generally speaking, avoid using <code>leftMatch()</code> with patterns with
+<code>reg_newline</code> set.</li>
+</ul>
+<a name="split"></a>
+<h3>split()</h3>
+<p>Split a string by a <code>Str</code> separator <code>sep</code> into a <code>List</code> of chunks.</p>
+<pre><code>pp ('a;b;;c'.split(';'))       <span class="sh-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;&quot;, &quot;c&quot;]</span>
+pp ('a&lt;&gt;b&lt;&gt;c&lt;d'.split('&lt;&gt;'))   <span class="sh-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&lt;d&quot;]</span>
+pp ('🌞🌝🌞🌝🌞'.split('🌝'))  <span class="sh-comment"># =&gt; [&quot;🌞&quot;, &quot;🌞&quot;, &quot;🌞&quot;]</span>
+</code></pre>
+<p>Or split using an <code>Eggex</code>.</p>
+<pre><code>pp ('a b  cd'.split(/ space+ /))   <span class="sh-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;cd&quot;]</span>
+pp ('a,b;c'.split(/ ',' | ';' /))  <span class="sh-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span>
+</code></pre>
+<p>Optionally, provide a <code>count</code> to split on <code>sep</code> at most <code>count</code> times. A
+negative <code>count</code> will split on all occurrences of <code>sep</code>.</p>
+<pre><code>pp ('a;b;;c'.split(';', count=2))   <span class="sh-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;;c&quot;]</span>
+pp ('a;b;;c'.split(';', count=-1))  <span class="sh-comment"># =&gt; [&quot;a&quot;, &quot;b&quot;, &quot;&quot;, &quot;c&quot;]</span>
+</code></pre>
+<p>Passing an empty <code>sep</code> will result in an error.</p>
+<pre><code class="language-raw">pp ('abc'.split(''))  # =&gt; Error: Sep cannot be &quot;&quot;
+</code></pre>
+<p>Splitting by an <code>Eggex</code> has some limitations:</p>
+<ul>
+<li>If a <code>search()</code> results in an empty string match, eg.
+<code>'abc'.split(/ space* /)</code>, then we raise an error to avoid an infinite loop.</li>
+<li>The string to split cannot contain NUL bytes because we use the libc regex
+engine.</li>
+</ul>
+<a name="lines"></a>
+<h3>lines()</h3>
+<p>Split a string into lines N lines, where N is the number of newlines.</p>
+<pre><code>var s = u'foo\nbar\n'  <span class="sh-comment"># 2 lines</span>
+= s.lines()            <span class="sh-comment"># =&gt; ['foo', 'bar']</span>
+</code></pre>
+<p>Notice that the result has 2 lines, where as <code>s.split('\n')</code> would have 3.</p>
+<hr />
+<p>Pass <code>eol=</code> to override the default delimiter of <code>\n</code>:</p>
+<pre><code>var s = b'foo\y00bar\y00'  <span class="sh-comment"># 2 lines terminated by NUL</span>
+= s.lines(eol=\y00)        <span class="sh-comment"># =&gt; ['foo', 'bar']</span>
+</code></pre>
+<p>(This is useful for the output of <code>find . -print0</code>.)</p>
+<p>Notes:</p>
+<ul>
+<li>Use <code>read --all</code> and <code>_reply.lines()</code> to replace the bash builtin
+<a href="chap-builtin-cmd.html#readarray">readarray</a> aka <a href="chap-builtin-cmd.html#mapfile">mapfile</a>.</li>
+<li>There is no special handling of carriage returns (<code>\r</code>), although you can
+pass <code>eol=u'\r\n'</code>.</li>
+</ul>
+<a name="Patterns"></a>
+<h2>Patterns</h2>
+<a name="Eggex"></a>
+<h3>Eggex</h3>
+<p>An <code>Eggex</code> is a composable regular expression.  It can be spliced into other
+regular expressions.</p>
+<a name="Match"></a>
+<h3>Match</h3>
+<p>A <code>Match</code> is the result searching for an <code>Eggex</code> within a <code>Str</code>.</p>
+<a name="group"></a>
+<h3>group()</h3>
+<p>Returns the string that matched a regex capture group.  Group 0 is the entire
+match.</p>
+<pre><code>var m = '10:59'.search(/ ':' &lt;capture d+&gt; /)
+echo $[m.group(0)]  <span class="sh-comment"># =&gt; ':59'</span>
+echo $[m.group(1)]  <span class="sh-comment"># =&gt; '59'</span>
+</code></pre>
+<p>Matches can be named with <code>as NAME</code>:</p>
+<pre><code>var m = '10:59'.search(/ ':' &lt;capture d+ as minute&gt; /)
+</code></pre>
+<p>And then accessed by the same name:</p>
+<pre><code>echo $[m.group('minute')]  <span class="sh-comment"># =&gt; '59'</span>
+</code></pre>
+<a name="start"></a>
+<h3>start()</h3>
+<p>Like <code>group()</code>, but returns the <strong>start</strong> position of a regex capture group,
+rather than its value.</p>
+<pre><code>var m = '10:59'.search(/ ':' &lt;capture d+ as minute&gt; /)
+echo $[m.start(0)]         <span class="sh-comment"># =&gt; position 2 for ':59'</span>
+echo $[m.start(1)]         <span class="sh-comment"># =&gt; position 3 for '59'</span>
+
+echo $[m.start('minute')]  <span class="sh-comment"># =&gt; position 3 for '59'</span>
+</code></pre>
+<a name="end"></a>
+<h3>end()</h3>
+<p>Like <code>group()</code>, but returns the <strong>end</strong> position of a regex capture group,
+rather than its value.</p>
+<pre><code>var m = '10:59'.search(/ ':' &lt;capture d+ as minute&gt; /)
+echo $[m.end(0)]         <span class="sh-comment"># =&gt; position 5 for ':59'</span>
+echo $[m.end(1)]         <span class="sh-comment"># =&gt; position 5 for '59'</span>
+
+echo $[m.end('minute')]  <span class="sh-comment"># =&gt; 5 for '59'</span>
+</code></pre>
+<a name="Containers"></a>
+<h2>Containers</h2>
+<a name="List"></a>
+<h3>List</h3>
+<p>An <code>Obj</code> instance representing the <code>List</code> type.</p>
+<p>A List contains an ordered sequence of values.</p>
+<a name="List/append"></a>
+<h3>List/append()</h3>
+<p>Add an element to a list.</p>
+<pre><code>var fruits = :|apple banana pear|
+call fruits-&gt;append('orange')
+echo @fruits  <span class="sh-comment"># =&gt; apple banana pear orange</span>
+</code></pre>
+<p>Similar names: <a href="chap-index.html#append">append</a></p>
+<a name="pop"></a>
+<h3>pop()</h3>
+<p>remove an element from a list and return it.</p>
+<pre><code>var fruits = :|apple banana pear orange|
+var last = fruits-&gt;pop()  <span class="sh-comment"># 'orange' is removed AND returned</span>
+echo $last                <span class="sh-comment"># =&gt; orange</span>
+echo @fruits              <span class="sh-comment"># =&gt; apple banana pear</span>
+</code></pre>
+<a name="extend"></a>
+<h3>extend()</h3>
+<p>Extend an existing list with the elements of another list.</p>
+<pre><code>var foods = :|cheese chocolate|
+var fruits = :|apple banana|
+call foods-&gt;extend(fruits)
+echo @foods  <span class="sh-comment"># =&gt; cheese chocolate apple banana</span>
+</code></pre>
+<a name="indexOf"></a>
+<h3>indexOf()</h3>
+<p>Returns the first index of the element in the list, or -1 if it's not present.</p>
+<pre><code>var names = :| Jane Peter Joana Sam |
+echo $[names.indexOf('Sam')]    <span class="sh-comment"># =&gt; 3</span>
+echo $[names.indexOf('Simon')]  <span class="sh-comment"># =&gt; -1</span>
+</code></pre>
+<a name="insert"></a>
+<h3>insert()</h3>
+<p>Insert an element into the list at the given index.</p>
+<pre><code>var hills = :| pillar glaramara helvellyn |
+call hills-&gt;insert(1, 'raise')
+echo @hills  <span class="sh-comment"># =&gt; pillar raise glaramara helvellyn</span>
+</code></pre>
+<ul>
+<li>If you pass an index greater than the list length, the item will be inserted
+at the end.</li>
+<li>If you pass a negative index, it's interpreted as relative to the end of the
+list, like slicing.
+<ul>
+<li>If the negative index is out of bounds, the item will be inserted at the
+beginning of the list.</li>
+</ul>
+</li>
+</ul>
+<a name="lastIndexOf"></a>
+<h3>lastIndexOf()</h3>
+<p>Returns the index of the last occurring instance of the specified
+element in the list, or -1 if it's not present.</p>
+<pre><code>var names = :| Sam Alice Sam Sam |
+echo $[names.lastIndexOf('Sam')]    <span class="sh-comment"># =&gt; 3</span>
+echo $[names.lastIndexOf('Simon')]  <span class="sh-comment"># =&gt; -1</span>
+</code></pre>
+<a name="remove"></a>
+<h3>remove()</h3>
+<p>Remove the first instance of the specified element from the list, if it exists.
+Returns <code>null</code>, even if the element did not exist.</p>
+<pre><code>var lakes = :| coniston derwent wast |
+call lakes-&gt;remove('wast')
+echo @lakes  <span class="sh-comment"># =&gt; coniston derwent</span>
+</code></pre>
+<a name="reverse"></a>
+<h3>reverse()</h3>
+<p>Reverses a list in place.</p>
+<pre><code>var fruits = :|apple banana pear|
+call fruits-&gt;reverse()
+echo @fruits  <span class="sh-comment"># =&gt; pear banana apple</span>
+</code></pre>
+<a name="List/clear"></a>
+<h3>List/clear()</h3>
+<p>Remove all entries from the List:</p>
+<pre><code>var fruits = :|apple banana pear|
+call fruits-&gt;clear()
+echo $[len(fruits)]  <span class="sh-comment"># =&gt; 0</span>
+</code></pre>
+<a name="Dict"></a>
+<h3>Dict</h3>
+<p>An <code>Obj</code> instance representing the <code>Dict</code> type.</p>
+<p>A Dict contains an ordered sequence of key-value pairs.  Given the key, the
+value can be retrieved efficiently.</p>
+<p>Let's use this definition:</p>
+<pre><code>var mydict = {}
+</code></pre>
+<a name="erase"></a>
+<h3>erase()</h3>
+<p>Ensures that the given key does not exist in the dictionary.</p>
+<pre><code>var book = {
+  title: 'The Histories',
+  author: 'Herodotus',
+}
+= book
+<span class="sh-comment"># =&gt; (Dict)   {title: 'The Histories', author: 'Herodotus'}</span>
+
+call book-&gt;erase('author')
+= book
+<span class="sh-comment"># =&gt; (Dict)   {title: 'The Histories'}</span>
+
+<span class="sh-comment"># repeating the erase call does not cause an error</span>
+call book-&gt;erase('author')
+= book
+<span class="sh-comment"># =&gt; (Dict)   {title: 'The Histories'}</span>
+</code></pre>
+<a name="accum"></a>
+<h3>accum()</h3>
+<p>TODO:</p>
+<pre><code class="language-raw">call mydict-&gt;accum('key', 'string to append')
+</code></pre>
+<p>Similar:</p>
+<pre><code class="language-raw">setvar mydict['k'] += 3  # TODO: default value of 0
+</code></pre>
+<a name="Dict/clear"></a>
+<h3>Dict/clear()</h3>
+<p>TODO:</p>
+<p>Remove all entries from the Dict:</p>
+<pre><code class="language-raw">call mydict-&gt;clear()
+</code></pre>
+<a name="Place"></a>
+<h3>Place</h3>
+<a name="setValue"></a>
+<h3>setValue()</h3>
+<p>A Place is used as an &quot;out param&quot; by calling setValue():</p>
+<pre><code>proc p (; out) {
+  call out-&gt;setValue('hi')
+}
+
+var x
+p (&amp;x)
+echo x=$x  <span class="sh-comment"># =&gt; x=hi</span>
+</code></pre>
+<a name="Code-Types"></a>
+<h2>Code Types</h2>
+<a name="Func"></a>
+<h3>Func</h3>
+<p>The type of a user-defined function.</p>
+<p>A Func captures the stack frame it was defined in, making it a closure.  It
+also captures the frame of the module it was defined in.</p>
+<a name="BuiltinFunc"></a>
+<h3>BuiltinFunc</h3>
+<p>A func that's part of Oils, like <code>len()</code>.</p>
+<a name="BoundFunc"></a>
+<h3>BoundFunc</h3>
+<p>The <a href="chap-expr-lang.html#thin-arrow">thin-arrow</a> creates a bound func:</p>
+<pre><code>var bound2 = [] -&gt; append
+</code></pre>
+<a name="Proc"></a>
+<h3>Proc</h3>
+<p>The type of a user-defined proc — i.e. a &quot;procedure&quot; or &quot;process&quot;.</p>
+<p>A Proc captures the stack frame it was defined in, making it a closure.  It
+also captures the frame of the module it was defined in.</p>
+<a name="docComment"></a>
+<h3>docComment()</h3>
+<p>Returns the <a href="chap-front-end.html#doc-comment">doc comment</a> associated with this proc or shell
+function.</p>
+<p>If there's no comment, it returns <code>null</code>.</p>
+<a name="BuiltinProc"></a>
+<h3>BuiltinProc</h3>
+<p>A builtin proc, aka builtin command, like <code>module-invoke</code>.</p>
+<a name="Objects"></a>
+<h2>Objects</h2>
+<a name="Obj"></a>
+<h3>Obj</h3>
+<p>An instance of <code>Obj</code>, representing the <code>Obj</code> type.</p>
+<p>TODO: make it callable.</p>
+<a name="__invoke__"></a>
+<h3><code>__invoke__</code></h3>
+
+<p>The <code>__invoke__</code> meta-method makes an Object &quot;proc-like&quot;.</p>
+<p>First, define a proc, with the first typed arg named <code>self</code>:</p>
+<pre><code>proc myInvoke (word_param; self, int_param) {
+  echo &quot;sum = $[self.x + self.y + int_param]&quot;
+}
+</code></pre>
+<p>Make it the <code>__invoke__</code> method of an <code>Obj</code>:</p>
+<pre><code>var methods = Object(null, {__invoke__: myInvoke})
+var invokable_obj = Object(methods, {x: 1, y: 2})
+</code></pre>
+<p>Then invoke it like a proc:</p>
+<pre><code>invokable_obj myword (3)
+<span class="sh-comment"># sum =&gt; 6</span>
+</code></pre>
+<a name="new"></a>
+<h3>new</h3>
+<p>Create an object:</p>
+<pre><code>func mymethod(self) { 
+  return (42)
+}
+var methods = Obj.new({methodName: mymethod}, null)
+var instance = Obj.new({x: 3, y: 4}, methods)
+</code></pre>
+<p>TODO: This will become <code>Obj.__call__</code>, which means it's written <code>Obj</code>.</p>
+<a name="__call__"></a>
+<h3><code>__call__</code></h3>
+<p>TODO</p>
+<a name="__index__"></a>
+<h3><code>__index__</code></h3>
+<p>The <code>__index__</code> meta-method controls what happens when <code>obj[x]</code> is evaluated.</p>
+<p>It's currently used for type objects:</p>
+<pre><code>var t = Dict[Str, Int]
+assert [t is Dict[Str, Int]]  <span class="sh-comment"># always evaluates to the same instance</span>
+</code></pre>
+<a name="__str__"></a>
+<h3><code>__str__</code></h3>
+<p>TODO</p>
+<a name="Reflection"></a>
+<h2>Reflection</h2>
+<p>Definitions used below:</p>
+<pre><code>proc my-cd (dest; ; ; block) {
+  pushd $dest
+  call io-&gt;eval(block, in_captured_frame=true)
+  popd
+}
+proc my-where (; predicate) {
+  for line in (io.stdin) {
+    <span class="sh-comment"># dummy implementation that doesn't use predicate</span>
+    write -- $line
+  }
+}
+</code></pre>
+<a name="Command"></a>
+<h3>Command</h3>
+<p>A value of type <code>Command</code> represents an unevaluated command.  There are <strong>two</strong>
+syntaxes for such values:</p>
+<ol>
+<li>
+<p>In <a href="../command-vs-expression-mode.html">expression mode</a>, a <a href="chap-expr-lang.html#block-expr">block
+expression</a> looks like this:</p>
+<pre><code>var block = ^(echo $PWD; ls *.txt)
+</code></pre>
+<p>This is similar to <code>$(echo $PWD)</code> in shell.</p>
+</li>
+<li>
+<p>In <a href="../command-vs-expression-mode.html">command mode</a>, a YSH <a href="chap-cmd-lang.html#block-arg">block-arg</a> is
+also of type <code>Command</code>:</p>
+<pre><code>my-cd /tmp { 
+  echo $PWD
+}
+</code></pre>
+<p>This is similar to <code>{ echo $PWD; }</code> in shell ([sh-block][])</p>
+</li>
+</ol>
+<hr />
+<p>The <code>Command</code> value is bound to a stack frame.  This frame will be pushed as an
+&quot;enclosed frame&quot; when the command is evaluated.</p>
+<a name="sourceCode"></a>
+<h3>sourceCode</h3>
+<p>The <code>Command.sourceCode()</code> method returns a <code>Dict</code> with the source code and
+location info for a literal block.</p>
+<pre><code><span class="sh-comment"># define a proc</span>
+proc p ( ; ; ; block) {
+  = block.sourceCode()
+}
+
+<span class="sh-comment"># call it with a literal block, getting the source code</span>
+p { echo hi }  <span class="sh-comment"># =&gt; { location_str:        &quot;[stdin]&quot;,</span>
+               <span class="sh-comment">#      location_start_line: 1,</span>
+               <span class="sh-comment">#      code_str:            &quot;echo hi\n&quot; }</span>
+</code></pre>
+<p>The <code>location_str</code> and <code>location_start_line</code> fields can be passed back into the
+YSH interpreter, so that error messages blame the original location, not new
+locations from <code>code_str</code>:</p>
+<pre><code class="language-raw">... ysh 
+    --location-str        $[src.location_str]
+    --location-start-line $[src.location_start_line]
+    file_with_code_str.ysh
+    ;
+</code></pre>
+<p>Currently, you can't extract the source code of an <code>Command</code> expression.  The
+method returns <code>null</code>:</p>
+<pre><code>var cmd = ^(echo hi)
+= cmd.sourceCode()  <span class="sh-comment"># =&gt; null</span>
+</code></pre>
+<p>Related topic: <a href="chap-front-end.html#shell-flags">shell-flags</a> documents the <code>--location-str</code> and
+<code>--location-start-line</code> flags.</p>
+<a name="Expr"></a>
+<h3>Expr</h3>
+<p>A value of type <code>Expr</code> represents an unevaluated expression.  There are <strong>three</strong>
+syntaxes for such values:</p>
+<ol>
+<li>
+<p>In <a href="../command-vs-expression-mode.html">expression mode</a>, an
+<a href="chap-expr-lang.html#expr-lit">expression literal</a> looks like this:</p>
+<pre><code>var expr = ^[42 + a[i]]
+</code></pre>
+</li>
+<li>
+<p>There's also a shortcut for string literals:</p>
+<pre><code>var s = &quot;foo&quot;.replace('o', ^&quot;-$0-&quot;)
+echo $s  <span class="sh-comment"># =&gt; f-o--o-</span>
+</code></pre>
+<p>The syntax <code>^&quot;-$0-&quot;</code> is short for <code>^[&quot;-$0-&quot;]</code>.  You can omit the brackets.</p>
+</li>
+<li>
+<p>In <a href="../command-vs-expression-mode.html">command mode</a>, a YSH <a href="chap-cmd-lang.html#lazy-expr-arg">lazy-expr-arg</a> is
+also of type <code>Expr</code>:</p>
+<pre><code>ls | my-where [size &gt; 42]
+</code></pre>
+<p>This is a shortcut for:</p>
+<pre><code>ls | my-where (^[size &gt; 42])  <span class="sh-comment"># same as syntax 1</span>
+</code></pre>
+</li>
+</ol>
+<hr />
+<p>The <code>Expr</code> value is bound to a stack frame.  This frame will be pushed as an
+&quot;enclosed frame&quot; when the expression is evaluated.</p>
+<a name="Frame"></a>
+<h3>Frame</h3>
+<p>A value that represents a stack frame.</p>
+<p>You can turn it into a Dict with <code>dict(myframe)</code>.</p>
+<a name="DebugFrame"></a>
+<h3>DebugFrame</h3>
+<p>An opaque value returned by <a href="chap-type-method.html#getDebugStack">vm.getDebugStack()</a>, which has a <code>toString()</code>
+method.</p>
+<p>Logically, it represents one of:</p>
+<ol>
+<li>An invocation of a proc or shell function</li>
+<li>A YSH func call</li>
+<li>The OSH <a href="chap-builtin-cmd.html#source">source</a> builtin</li>
+<li>The YSH <a href="chap-builtin-cmd.html#use">use</a> builtin</li>
+</ol>
+<a name="toString"></a>
+<h3>toString()</h3>
+<p>Return a string representing the <code>DebugFrame</code> value.</p>
+<p>We recommend that you print each frame with a numeric prefix, like this:</p>
+
+<pre><code class="language-none">proc print-stack {
+  for i, frame in (vm.getDebugStack()) {
+    write --end '' -- &quot;  #$[i+1] $[frame.toString()]&quot;
+  }
+}
+</code></pre>
+<p>Then the output will look like:</p>
+<pre><code class="language-none">  #1 main.ysh
+    source lib.ysh
+    ^~~~~~
+  #2 lib.ysh
+    print-stack
+    ^~~~~~~~~~~
+</code></pre>
+<a name="io"></a>
+<h3>io</h3>
+<a name="stdin"></a>
+<h3>stdin</h3>
+<p>Returns the singleton <code>stdin</code> value, which you can iterate over:</p>
+<pre><code>seq 3 | for line in (io.stdin) {
+   echo &quot;+$line&quot;
+}
+<span class="sh-comment"># =&gt;</span>
+<span class="sh-comment"># +1</span>
+<span class="sh-comment"># +2</span>
+<span class="sh-comment"># +3</span>
+</code></pre>
+<p>This is buffered line-based I/O, as opposed to the unbuffered I/O of the <a href="chap-builtin-cmd.html#read">read</a>
+builtin.</p>
+<a name="io/eval"></a>
+<h3>io/eval()</h3>
+<p>Given a <code>Command</code> value (e.g. a block argument), execute it, and return <code>null</code>.</p>
+<pre><code>var cmd = ^(echo hi)
+call io-&gt;eval(cmd)  <span class="sh-comment"># =&gt; hi</span>
+</code></pre>
+<p>This method is more principled and flexible than shell's <a href="chap-builtin-cmd.html#cmd/eval">eval</a> builtin.
+It's especially useful in pure functions.</p>
+<p>It accepts optional args that let you control name binding:</p>
+<ul>
+<li><code>dollar0</code> for <code>$0</code></li>
+<li><code>pos_args</code> for <code>$1 $2 $3</code></li>
+<li><code>vars</code> for named variables</li>
+</ul>
+<p>Example:</p>
+<pre><code>var cmd = ^(echo &quot;zero $0, one $1, named $x&quot;)
+call io-&gt;eval(cmd, dollar0=&quot;z&quot;, pos_args=['one'], vars={x: &quot;x&quot;})
+<span class="sh-comment"># =&gt; zero z, one one, named x</span>
+</code></pre>
+<p>Scoping rules:</p>
+<ul>
+<li>The frame that contains the <code>Command</code>, e.g.  <code>^(echo hi)</code> or <code>p { echo hi }</code>,
+is called the <em>captured</em> frame.</li>
+<li>Normally, a <code>Command</code> is evaluated in a new stack frame, which &quot;encloses&quot; the
+captured frame.  That is, a <code>Command</code> is a <em>closure</em>.</li>
+</ul>
+<p>The <code>in_captured_frame</code> argument changes this behavior:</p>
+<pre><code>call io-&gt;eval(cmd, pos_args=['one'], in_captured_frame=true)
+</code></pre>
+<p>In this case, the captured frame becomes the local frame.  It's useful for
+creating procs that behave like builtins:</p>
+<pre><code>my-cd /tmp {           <span class="sh-comment"># my-cd is a proc, which pushes a new stack frame</span>
+  var listing = $(ls)  <span class="sh-comment"># This variable is created in the captured frame</span>
+}
+echo $listing          <span class="sh-comment"># It's still visible after the proc returns</span>
+</code></pre>
+<hr />
+<p>When the <code>eval()</code> method is passed <code>to_dict=true</code>, it returns a <code>Dict</code>
+corresponding to the stack frame that the <code>Command</code> is evaluated in.</p>
+<p>Example:</p>
+<pre><code>var x = 10  <span class="sh-comment"># captured</span>
+var cmd = ^(var a = 42; var hidden_ = 'h'; var b = x + 1; )
+
+var d = io-&gt;evalToDict(cmd)
+
+pp (d)  <span class="sh-comment"># =&gt; {a: 42, b: 11}</span>
+</code></pre>
+<p>Names that end with an underscore <code>_</code> are not copied, so <code>hidden_</code> is not in
+the <code>Dict</code>.</p>
+<hr />
+<p>To evaluate &quot;purely&quot;, use the <a href="chap-builtin-func.html#func/eval"><code>eval()</code></a> function.</p>
+<a name="io/evalExpr"></a>
+<h3>io/evalExpr()</h3>
+<p>Given an <code>Expr</code> value, evaluate it and return its value:</p>
+<pre><code>var i = 42
+var expr = ^[i + 1] 
+
+= io-&gt;evalExpr(expr)  <span class="sh-comment"># =&gt; 43</span>
+</code></pre>
+<p>It accepts optional args that let you control name binding:</p>
+<ul>
+<li><code>pos_args</code> for <code>$1 $2 $3</code></li>
+<li><code>dollar0</code> for <code>$0</code></li>
+<li><code>vars</code> for named variables</li>
+</ul>
+<p>Example:</p>
+<pre><code>var expr = ^[&quot;zero $0, one $1, named $x&quot;]
+var s = io-&gt;evalExpr(expr, dollar0=&quot;z&quot;, pos_args=['one'], vars={x: &quot;x&quot;})
+echo $s  <span class="sh-comment"># =&gt; zero z, one one, named x</span>
+</code></pre>
+<p>Note that these expressions that have effects:</p>
+<ul>
+<li><code>^[ myplace-&gt;setValue(42) ]</code> - memory operation</li>
+<li><code>^[ $(echo 42 &gt; hi) ]</code> - I/O operation</li>
+</ul>
+<hr />
+<p>To evaluate &quot;purely&quot;, use the <a href="chap-builtin-func.html#func/evalExpr"><code>evalExpr()</code></a> function.</p>
+<a name="captureStdout"></a>
+<h3>captureStdout()</h3>
+<p>Run a Command, and return its stdout as a astring.</p>
+<pre><code>var c = ^(echo hi)
+var stdout_str = io.captureStdout(c)  <span class="sh-comment"># =&gt; &quot;hi&quot;</span>
+</code></pre>
+<p>It's like <code>$()</code> <a href="chap-word-lang.html#command-sub">command subs</a>, but can be used in pure functions
+that have access to <code>io</code>.</p>
+<p><code>NUL</code> bytes and any trailing newline <code>\n</code> is removed,</p>
+<p>If the command fails, <code>captureStdout()</code> raises an error, which can be caught
+with <code>try</code>.</p>
+<pre><code>try {
+  var s = io.captureStdout(c)
+}
+</code></pre>
+<a name="captureAll"></a>
+<h3>captureAll()</h3>
+<p>Run a Command, and return its <code>stdout</code> string, <code>stderr</code> string, and integer
+<code>status</code>.</p>
+<pre><code>var c = ^(echo out; echo err &gt;&amp;2)
+var r = io.captureAll(c)  <span class="sh-comment"># =&gt; {stdout: b'out\n', stderr: b'err\n', status: 0}</span>
+</code></pre>
+<p>It's similar to <code>io.captureStdout</code>, but returns more info.</p>
+<ul>
+<li>
+<p>NUL bytes and trailing newlines <code>\n</code> are <strong>not</strong> removed.</p>
+</li>
+<li>
+<p>Because it captures the status, it doesn't fail when the status is non-zero.</p>
+<p>= io.captureAll(^(echo stdout; echo stderr &gt;&amp;2; exit 3))
+(Dict)
+{
+stdout: 'stdout\n',
+stderr: 'stderr\n',
+status: 3
+}</p>
+</li>
+</ul>
+<a name="promptVal"></a>
+<h3>promptVal()</h3>
+<p>An API the wraps the <code>$PS1</code> language.  For example, to simulate <code>PS1='\w\$ '</code>:</p>
+<pre><code>func renderPrompt(io) {
+  var parts = []
+  call parts-&gt;append(io.promptVal('w'))  <span class="sh-comment"># pass 'w' for \w</span>
+  call parts-&gt;append(io.promptVal('$'))  <span class="sh-comment"># pass '$' for \$</span>
+  call parts-&gt;append(' ')
+  return (join(parts))
+}
+</code></pre>
+<a name="time"></a>
+<h3>time()</h3>
+<p>TODO: Depends on system clock.</p>
+<a name="strftime"></a>
+<h3>strftime()</h3>
+<p>TODO: Like the awk function, this takes an timestamp directly.</p>
+<p>In other words, it calls C localtime() (which depends on the time zone
+database), and then C strftime().</p>
+<a name="glob"></a>
+<h3>glob()</h3>
+<p>TODO: The free function glob() actually does I/O.  Although maybe it doesn't
+fail?</p>
+<a name="vm"></a>
+<h3>vm</h3>
+<p>An object with functions for introspecting the Oils VM.</p>
+<a name="getFrame"></a>
+<h3>getFrame()</h3>
+<p>Given an index, get a handle to a call stack frame.</p>
+<pre><code>proc p {
+  var frame
+  setvar frame = vm.getFrame(0)   <span class="sh-comment"># global frame</span>
+  setvar frame = vm.getFrame(1)   <span class="sh-comment"># first frame pushed on the global frame</span>
+
+  setvar frame = vm.getFrame(-1)  <span class="sh-comment"># the current frame, aka local frame</span>
+  setvar frame = vm.getFrame(-2)  <span class="sh-comment"># the calling frame</span>
+}
+p
+</code></pre>
+<p>If the index is out of range, an error is raised.</p>
+<a name="getDebugStack"></a>
+<h3>getDebugStack()</h3>
+<p>Returns a list of <a href="#DebugFrame">DebugFrame</a> values, representing the current call stack.</p>
+<a name="id"></a>
+<h3>id()</h3>
+<p>Returns an integer ID for mutable values like List, Dict, and Obj.</p>
+<pre><code>= vm.id({})  <span class="sh-comment"># =&gt; (Int)  123</span>
+</code></pre>
+<p>You can use it to test if two names refer to the same instance.</p>
+<p><code>vm.id()</code> is undefined on immutable values like Bool, Int, Float, Str, etc.</p>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

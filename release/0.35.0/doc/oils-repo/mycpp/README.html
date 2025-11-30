@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>mycpp</title>
+    <link rel="stylesheet" type="text/css" href="../../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/mycpp/README.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>mycpp</h1>
+<p>This is a Python-to-C++ translator based on MyPy.  It only
+handles the small subset of Python that we use in Oils.</p>
+<p>It's inspired by both mypyc and Shed Skin.  These posts give background:</p>
+<ul>
+<li><a href="https://www.oilshell.org/blog/2022/05/mycpp.html">Brief Descriptions of a Python to C++ Translator</a></li>
+<li><a href="https://www.oilshell.org/blog/2022/03/middle-out.html">Oil Is Being Implemented &quot;Middle Out&quot;</a></li>
+</ul>
+<p>As of March 2024, the translation to C++ is <strong>done</strong>.  So it's no longer
+experimental!</p>
+<hr />
+<p><code>mycpp</code> started as a <strong>hack</strong>, but it worked because its output is fairly
+strongly-typed C++.</p>
+<p>That is, the C++ type system catches many errors!  But it doesn't catch all of
+them, so we've gradually made <code>mycpp</code> more strict.</p>
+<p>As of December 2024, <code>mycpp</code> is a pretty clean program, although there are
+still many heuristics.  This doc explains the heuristics.</p>
+<p>(I'd like to gradually rewrite mycpp as a more principled &quot;yaks&quot; language,
+although this isn't a high priority.)</p>
+<hr />
+<p>Source for this doc: <a href="https://github.com/oils-for-unix/oils/blob/master/mycpp/README.md">mycpp/README.md</a>.  The code is all in
+<a href="https://github.com/oils-for-unix/oils/blob/master/mycpp/">mycpp/</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#instructions">Instructions</a></div>
+  <div class="toclevel2"><a href="#translating-and-compiling-oils-cpp">Translating and Compiling <code>oils-cpp</code></a></div>
+  <div class="toclevel1"><a href="#notes-on-the-algorithm-architecture">Notes on the Algorithm / Architecture</a></div>
+  <div class="toclevel1"><a href="#mycpp-idioms-creative-hacks">mycpp Idioms / &quot;Creative Hacks&quot;</a></div>
+  <div class="toclevel2"><a href="#with-tagstr_switch-switch-statement"><code>with {,tag,str_}switch</code> → Switch statement</a></div>
+  <div class="toclevel2"><a href="#val-up_val-val-downcasting-pattern"><code>val</code> → <code>UP_val</code> → <code>val</code> Downcasting pattern</a></div>
+  <div class="toclevel2"><a href="#python-context-manager-c-constructor-and-destructor-raii">Python context manager → C++ constructor and destructor (RAII)</a></div>
+  <div class="toclevel1"><a href="#mypy-shimming-technique">MyPy &quot;Shimming&quot; Technique</a></div>
+  <div class="toclevel2"><a href="#newdict-for-ordered-dicts">NewDict() for ordered dicts</a></div>
+  <div class="toclevel2"><a href="#stackarrayt">StackArray[T]</a></div>
+  <div class="toclevel2"><a href="#bigint">BigInt</a></div>
+  <div class="toclevel2"><a href="#byteat-byteequals">ByteAt(), ByteEquals(), ...</a></div>
+  <div class="toclevel2"><a href="#file-linereader-bufwriter">File / LineReader / BufWriter</a></div>
+  <div class="toclevel2"><a href="#fast-json-avoid-intermediate-allocations">Fast JSON - avoid intermediate allocations</a></div>
+  <div class="toclevel1"><a href="#limitations-requiring-source-rewrites">Limitations Requiring Source Rewrites</a></div>
+  <div class="toclevel1"><a href="#warning-assumptions-not-checked">WARNING: Assumptions Not Checked</a></div>
+  <div class="toclevel2"><a href="#global-constants-cant-be-mutated">Global Constants Can't Be Mutated</a></div>
+  <div class="toclevel2"><a href="#gotcha-about-returning-variants-subclasses-of-a-type">Gotcha about Returning Variants (Subclasses) of a Type</a></div>
+  <div class="toclevel2"><a href="#exceptions-cant-leave-destructors-python-__exit__">Exceptions Can't Leave Destructors / Python <code>__exit__</code></a></div>
+  <div class="toclevel1"><a href="#translation-errors">Translation Errors</a></div>
+  <div class="toclevel2"><a href="#hoisting-of-c-variables-may-undefined-vars-in-python">Hoisting of C++ variables May Undefined Vars in Python</a></div>
+  <div class="toclevel1"><a href="#more-translation-notes">More Translation Notes</a></div>
+  <div class="toclevel2"><a href="#special-case-pnodepnode-are-not-gc-objects">Special case: <code>pnode::PNode*</code> are not GC objects</a></div>
+  <div class="toclevel2"><a href="#hacky-heuristics">Hacky Heuristics</a></div>
+  <div class="toclevel2"><a href="#hacky-hard-coded-names">Hacky Hard-Coded Names</a></div>
+  <div class="toclevel2"><a href="#major-features">Major Features</a></div>
+  <div class="toclevel2"><a href="#minor-translations">Minor Translations</a></div>
+  <div class="toclevel2"><a href="#optimizations">Optimizations</a></div>
+  <div class="toclevel2"><a href="#rooting-policy">Rooting Policy</a></div>
+  <div class="toclevel1"><a href="#the-mycpp-runtime">The mycpp Runtime</a></div>
+  <div class="toclevel2"><a href="#differences-from-cpython">Differences from CPython</a></div>
+  <div class="toclevel1"><a href="#c-notes">C++ Notes</a></div>
+  <div class="toclevel2"><a href="#gotchas">Gotchas</a></div>
+  <div class="toclevel2"><a href="#minor-features-used">Minor Features Used</a></div>
+  <div class="toclevel2"><a href="#not-used">Not Used</a></div>
+</div>
+<a name="instructions"></a>
+<h2>Instructions</h2>
+<a name="translating-and-compiling-oils-cpp"></a>
+<h3>Translating and Compiling <code>oils-cpp</code></h3>
+<p>Running <code>mycpp</code> is best done on a Debian / Ubuntu-ish machine.  Follow the
+instructions at <a href="https://github.com/oilshell/oil/wiki/Contributing">https://github.com/oilshell/oil/wiki/Contributing</a> to create
+the &quot;dev build&quot; first, which is DISTINCT from the C++ build.  Make sure you can
+run:</p>
+<pre><code>oil$ build/py.sh all
+</code></pre>
+<p>This will give you a working shell:</p>
+<pre><code>oil$ bin/osh -c 'echo hi'  # running interpreted Python
+hi
+</code></pre>
+<p>To run mycpp, we will build Python 3.10, clone MyPy, and install MyPy's
+dependencies.  First install packages:</p>
+<pre><code># We need libssl-dev, libffi-dev, zlib1g-dev to bootstrap Python
+oil$ build/deps.sh install-ubuntu-packages
+</code></pre>
+<p>You'll also need a C++17 compiler for code generated by Souffle datalog, used
+by mycpp, although Oils itself only requires C++11.</p>
+<p>Then fetch data, like the Python 3.10 tarball and MyPy repo:</p>
+<pre><code>oil$ build/deps.sh fetch
+</code></pre>
+<p>Then build from source:</p>
+<pre><code>oil$ build/deps.sh install-wedges
+</code></pre>
+<p>To build oil-native, use:</p>
+<pre><code>oil$ ./NINJA-config.sh
+oil$ ninja              # translate and compile, may take 30 seconds
+
+oil$ _bin/cxx-asan/osh -c 'echo hi'  # running compiled C++ !
+hi
+</code></pre>
+<p>To run the tests and benchmarks:</p>
+<pre><code>oil$ mycpp/TEST.sh test-translator
+... 200+ tasks run ...
+</code></pre>
+<p>If you have problems, post a message on <code>#oil-dev</code> at
+<code>https://oilshell.zulipchat.com</code>.  Not many people have contributed to <code>mycpp</code>,
+so I can use your feedback!</p>
+<p>Related:</p>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/Oil-Native-Quick-Start">Oil Native Quick
+Start</a> on the
+wiki.</li>
+<li><a href="https://github.com/oilshell/oil/wiki/Oil-Native-Quick-Start">Oil Dev Cheat Sheet</a></li>
+</ul>
+<a name="notes-on-the-algorithm-architecture"></a>
+<h2>Notes on the Algorithm / Architecture</h2>
+<p>There are four passes over the MyPy AST.</p>
+<p>(1) <code>const_pass.py</code>: Collect string constants</p>
+<p>Turn turn the constant in <code>myfunc(&quot;foo&quot;)</code> into top-level <code>GLOBAL_STR(str1, &quot;foo&quot;)</code>.</p>
+<p>(2) Three passes in <code>cppgen_pass.py</code>.</p>
+<p>(a) Forward Declaration Pass.</p>
+<pre><code>class Foo;
+class Bar;
+</code></pre>
+<p>This pass also determines which methods should be declared <code>virtual</code> in their
+declarations.  The <code>virtual</code> keyword is written in the next pass.</p>
+<p>(b) Declaration Pass.</p>
+<pre><code>class Foo {
+  void method();
+};
+class Bar {
+  void method();
+};
+</code></pre>
+<p>More work in this pass:</p>
+<ul>
+<li>Collect member variables and write them at the end of the definition</li>
+<li>Collect locals for &quot;hoisting&quot;.  Written in the next pass.</li>
+</ul>
+<p>(c) Definition Pass.</p>
+<pre><code>void Foo:method() {
+  ...
+}
+
+void Bar:method() {
+  ...
+}
+</code></pre>
+<p>Note: I really wish we were not using visitors, but that's inherited from MyPy.</p>
+<a name="mycpp-idioms-creative-hacks"></a>
+<h2>mycpp Idioms / &quot;Creative Hacks&quot;</h2>
+<p>Oils is written in typed Python 2.  It will run under a stock Python 2
+interpreter, and it will typecheck with stock MyPy.</p>
+<p>However, there are a few language features that don't map cleanly from typed
+Python to C++:</p>
+<ul>
+<li>switch statements (unfortunately we don't have the Python 3 match statement)</li>
+<li>C++ destructors - the RAII ptatern</li>
+<li>casting - MyPy has one kind of cast; C++ has <code>static_cast</code> and
+<code>reinterpret_cast</code>.  (We don't use C-style casting.)</li>
+</ul>
+<p>So this describes the idioms we use.  There are some hacks in
+<a href="https://github.com/oils-for-unix/oils/blob/master/mycpp/cppgen_pass.py">mycpp/cppgen_pass.py</a> to handle these cases, and also Python
+runtime equivalents in <code>mycpp/mylib.py</code>.</p>
+<a name="with-tagstr_switch-switch-statement"></a>
+<h3><code>with {,tag,str_}switch</code> → Switch statement</h3>
+<p>We have three constructs that translate to a C++ switch statement.  They use a
+Python context manager <code>with Xswitch(obj) ...</code> as a little hack.</p>
+<p>Here are examples like the ones in <a href="https://github.com/oils-for-unix/oils/blob/master/mycpp/examples/test_switch.py">mycpp/examples/test_switch.py</a>.
+(<code>ninja mycpp-logs-equal</code> translates, compiles, and tests all the examples.)</p>
+<p>Simple switch:</p>
+<pre><code>myint = 99
+with switch(myint) as case:
+    if case(42, 43):
+        print('forties')
+    else:
+        print('other')
+</code></pre>
+<p>Switch on <strong>object type</strong>, which goes well with ASDL sum types:</p>
+<pre><code>val = value.Str('foo)  # type: value_t
+with tagswitch(val) as case:
+    if case(value_e.Str, value_e.Int):
+        print('string or int')
+    else:
+        print('other')
+</code></pre>
+<p>We usually need to apply the <code>UP_val</code> pattern here, described in the next
+section.</p>
+<p>Switch on <strong>string</strong>, which generates a fast <strong>two-level dispatch</strong> -- first on
+length, and then with <code>str_equals_c()</code>:</p>
+<pre><code>s = 'foo'
+with str_switch(s) as case:
+    if case(&quot;foo&quot;)
+        print('FOO')
+    else:
+        print('other')
+</code></pre>
+<a name="val-up_val-val-downcasting-pattern"></a>
+<h3><code>val</code> → <code>UP_val</code> → <code>val</code> Downcasting pattern</h3>
+<p>Summary: variable names like <code>UP_*</code> are <strong>special</strong> in our Python code.</p>
+<p>Consider the downcasts marked BAD:</p>
+<pre><code>val = value.Str('foo)  # type: value_t
+
+with tagswitch(obj) as case:
+    if case(value_e.Str):
+        val = cast(value.Str, val)  # BAD: conflicts with first declaration
+        print('s = %s' % val.s)
+
+    elif case(value_e.Int):
+        val = cast(value.Int, val)  # BAD: conflicts with both
+        print('i = %d' % val.i)
+
+    else:
+        print('other')
+</code></pre>
+<p>MyPy allows this, but it translates to invalid C++ code.  C++ can't have a
+variable named <code>val</code>, with 2 related types <code>value_t</code> and <code>value::Str</code>.</p>
+<p>So we use this idiom instead, which takes advantage of <strong>local vars in case
+blocks</strong> in C++:</p>
+<pre><code>val = value.Str('foo')  # type: value_t
+
+UP_val = val  # temporary variable that will be casted
+
+with tagswitch(val) as case:
+    if case(value_e.Str):
+        val = cast(value.Str, UP_val)  # this works
+        print('s = %s' % val.s)
+
+    elif case(value_e.Int):
+        val = cast(value.Int, UP_val)  # also works
+        print('i = %d' % val.i)
+
+    else:
+        print('other')
+</code></pre>
+<p>This translates to something like:</p>
+<pre><code>value_t* val = Alloc&lt;value::Str&gt;(str42);
+value_t* UP_val = val;
+
+switch (val-&gt;tag()) {
+    case value_e::Str: {
+        // DIFFERENT local var
+        value::Str* val = static_cast&lt;value::Str&gt;(UP_val);
+        print(StrFormat(str43, val-&gt;s))
+    }
+        break;
+    case value_e::Int: {
+        // ANOTHER DIFFERENT local var
+        value::Int* val = static_cast&lt;value::Int&gt;(UP_val);
+        print(StrFormat(str44, val-&gt;i))
+    }
+        break;
+    default:
+        print(str45);
+}
+</code></pre>
+<p>This works because there's no problem having <strong>different</strong> variables with the
+same name within each <code>case { }</code> block.</p>
+<p>Again, the names <code>UP_*</code> are <strong>special</strong>.  If the name doesn't start with <code>UP_</code>,
+the inner blocks will look like:</p>
+<pre><code>    case value_e::Str: {
+        val = static_cast&lt;value::Str&gt;(val);  // BAD: val reused
+        print(StrFormat(str43, val-&gt;s))
+    }
+</code></pre>
+<p>And they will fail to compile.  It's not valid C++ because the superclass
+<code>value_t</code> doesn't have a field <code>val-&gt;s</code>.  Only the subclass <code>value::Str</code> has
+it.</p>
+<p>(Note that Python has a single flat scope per function, while C++ has nested
+scopes.)</p>
+<a name="python-context-manager-c-constructor-and-destructor-raii"></a>
+<h3>Python context manager → C++ constructor and destructor (RAII)</h3>
+<p>This Python code:</p>
+<pre><code>with ctx_Foo(42):
+  f()
+</code></pre>
+<p>translates to this C++ code:</p>
+<pre><code>{
+  ctx_Foo tmp(42);
+  f()
+
+  // destructor ~ctx_Foo implicitly called
+}
+</code></pre>
+<a name="mypy-shimming-technique"></a>
+<h2>MyPy &quot;Shimming&quot; Technique</h2>
+<p>We have an interesting way of &quot;writing Python and C++ at the same time&quot;:</p>
+<ol>
+<li>First, all Python code must pass the MyPy type checker, and run with a stock
+Python 2 interpreter.
+<ul>
+<li>This is the source of truth — the source of our semantics.</li>
+</ul>
+</li>
+<li>We translate most <code>.py</code> files to C++, <strong>except</strong> some files, in particular
+<a href="https://github.com/oils-for-unix/oils/blob/master/mycpp/mylib.py">mycpp/mylib.py</a> and files starting with <code>py</code> like
+<code>core/{pyos.pyutil}.py</code>.</li>
+<li>In C++, we can substitute custom implementations with the properties we
+want, like <code>Dict&lt;K, V&gt;</code> being ordered, <code>BigInt</code> being distinct from C <code>int</code>,
+<code>BufWriter</code> being efficient, etc.</li>
+</ol>
+<p>The MyPy type system is very powerful!  It lets us do all this.</p>
+<a name="newdict-for-ordered-dicts"></a>
+<h3>NewDict() for ordered dicts</h3>
+<p>Dicts in Python 2 aren't ordered, but we make them ordered at <strong>runtime</strong> by
+using <code>mylib.NewDict()</code>, which returns <code>collections_.OrderedDict</code>.</p>
+<p>The <strong>static type</strong> is still <code>Dict[K, V]</code>, but change the &quot;spec&quot; to be an
+ordered dict.</p>
+<p>In C++, <code>Dict&lt;K, V&gt;</code> is implemented as an ordered dict.  (Note: we don't
+implement preserving order on deletion, which seems OK.)</p>
+<ul>
+<li>TODO: <code>iteritems()</code> could go away</li>
+</ul>
+<a name="stackarrayt"></a>
+<h3>StackArray[T]</h3>
+<p>TODO: describe this when it works.</p>
+<a name="bigint"></a>
+<h3>BigInt</h3>
+<ul>
+<li>In Python, it's simply defined a a class with an integer, in
+<a href="https://github.com/oils-for-unix/oils/blob/master/mylib/mops.py">mylib/mops.py</a>.</li>
+<li>In C++, it's currently <code>typedef int64_t BigInt</code>, but we want to make it a big
+integer.</li>
+</ul>
+<a name="byteat-byteequals"></a>
+<h3>ByteAt(), ByteEquals(), ...</h3>
+<p>Hand optimization to reduce 1-byte strings.  For IFS algorithm,
+<code>LooksLikeGlob()</code>, <code>GlobUnescape()</code>.</p>
+<a name="file-linereader-bufwriter"></a>
+<h3>File / LineReader / BufWriter</h3>
+<p>TODO: describe how this works.</p>
+<p>Can it be more type safe?  I think we can cast <code>File</code> to both <code>LineReader</code> and
+<code>BufWriter</code>.</p>
+<p>Or can we invert the relationship, so <code>File</code> derives from <strong>both</strong> LineReader
+and BufWriter?</p>
+<a name="fast-json-avoid-intermediate-allocations"></a>
+<h3>Fast JSON - avoid intermediate allocations</h3>
+<ul>
+<li><code>pyj8.WriteString()</code> is shimmed so we don't create encoded J8 string objects,
+only to throw them away and write to <code>mylib.BufWriter</code>.  Instead, we append
+an encoded strings <strong>directly</strong> to the <code>BufWriter</code>.</li>
+<li>Likewise, we have <code>BufWriter::write_spaces</code> to avoid temporary allocations
+when writing indents.
+<ul>
+<li>This could be generalized to <code>BufWriter::write_repeated(' ', 42)</code>.</li>
+</ul>
+</li>
+<li>We may also want <code>BufWriter::write_slice()</code></li>
+</ul>
+<a name="limitations-requiring-source-rewrites"></a>
+<h2>Limitations Requiring Source Rewrites</h2>
+<p>mycpp itself may cause limitations on expressiveness, or the C++ language may
+be able express what we want.</p>
+<ul>
+<li>C++ doesn't have <code>try / except / else</code>, or <code>finally</code>
+<ul>
+<li>Use the <code>with ctx_Foo</code> pattern instead.</li>
+</ul>
+</li>
+<li><code>if mylist</code> tests if the pointer is non-NULL; use <code>if len(mylist)</code> for
+non-empty test</li>
+<li>Functions can have at most one keyword / optional argument.
+<ul>
+<li>We generate two methods: <code>f(x)</code> which calls <code>f(x, y)</code> with the default
+value of <code>y</code></li>
+<li>If there are two or more optional arguments:
+<ul>
+<li>For classes, you can use the &quot;builder pattern&quot;, i.e. add an
+<code>Init_MyMember()</code> method</li>
+<li>If the arguments are booleans, translate it to a single bitfield argument</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>C++ has nested scope and Python has flat function scope.  This can cause name
+collisions.
+<ul>
+<li>Could enforce this if it becomes a problem</li>
+</ul>
+</li>
+</ul>
+<p>Also see <code>mycpp/examples/invalid_*</code> for Python code that fails to translate.</p>
+<a name="warning-assumptions-not-checked"></a>
+<h2>WARNING: Assumptions Not Checked</h2>
+<a name="global-constants-cant-be-mutated"></a>
+<h3>Global Constants Can't Be Mutated</h3>
+<p>We translate top level constants to statically initialized C data structures
+(zero startup cost):</p>
+<pre><code>gStr = 'foo'   
+gList = [1, 2]  # type: List[int]
+gDict = {'bar': 42}  # type: Dict[str, int]
+</code></pre>
+<p>Even though <code>List</code> and <code>Dict</code> are mutable in general, you should <strong>NOT</strong> mutate
+these global instances!  The C++ code will break at runtime.</p>
+<a name="gotcha-about-returning-variants-subclasses-of-a-type"></a>
+<h3>Gotcha about Returning Variants (Subclasses) of a Type</h3>
+<p>MyPy will accept this code:</p>
+<pre><code>if cond:
+  sig = proc_sig.Open  # type: proc_sig_t
+                       # bad because mycpp HOISTS this
+else:
+  sig = proc_sig.Closed.CreateNull()
+  sig.words = words    # assignment fails
+return sig
+</code></pre>
+<p>It will translate to C++, but fail to compile.  Instead, rewrite it like this:</p>
+<pre><code>sig = None  # type: proc_sig_t
+if cond:
+  sig = proc_sig.Open  # type: proc_sig_t
+                       # bad because mycpp HOISTS this
+else:
+  closed = proc_sig.Closed.CreateNull()
+  closed.words = words    # assignment fails
+  sig = closed
+return sig
+</code></pre>
+<a name="exceptions-cant-leave-destructors-python-__exit__"></a>
+<h3>Exceptions Can't Leave Destructors / Python <code>__exit__</code></h3>
+<p>Context managers like <code>with ctx_Foo():</code> translate to C++ constructors and
+destructors.</p>
+<p>In C++, a destructor can't &quot;leave&quot; an exception.  It results in a runtime error.</p>
+<p>You can throw and CATCH an exception WITHIN a destructor, but you can't let it
+propagate outside.</p>
+<p>This means you must be careful when coding the <code>__exit__</code> method.  For example,
+in <code>vm::ctx_Redirect</code>, we had this bug due to <code>IOError</code> being thrown and not
+caught when restoring/popping redirects.</p>
+<p>To fix the bug, we rewrote the code to use an out param
+<code>List[IOError_OSError]</code>.</p>
+<p>Related:</p>
+<ul>
+<li><a href="https://akrzemi1.wordpress.com/2011/09/21/destructors-that-throw/">https://akrzemi1.wordpress.com/2011/09/21/destructors-that-throw/</a></li>
+</ul>
+<a name="translation-errors"></a>
+<h2>Translation Errors</h2>
+<a name="hoisting-of-c-variables-may-undefined-vars-in-python"></a>
+<h3>Hoisting of C++ variables May Undefined Vars in Python</h3>
+<p>I ran into this bug in <code>osh/word_eval.py</code> in March 2025:</p>
+<pre><code>if cond():
+    a = ''
+
+if n &lt; 0:
+    # UnboundLocalError: local variable 'a' referenced before assignment
+    raise error.FailGlob('Pattern %r matched no files' % a,
+                         loc.Missing)
+</code></pre>
+<p>So the variable is not defined in Python — <em>dynamically</em>.  But in C++,
+the variable <code>a</code> is &quot;hoisted&quot; to the top and declared, which masks the bug.</p>
+<p>This is also not a MyPy error!  Usually one of MyPy or mycpp will catch
+undefined variables.</p>
+<a name="more-translation-notes"></a>
+<h2>More Translation Notes</h2>
+<a name="special-case-pnodepnode-are-not-gc-objects"></a>
+<h3>Special case: <code>pnode::PNode*</code> are not GC objects</h3>
+<p>Instead, they use the arena <code>ctx_PNodeAllocator</code>.</p>
+<p>There is a special case in mycpp for this.  (And regression test in
+build/native.sh)</p>
+<a name="hacky-heuristics"></a>
+<h3>Hacky Heuristics</h3>
+<ul>
+<li><code>callable(arg)</code> to either:
+<ul>
+<li>function call <code>f(arg)</code></li>
+<li>instantiation <code>Alloc&lt;T&gt;(arg)</code></li>
+</ul>
+</li>
+<li><code>name.attr</code> to either:
+<ul>
+<li><code>obj-&gt;member</code></li>
+<li><code>module::Func</code></li>
+</ul>
+</li>
+<li><code>cast(MyType, obj)</code> to either
+<ul>
+<li><code>static_cast&lt;MyType*&gt;(obj)</code></li>
+<li><code>reinterpret_cast&lt;MyType*&gt;(obj)</code></li>
+</ul>
+</li>
+</ul>
+<a name="hacky-hard-coded-names"></a>
+<h3>Hacky Hard-Coded Names</h3>
+<p>These are signs of coupling between mycpp and Oils, which ideally shouldn't
+exist.</p>
+<ul>
+<li><code>mycpp_main.py</code>
+<ul>
+<li><code>ModulesToCompile()</code> -- some files have to be ordered first, like the ASDL
+runtime.
+<ul>
+<li>TODO: Pea can respect parameter order?  So we do that outside the project?</li>
+<li>Another ordering constraint comes from <strong>inheritance</strong>.  The forward
+declaration is NOT sufficient in that case.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>cppgen_pass.py</code>
+<ul>
+<li><code>_GetCastKind()</code> has some hard-coded names</li>
+<li><code>AsdlType::Create()</code> is special cased to <code>::</code>, not <code>-&gt;</code></li>
+<li>Default arguments e.g. <code>scope_e::Local</code> need a repeated <code>using</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Issue on mycpp improvements: <a href="https://github.com/oilshell/oil/issues/568">https://github.com/oilshell/oil/issues/568</a></p>
+<a name="major-features"></a>
+<h3>Major Features</h3>
+<ul>
+<li>Python <code>int</code> and <code>bool</code> → C++ <code>int</code> and <code>bool</code>
+<ul>
+<li><code>None</code> → <code>nullptr</code></li>
+</ul>
+</li>
+<li>Statically Typed Python Collections
+<ul>
+<li><code>str</code> → <code>Str*</code></li>
+<li><code>List[T]</code> → <code>List&lt;T&gt;*</code></li>
+<li><code>Dict[K, V]</code> → <code>Dict&lt;K, V&gt;*</code></li>
+<li>tuples → <code>Tuple2&lt;A, B&gt;</code>, <code>Tuple3&lt;A, B, C&gt;</code>, etc.</li>
+</ul>
+</li>
+<li>Collection literals turn into initializer lists
+<ul>
+<li>And there is a C++ type inference issue which requires an explicit
+<code>std::initializer_list&lt;int&gt;{1, 2, 3}</code>, not just <code>{1, 2, 3}</code></li>
+</ul>
+</li>
+<li><code>for</code> loops, i.e. Python's polymorphic iteration → <code>StrIter</code>,
+<code>ListIter&lt;T&gt;</code>, <code>DictIter&lt;K, V</code>
+<ul>
+<li><code>xrange()</code></li>
+<li><code>enumerate()</code></li>
+<li><code>reversed(mylist)</code> → <code>ReverseListIter</code></li>
+<li><code>d.iteritems()</code> is rewritten <code>mylib.iteritems()</code> → <code>DictIter</code>
+<ul>
+<li>TODO: can we be smarter about this?</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Python's <code>in</code> operator:
+<ul>
+<li><code>s in mystr</code> → <code>str_contains(mystr, s)</code></li>
+<li><code>x in mylist</code> → <code>list_contains(mylist, x)</code></li>
+</ul>
+</li>
+<li>Classes and inheritance
+<ul>
+<li><code>__init__</code> method becomes a constructor.  Note: initializer lists aren't
+used.</li>
+<li>Detect <code>virtual</code> methods</li>
+<li>TODO: could we detect <code>abstract</code> methods? (<code>NotImplementedError</code>)</li>
+</ul>
+</li>
+<li>Python generators <code>Iterator[T]</code> → eager <code>List&lt;T&gt;</code> accumulators</li>
+<li>Python Exceptions → C++ exceptions</li>
+<li>Python Modules → C++ namespace (we assume a 2-level hierarchy)
+<ul>
+<li>TODO: mycpp need real modules, because our <code>oils_for_unix.mycpp.cc</code>
+translation unit is getting big.</li>
+<li>And <code>cpp/preamble.h</code> is a hack to work around the lack of modules.</li>
+</ul>
+</li>
+</ul>
+<a name="minor-translations"></a>
+<h3>Minor Translations</h3>
+<ul>
+<li><code>s1 == s2</code> → <code>str_equals(s1, s2)</code></li>
+<li><code>'x' * 3</code> → <code>str_repeat(globalStr, 3)</code></li>
+<li><code>[None] * 3</code> → <code>list_repeat(nullptr, 3)</code></li>
+<li>Omitted:
+<ul>
+<li>If the LHS of an assignment is <code>_</code>, then the statement is omitted
+<ul>
+<li>This is for <code>_ = log</code>, which shuts up Python lint warnings for 'unused
+import'</li>
+</ul>
+</li>
+<li>Code under <code>if __name__ == '__main__'</code></li>
+</ul>
+</li>
+</ul>
+<a name="optimizations"></a>
+<h3>Optimizations</h3>
+<ul>
+<li>Returning Tuples by value.  To reduce GC pressure, we we return
+<code>Tuple2&lt;A, B&gt;</code> instead of <code>Tuple2&lt;A, B&gt;*</code>, and likewise for <code>Tuple3</code> and <code>Tuple4</code>.</li>
+</ul>
+<a name="rooting-policy"></a>
+<h3>Rooting Policy</h3>
+<p>The translated code roots local variables in every function</p>
+<pre><code>StackRoots _r({&amp;var1, &amp;var2});
+</code></pre>
+<p>We have two kinds of hand-written code:</p>
+<ol>
+<li>Methods like <code>Str::strip()</code> in <code>mycpp/</code></li>
+<li>OS bindings like <code>stat()</code> in <code>cpp/</code></li>
+</ol>
+<p>Neither of them needs any rooting!  This is because we use <strong>manual collection
+points</strong> in the interpreter, and these functions don't call any functions that
+can collect.  They are &quot;leaves&quot; in the call tree.</p>
+<a name="the-mycpp-runtime"></a>
+<h2>The mycpp Runtime</h2>
+<p>The mycpp translator targets a runtime that's written from scratch.  It
+implements garbage-collected data structures like:</p>
+<ul>
+<li>Typed records
+<ul>
+<li>Python classes</li>
+<li>ASDL product and sum types</li>
+</ul>
+</li>
+<li><code>Str</code> (immutable, as in Python)</li>
+<li><code>List&lt;T&gt;</code></li>
+<li><code>Dict&lt;K, V&gt;</code></li>
+<li><code>Tuple2&lt;A, B&gt;</code>, <code>Tuple3&lt;A, B, C&gt;</code>, ...</li>
+</ul>
+<p>It also has functions based on CPython's:</p>
+<ul>
+<li><code>mycpp/gc_builtins.{h,cc}</code> corresponds roughly to Python's <code>__builtin__</code>
+module, e.g. <code>int()</code> and <code>str()</code></li>
+<li><code>mycpp/gc_mylib.{h,cc}</code> corresponds <code>mylib.py</code>
+<ul>
+<li><code>mylib.BufWriter</code> is a bit like <code>cStringIO.StringIO</code></li>
+</ul>
+</li>
+</ul>
+<a name="differences-from-cpython"></a>
+<h3>Differences from CPython</h3>
+<ul>
+<li>Integers either C <code>int</code> or <code>mylib.BigInt</code>, not Python's arbitrary size
+integers</li>
+<li><code>NUL</code> bytes are allowed in arguments to syscalls like <code>open()</code>, unlike in
+CPython</li>
+<li><code>s.strip()</code> is defined in terms of ASCII whitespace, which does not include
+say <code>\v</code>.
+<ul>
+<li>This is done to be consistent with JSON and J8 Notation.</li>
+</ul>
+</li>
+</ul>
+<a name="c-notes"></a>
+<h2>C++ Notes</h2>
+<a name="gotchas"></a>
+<h3>Gotchas</h3>
+<ul>
+<li>C++ classes can have 2 member variables of the same name!  From the base
+class and derived class.</li>
+<li>Failing to declare methods <code>virtual</code> can involve the wrong one being called
+at runtime</li>
+</ul>
+<a name="minor-features-used"></a>
+<h3>Minor Features Used</h3>
+<p>In addition to classes, templates, exceptions, etc. mentioned above, we use:</p>
+<ul>
+<li><code>static_cast</code> and <code>reinterpret_cast</code></li>
+<li><code>enum class</code> for ASDL</li>
+<li>Function overloading
+<ul>
+<li>For equality and hashing?</li>
+</ul>
+</li>
+<li><code>offsetof</code> for introspection of field positions for garbage collection</li>
+<li><code>std::initializer_list</code> for <code>StackRoots()</code>
+<ul>
+<li>Should we get rid of this?</li>
+</ul>
+</li>
+</ul>
+<a name="not-used"></a>
+<h3>Not Used</h3>
+<ul>
+<li>I/O Streams, RTTI, etc.</li>
+<li><code>const</code></li>
+<li>Smart pointers</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

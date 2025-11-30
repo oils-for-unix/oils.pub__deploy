@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shell Language Idioms</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/shell-idioms.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Shell Language Idioms</h1>
+<p>These are like the <a href="idioms.html">YSH vs. Shell Idioms</a>, but the advice also
+applies to other Unix shells.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#style">Style</a></div>
+  <div class="toclevel2"><a href="#use-only">Use Only <code>&quot;$@&quot;</code></a></div>
+  <div class="toclevel2"><a href="#prefer-test-to">Prefer <code>test</code> to <code>[</code></a></div>
+  <div class="toclevel1"><a href="#use-statically-parsed-language-constructs">Use Statically Parsed Language Constructs</a></div>
+  <div class="toclevel2"><a href="#test-should-only-have-2-or-3-arguments"><code>test</code> Should Only Have 2 or 3 Arguments</a></div>
+  <div class="toclevel2"><a href="#prefer-shell-functions-to-aliases">Prefer Shell Functions to Aliases</a></div>
+  <div class="toclevel2"><a href="#prefer-n-to-echo-e">Prefer <code>$'\n'</code> to <code>echo -e</code></a></div>
+  <div class="toclevel1"><a href="#how-to-fix-code-that-strict_errexit-disallows">How to Fix Code That <code>strict_errexit</code> Disallows</a></div>
+  <div class="toclevel2"><a href="#the-local-ddate-x-pitfall">The <code>local d=$(date %x)</code> Pitfall</a></div>
+  <div class="toclevel2"><a href="#variations-with-readonly-and-export">Variations With <code>readonly</code> and <code>export</code></a></div>
+  <div class="toclevel2"><a href="#the-if-myfunc-pitfall">The <code>if myfunc</code> Pitfall</a></div>
+  <div class="toclevel1"><a href="#remove-dynamic-parsing">Remove Dynamic Parsing</a></div>
+  <div class="toclevel2"><a href="#replacing-declare-i-local-i">Replacing <code>declare -i</code>, <code>local -i</code>, ...</a></div>
+</div>
+<a name="style"></a>
+<h2>Style</h2>
+<a name="use-only"></a>
+<h3>Use Only <code>&quot;$@&quot;</code></h3>
+<p>There's no reason to use anything but <code>&quot;$@&quot;</code>.  All the other forms like <code>$*</code>
+can be disallowed, because if you want to join to a string, you can write:</p>
+<p>joined_str=&quot;$@&quot;</p>
+<p>The same advice applies to arrays.  You can always use <code>&quot;${myarray[@]}&quot;</code>; you
+never need to use <code>${myarray[*]}</code> or any other form.</p>
+<p>Related: <a href="http://www.oilshell.org/blog/2016/11/06.html">Thirteen Incorrect Ways and Two Awkward Ways to Use
+Arrays</a></p>
+<a name="prefer-test-to"></a>
+<h3>Prefer <code>test</code> to <code>[</code></h3>
+<p>Idiomatic OSH code doesn't use &quot;puns&quot;.</p>
+<p>No:</p>
+<pre><code>[ -d /tmp ]
+</code></pre>
+<p>Yes:</p>
+<pre><code>test -d /tmp
+</code></pre>
+<p>The <a href="ref/chap-option.html#ysh:all">simple_test_builtin</a> option enforces this.</p>
+<a name="use-statically-parsed-language-constructs"></a>
+<h2>Use Statically Parsed Language Constructs</h2>
+<p>Static parsing is one of the <a href="syntactic-concepts.html">syntactic concepts</a>.  It
+leads to better error messages, earlier error messages, and lets tools
+understand your code.</p>
+<a name="test-should-only-have-2-or-3-arguments"></a>
+<h3><code>test</code> Should Only Have 2 or 3 Arguments</h3>
+<p>In POSIX, the <code>test</code> builtin has a lot of unnecessary flexibility, which leads
+to bugs.</p>
+<p>See <a href="//www.oilshell.org/blog/2017/08/31.html">Problems With the test Builtin: What Does -a
+Mean?</a></p>
+<p>No:</p>
+<pre><code>test ! -d /tmp
+test -d /tmp -a -d /tmp/foo
+</code></pre>
+<p>Yes:</p>
+<pre><code>! test -d /tmp
+test -d /tmp &amp;&amp; test -d /tmp/foo
+</code></pre>
+<p>The <a href="ref/chap-option.html#ysh:all">simple_test_builtin</a> option enforces that
+<code>test</code> receives 3 or fewer arguments.</p>
+<a name="prefer-shell-functions-to-aliases"></a>
+<h3>Prefer Shell Functions to Aliases</h3>
+<p>Functions subsume all the common uses of alias, and can be parsed statically.</p>
+<p>No:</p>
+<pre><code>alias ll='ls -l'    
+</code></pre>
+<p>Yes:</p>
+<pre><code>ll() {         <span class="sh-comment"># Shell Style</span>
+  ls -l &quot;$@&quot;
+}
+
+proc ll {      <span class="sh-comment"># YSH Style</span>
+  ls -l @ARGV
+}
+</code></pre>
+<p>If you're wrapping an external command with a function of the same, use the
+<a href="ref/chap-builtin-cmd.html#command">command</a> builtin:</p>
+<pre><code>proc ls {
+  command ls --color @ARGV
+}
+</code></pre>
+<a name="prefer-n-to-echo-e"></a>
+<h3>Prefer <code>$'\n'</code> to <code>echo -e</code></h3>
+<p>No:</p>
+<pre><code>echo -e '\n'   <span class="sh-comment"># arg to -e is dynamically parsed</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>echo $'\n'     <span class="sh-comment"># statically parsed</span>
+</code></pre>
+<a name="how-to-fix-code-that-strict_errexit-disallows"></a>
+<h2>How to Fix Code That <code>strict_errexit</code> Disallows</h2>
+<p>The <code>strict_errexit</code> feature warns you when you would <strong>lose errors</strong> in shell
+code.</p>
+<a name="the-local-ddate-x-pitfall"></a>
+<h3>The <code>local d=$(date %x)</code> Pitfall</h3>
+<p>No:</p>
+<pre><code>local d=$(date %x)   <span class="sh-comment"># ignores failure</span>
+</code></pre>
+<p>Yes:</p>
+<pre><code>local d
+d=$(date %x)         <span class="sh-comment"># fails properly</span>
+</code></pre>
+<p>Better YSH style:</p>
+<pre><code>var d = $(date %x)   <span class="sh-comment"># fails properly</span>
+</code></pre>
+<a name="variations-with-readonly-and-export"></a>
+<h3>Variations With <code>readonly</code> and <code>export</code></h3>
+<p>In these cases, the builtin comes after the assignment.</p>
+<p>No:</p>
+<pre><code>readonly d1=$(date %x)
+export d2=$(date %x)
+</code></pre>
+<p>Yes:</p>
+<pre><code>d1=$(date %x)
+readonly d1
+
+d2=$(date %x)
+export d2
+</code></pre>
+<a name="the-if-myfunc-pitfall"></a>
+<h3>The <code>if myfunc</code> Pitfall</h3>
+<p>No:</p>
+<pre><code>if myfunc; then
+  echo 'Success'
+fi
+</code></pre>
+<p>Shell workaround when the <em>$0 Dispatch Pattern</em> is used:</p>
+<pre><code>myfunc() {
+  echo hi
+}
+
+mycaller() {
+  if $0 myfunc; then  <span class="sh-comment"># $0 starts this script as a new process</span>
+    echo 'Success'
+  fi
+}
+
+&quot;$@&quot;  <span class="sh-comment"># invoked like myscript.sh mycaller arg1 arg2 ...</span>
+</code></pre>
+<p>Better YSH Style:</p>
+<pre><code>try {
+  myfunc
+}
+if (_error.code === 0) 
+  echo 'Success'
+}
+</code></pre>
+<a name="remove-dynamic-parsing"></a>
+<h2>Remove Dynamic Parsing</h2>
+<a name="replacing-declare-i-local-i"></a>
+<h3>Replacing <code>declare -i</code>, <code>local -i</code>, ...</h3>
+<p>The <code>-i</code> flag on assignment builtins doesn't add any functionality to bash —
+it's merely a different and confusing style.</p>
+<p>OSH doesn't support it; instead it has <em>true integers</em>.</p>
+<p>For example, don't rely on &quot;punning&quot; of the <code>+=</code> operator; use <code>$(( ))</code>
+instead.</p>
+<p>No:</p>
+<pre><code>declare -i x=3
+x+=1            <span class="sh-comment"># Now it's '4' because += will do integer arithmetic</span>
+</code></pre>
+<p>Yes (shell style):</p>
+<pre><code>x=3          
+x=$(( x + 1 ))  <span class="sh-comment"># No -i flag needed</span>
+</code></pre>
+<p>Yes (YSH style):</p>
+<pre><code>var x = 3
+setvar x += 1
+</code></pre>
+<p>Likewise, don't rely on dynamic parsing of arithmetic.</p>
+<p>No:</p>
+<pre><code>declare -i x
+x='1 + 2'     <span class="sh-comment"># Now it's the string '3'</span>
+</code></pre>
+<p>Yes (shell style):</p>
+<pre><code>x=$(( 1 + 2 ))
+</code></pre>
+<p>Yes (YSH style):</p>
+<pre><code>var x = 1 + 2
+</code></pre>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Notation Table of Contents</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/ref-index.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/toc-data.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+<a href="toc-osh.html">OSH</a> | <a href="toc-ysh.html">YSH</a> | <strong>Data Notation Table of Contents</strong></p>
+</div>
+<p>Shell programs can be built on well-defined data notation / data languages /
+text interchange formats.</p>
+
+<h2 id="front-end">
+  
+  Front End <a class="group-link" href="chap-front-end.html">front-end</a>
+</h2>
+<pre><code class="language-chapter-links-front-end">  [<a href="chap-front-end.html#Lexing" class="level2">Lexing</a>]        <a href="chap-front-end.html#ascii-whitespace">ascii-whitespace</a> [ \t\r\n]
+                  <a href="chap-front-end.html#ascii-control-chars">ascii-control-chars</a>
+</code></pre>
+<h2 id="j8-notation">
+  J8 Notation
+  <a class="group-link" href="chap-j8.html">j8</a>
+</h2>
+<pre><code class="language-chapter-links-j8">  [<a href="chap-j8.html#J8-Strings" class="level2">J8 Strings</a>]   <a href="chap-j8.html#json-string">json-string</a>        &quot;hi&quot;
+                 <a href="chap-j8.html#json-escape">json-escape</a>        \&quot;  \\  \u1234
+                 <a href="chap-j8.html#surrogate-pair">surrogate-pair</a>     \ud83e\udd26
+                 <a href="chap-j8.html#j8-escape">j8-escape</a>          \'  \u{1f926}  \yff
+                 <a href="chap-j8.html#u-prefix">u-prefix</a>           u'hi'
+                 <a href="chap-j8.html#b-prefix">b-prefix</a>           b'hi'
+                 <a href="chap-j8.html#no-prefix">no-prefix</a>          'hi'
+  [<a href="chap-j8.html#J8-Lines" class="level2">J8 Lines</a>]     <a href="chap-j8.html#unquoted-line">unquoted-line</a>
+  [<a href="chap-j8.html#JSON8" class="level2">JSON8</a>]        <a href="chap-j8.html#json8-num">json8-num</a>          <a href="chap-j8.html#json8-str">json8-str</a>
+               <span style="color: darkred">X </span><a href="chap-j8.html#json8-list">json8-list</a>       <span style="color: darkred">X </span><a href="chap-j8.html#json8-dict">json8-dict</a>
+                 <a href="chap-j8.html#json8-comment">json8-comment</a>
+  [<a href="chap-j8.html#TSV8" class="level2">TSV8</a>]         <a href="chap-j8.html#column-attrs">column-attrs</a>       <a href="chap-j8.html#column-types">column-types</a>
+</code></pre>
+<p>All J8 notation is UTF-8.</p>
+
+<h2 id="errors">
+  Errors
+  <a class="group-link" href="chap-errors.html">errors</a>
+</h2>
+<pre><code class="language-chapter-links-errors">  [<a href="chap-errors.html#UTF8" class="level2">UTF8</a>]      <a href="chap-errors.html#err-utf8-encode">err-utf8-encode</a>       <a href="chap-errors.html#err-utf8-decode">err-utf8-decode</a>
+  [<a href="chap-errors.html#J8-String" class="level2">J8 String</a>] <a href="chap-errors.html#err-j8-str-encode">err-j8-str-encode</a>     <a href="chap-errors.html#err-j8-str-decode">err-j8-str-decode</a>
+  [<a href="chap-errors.html#J8-Lines" class="level2">J8 Lines</a>]  <a href="chap-errors.html#err-j8-lines-encode">err-j8-lines-encode</a>   <a href="chap-errors.html#err-j8-lines-decode">err-j8-lines-decode</a>
+  [<a href="chap-errors.html#JSON" class="level2">JSON</a>]      <a href="chap-errors.html#err-json-encode">err-json-encode</a>       <a href="chap-errors.html#err-json-decode">err-json-decode</a>
+  [<a href="chap-errors.html#JSON8" class="level2">JSON8</a>]     <a href="chap-errors.html#err-json8-encode">err-json8-encode</a>      <a href="chap-errors.html#err-json8-decode">err-json8-decode</a>
+</code></pre>
+
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

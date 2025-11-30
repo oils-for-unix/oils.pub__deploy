@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solutions to the Framing Problem</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/framing.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Solutions to the Framing Problem</h1>
+<p>How do you write multiple <strong>records</strong> to a pipe, and how do you read them?</p>
+<p>You need a way of delimiting them.  Let's call this the &quot;framing problem&quot;
+— a term borrowed from network engineering.</p>
+<p>This doc categorizes different formats, and shows how you handle them in YSH.</p>
+<p>YSH is meant for writing correct shell programs.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#a-length-prefix">A Length Prefix</a></div>
+  <div class="toclevel1"><a href="#solutions-using-a-delimiter">Solutions Using a Delimiter</a></div>
+  <div class="toclevel2"><a href="#fixed-delimiter-newline-or-nul-byte">Fixed Delimiter: Newline or <code>NUL</code> byte</a></div>
+  <div class="toclevel2"><a href="#chosen-delimiter-here-docs-and-multipart-mime">Chosen Delimiter: Here docs and multipart MIME</a></div>
+  <div class="toclevel1"><a href="#c-style-escaping-allows-arbitrary-bytes">C-Style <code>\</code> escaping allows arbitrary bytes</a></div>
+  <div class="toclevel2"><a href="#escaping-based-records">Escaping-Based Records</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel1"><a href="#appendix">Appendix</a></div>
+  <div class="toclevel2"><a href="#notes-on-http-11">Notes on HTTP 1.1</a></div>
+</div>
+<a name="a-length-prefix"></a>
+<h2>A Length Prefix</h2>
+<p><a href="https://en.wikipedia.org/wiki/Netstring">Netstrings</a> are a simple format defined by Daniel J Bernstein.</p>
+<pre><code>3:foo,  # ASCII length, colon, byte string, comma
+</code></pre>
+<p>This format is easy to implement, and efficient to read and write.</p>
+<p>But the encoded output may contain binary data, which isn't readable by a human
+using a terminal (or GUI).  This is significant!</p>
+<hr />
+<p>TODO: Implement <code>read --netstr</code> and <code>write --netstr</code></p>
+
+<a name="solutions-using-a-delimiter"></a>
+<h2>Solutions Using a Delimiter</h2>
+<p>Now let's look at traditional Unix solutions, and their <strong>problems</strong>.</p>
+<a name="fixed-delimiter-newline-or-nul-byte"></a>
+<h3>Fixed Delimiter: Newline or <code>NUL</code> byte</h3>
+<p>In traditional Unix, newlines delimit &quot;records&quot;.  Here's how you read them in
+shell:</p>
+<pre><code>while IFS='' read -r; do  # confusing idiom!
+  echo line=$REPLY
+  break                   # remaining bytes are still in the pipe
+done
+</code></pre>
+<p>YSH has a simpler idiom:</p>
+<pre><code>while read --raw-line {   # unbuffered
+  echo line=$_reply
+  break                   # remaining bytes are still in the pipe
+}
+</code></pre>
+<p>Or you can read all lines:</p>
+<pre><code>for line in (io.stdin) {     # buffered
+  echo line=$line
+  break                   # remaining bytes may be lost in a buffer
+}
+</code></pre>
+<p><strong>However</strong>, in Unix, all of these strings may have newlines:</p>
+<ul>
+<li>filenames</li>
+<li>items in <code>argv</code></li>
+<li>values in <code>environ</code></li>
+</ul>
+<hr />
+<p>But these C-style strings can't contain the <code>NUL</code> byte, aka <code>\0</code>.  So GNU tools
+have evolved support for another format:</p>
+<pre><code>find . -print0  # write data
+xargs -0        # read data; also --null
+grep -z         # read data; also --null-data
+sort -z         # read data; also --zero-terminated
+                # (Why are all the names different?)
+</code></pre>
+<p>In Oils, we added a <code>-0</code> flag to <code>read</code> to understands this:</p>
+<pre><code>$ find . -print0 | { read -0 x; echo $x; read -0 x; echo $x; }
+foo  # could contain newlines!
+bar
+</code></pre>
+<a name="chosen-delimiter-here-docs-and-multipart-mime"></a>
+<h3>Chosen Delimiter: Here docs and multipart MIME</h3>
+<p>Shell has has here docs that look like this:</p>
+<pre><code>cat &lt;&lt;EOF
+the string EOF
+can't start a line
+EOF
+</code></pre>
+<p>So you <strong>choose</strong> the delimiter, with the &quot;word&quot; you write after <code>&lt;&lt;</code>.</p>
+<hr />
+<p>Similarly, when your browser POSTs a form, it uses <a href="https://en.wikipedia.org/wiki/MIME#Multipart_messages">MIME multipart message
+format</a>:</p>
+<pre><code>MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary=frontier
+
+This is a message with multiple parts in MIME format.
+--frontier
+Content-Type: text/plain
+
+This is the body of the message.
+--frontier
+</code></pre>
+<p>So again, you <strong>choose</strong> a delimiter with <code>boundary=frontier</code>, and then you
+must recognize it later in the message.</p>
+<a name="c-style-escaping-allows-arbitrary-bytes"></a>
+<h2>C-Style <code>\</code> escaping allows arbitrary bytes</h2>
+<p><a href="/cross-ref.html?tag=JSON#JSON">JSON</a> can express strings with newlines:</p>
+<pre><code>&quot;line 1 \n line 2&quot;
+</code></pre>
+<p>It can also express the zero code point, which isn't the same as NUL byte:</p>
+<pre><code>&quot;zero code point \u0000&quot;
+</code></pre>
+<p><a href="j8-notation.html">J8 Notation</a> is an extension of JSON that fixes this:</p>
+<pre><code>&quot;NUL byte \y00&quot;
+</code></pre>
+<p>(We use <code>\y00</code> rather than <code>\x00</code>, because Python and JavaScript both confuse
+<code>\x00</code> with <code>U+0000</code>.  The zero code point may be encoded as 2 or 4 <code>NUL</code>
+bytes.)</p>
+<a name="escaping-based-records"></a>
+<h3>Escaping-Based Records</h3>
+<p>TSV files are based on delimiters, but they aren't very readable in a terminal.</p>
+<p>TODO</p>
+<p>So TSV8 offers and &quot;aligned&quot; format:</p>
+<pre><code>#.ssv8 flag      desc                 type
+type   Str       Str                  Str
+       --verbose &quot;do it \t verbosely&quot; bool
+       --count   &quot;count only&quot;         int
+</code></pre>
+<p>So this format combines two strategies:</p>
+<ul>
+<li>Delimiter-based for the <strong>rows</strong> / lines</li>
+<li>Escaping-based for the <strong>cells</strong></li>
+</ul>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>Traditional shells mostly support newline-based records.  YSH supports:</p>
+<ol>
+<li>Length-prefixed records</li>
+<li>Delimiter-based records
+<ul>
+<li>fixed delimiter: newline or <code>NUL</code></li>
+<li>chosen delimiter: TODO?  with regex capture?</li>
+</ul>
+</li>
+<li>Escaping-based records with <a href="/cross-ref.html?tag=JSON#JSON">JSON</a> and the <a href="j8-notation.html">J8 Notation</a> extension.
+<ul>
+<li>But we avoid formats that are purely based on escaping.</li>
+</ul>
+</li>
+</ol>
+<a name="appendix"></a>
+<h2>Appendix</h2>
+<a name="notes-on-http-11"></a>
+<h3>Notes on HTTP 1.1</h3>
+<p>It has a messy mix of strategies:</p>
+<ul>
+<li>The HTTP headers and body are separated by a blank line - a fixed <strong>delimiter</strong></li>
+<li>The <code>Content-Length:</code> header is a <strong>length prefix</strong> for the request or
+response body</li>
+<li>But you can also use <code>Transfer-Encoding: chunked</code>, which makes the body a
+<strong>stream</strong> of length-prefixed chunks.  The stream is terminated by a sentinel
+(a delimiter).</li>
+<li>Multipart MIME file uploads use a <strong>chosen delimiter</strong> to separate files.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>

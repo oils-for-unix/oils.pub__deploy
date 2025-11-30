@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tables, Object, and Documents - Notation, Query, Creation, Schema</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width50">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/table-object-doc.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.35.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Tables, Object, and Documents - Notation, Query, Creation, Schema</h1>
+<style>
+  thead {
+    background-color: #eee;
+    font-weight: bold;
+    text-align: left;
+  }
+  table {
+    font-family: sans-serif;
+    border-collapse: collapse;
+  }
+
+  tr {
+    border-bottom: solid 1px;
+    border-color: #ddd;
+  }
+
+  td {
+    padding: 8px;  /* override default of 5px */
+  }
+</style>
+<p>This is part of <strong>maximal</strong> YSH!</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#philosophy">Philosophy</a></div>
+  <div class="toclevel1"><a href="#tables">Tables</a></div>
+  <div class="toclevel1"><a href="#note-sql-databases-support-all-three-models">Note: SQL Databases Support all three models!</a></div>
+  <div class="toclevel1"><a href="#design-issues">Design Issues</a></div>
+  <div class="toclevel2"><a href="#streaming">Streaming</a></div>
+  <div class="toclevel2"><a href="#mutual-nesting">Mutual Nesting</a></div>
+  <div class="toclevel2"><a href="#html5-whitespace-rules">HTML5 whitespace rules</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+  <div class="toclevel1"><a href="#notes">Notes</a></div>
+  <div class="toclevel2"><a href="#relaxng-xsd-dtd">RelaxNG, XSD, DTD</a></div>
+  <div class="toclevel2"><a href="#algorithms">Algorithms?</a></div>
+  <div class="toclevel2"><a href="#naming">Naming</a></div>
+</div> 
+<a name="philosophy"></a>
+<h2>Philosophy</h2>
+<ul>
+<li>Oils is Exterior-First</li>
+<li>Tables, Objects, Documents - CSV, JSON, HTML
+<ul>
+<li>Oils cleanup: TSV8, JSON8, HTM8</li>
+</ul>
+</li>
+</ul>
+<a name="tables"></a>
+<h2>Tables</h2>
+<table>
+<thead>
+<tr>
+  <th>Data Type</th>
+  <th>Notation</th>
+  <th>Query</th>
+  <th>Creation</th>
+  <th>Schema</th>
+</tr>
+</thead>
+<tr>
+  <td>Table</td>
+  <td>TSV, CSV</td>
+  <td>csvkit, xsv, awk-ish, etc. <br/>
+SQL, Data Frames</td>
+  <td>?</td>
+  <td>?</td>
+</tr>
+<tr>
+  <td>Object</td>
+  <td>JSON</td>
+  <td>jq <br/>
+JSONPath: MySQL/Postgres/sqlite support it?</td>
+  <td>jq</td>
+  <td>JSON Schema</td>
+</tr>
+<tr>
+  <td>Document</td>
+  <td>HTML5</td>
+  <td>DOM API like getElementById() <br/>
+CSS selectors <br/></td>
+  <td>JSX Templates</td>
+  <td>?</td>
+</tr>
+<tr>
+  <td>Document</td>
+  <td>XML</td>
+  <td>XPath?  XQuery?</td>
+  <td>XSLT?</td>
+  <td>three:
+<ul>
+<li>DTD (document type definition, 1986)</li>
+<li>RelaxNG (2001)</li>
+<li>XML Schema aka XSD (2001)</li>
+</ul>
+</td>
+</tr>
+<caption>Existing</caption>
+</table>
+<p> </p>
+<table>
+<thead>
+<tr>
+  <th>Data Type</th>
+  <th>Notation</th>
+  <th>Query</th>
+  <th>Creation</th>
+  <th>Schema</th>
+  <th>In-Memory</th>
+</tr>
+</thead>
+<tr>
+  <td>Table</td>
+  <td>TSV8 (is valid TSV)</td>
+  <td>dplyr-like Data Frames <br/>
+Maybe some SQL-pipe subset thing?</td>
+  <td><code>table { }</code></td>
+  <td>?</td>
+  <td>By column: dict of &quot;arrays&quot; <br/>
+By row: list of dicts <br/></td>
+</tr>
+<tr>
+  <td>Object</td>
+  <td>JSON8 (superset)</td>
+  <td>JSONPath? <br/>
+jq as a reshaping language</td>
+  <td>Hay?  <code>Package { }</code></td>
+  <td>JSON Schema?</td>
+  <td>List and Dict</td>
+</tr>
+<tr>
+  <td>Document</td>
+  <td>HTM8 (subset)</td>
+  <td>CSS selectors</td>
+  <td>Markaby Style <code>div { }</code> <br/>
+&quot;sed&quot; style</td>
+  <td>?</td>
+  <td>DocFrag - a span within a doc<br/>
+DocTree - an Obj representation<br/>
+?</td>
+</tr>
+<caption>Oils</caption>
+</table>
+<a name="note-sql-databases-support-all-three-models"></a>
+<h2>Note: SQL Databases Support all three models!</h2>
+<ul>
+<li>sqlite, MySQL, and PostGres obviously have tables</li>
+<li>They all have JSON and JSONPath support!
+<ul>
+<li>JSONPath syntax might differ a bit?</li>
+</ul>
+</li>
+<li>XML support
+<ul>
+<li>Postgres: XML type, XPath, more</li>
+<li>MySQL: XML extraction functions only</li>
+<li>sqlite: none</li>
+</ul>
+</li>
+</ul>
+<a name="design-issues"></a>
+<h2>Design Issues</h2>
+<a name="streaming"></a>
+<h3>Streaming</h3>
+<ul>
+<li>jq has a line-based streaming model, by taking advantage of the fact that
+all JSON can be encoded without literal newlines
+<ul>
+<li>HTML/XML don't have this property</li>
+</ul>
+</li>
+<li>Solution: Netstring based streaming?
+<ul>
+<li>can do it for both JSON8 and HTM8 ?</li>
+</ul>
+</li>
+</ul>
+<a name="mutual-nesting"></a>
+<h3>Mutual Nesting</h3>
+<ul>
+<li>JSON must be UTF-8, so JSON strings can contain JSON
+<ul>
+<li>ditto for JSON8, and J8 strings</li>
+</ul>
+</li>
+<li>TSV cells can't contain tabs or newlines
+<ul>
+<li>so they can't contain TSV</li>
+<li>if you remove all the newlines, they can contain JSON</li>
+</ul>
+</li>
+<li>TSV8 cells use J8 strings, so they can contain JSON, TSV</li>
+<li>HTM8
+<ul>
+<li>you can escape everything, so you can put another HTM8 doc inside</li>
+<li>and you can put JSON/JSON8 or TSV/TSV8</li>
+<li>although are there whitespace rules?</li>
+<li>all nodes can be like <code>&lt;pre&gt;</code> nodes, preserving whitespace, until
+<ul>
+<li>you apply another function to it</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<a name="html5-whitespace-rules"></a>
+<h3>HTML5 whitespace rules</h3>
+<ul>
+<li>inside text context:
+<ul>
+<li>multiple whitespace chars collapsed into a single one</li>
+<li>newlines converted to spaces</li>
+<li>leading and trailing space is preserved</li>
+</ul>
+</li>
+<li><code>&lt;pre&gt; &lt;code&gt; &lt;textarea&gt;</code>
+<ul>
+<li>whitespace is preserved exactly as written
+<ul>
+<li>I guess HTM8 could use another function for this?</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>quoted attributes
+<ul>
+<li>whitespace is untouched</li>
+</ul>
+</li>
+</ul>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="stream-table-process.html">stream-table-process.html</a></li>
+<li><a href="ysh-doc-processing.html">ysh-doc-processing.html</a></li>
+</ul>
+<a name="notes"></a>
+<h2>Notes</h2>
+<a name="relaxng-xsd-dtd"></a>
+<h3>RelaxNG, XSD, DTD</h3>
+<p>I didn't know there were these 3 schema types!</p>
+<ul>
+<li>DTD is older, associated with SGML created in 1986</li>
+<li>XML Schema and Relax NG created in 2001
+<ul>
+<li>XML Schema use XML syntax, which is bad!</li>
+</ul>
+</li>
+</ul>
+<a name="algorithms"></a>
+<h3>Algorithms?</h3>
+<ul>
+<li>
+<p>I looked at <code>jq</code></p>
+</li>
+<li>
+<p>how do you do CSS selectors?</p>
+</li>
+<li>
+<p>how do you do JSONPath?</p>
+</li>
+<li>
+<p>XML Path</p>
+<ul>
+<li>holistic twig joins - bounded memory</li>
+<li>Hollandar Marx XPath Streaming</li>
+</ul>
+</li>
+</ul>
+<a name="naming"></a>
+<h3>Naming</h3>
+<ul>
+<li>
+<p>HTM8 doesn't use J8 strings</p>
+<ul>
+<li>but TSV8 does</li>
+</ul>
+</li>
+<li>
+<p>Technically we could add j8 strings with</p>
+<ul>
+<li>j''</li>
+<li>and even templated strings with $&quot;&quot; ?</li>
+</ul>
+</li>
+<li>
+<p>hm</p>
+<ul>
+<li>well then we would need $[ j'' ] and so forth</li>
+</ul>
+</li>
+</ul>
+<p>Is</p>
+<ul>
+<li><code>&lt;span x=j'foo'&gt;</code> identical to <code>&lt;span x=&quot;j'foo'&quot;&gt;</code> in HTML5 ?
+<ul>
+<li>it seems do</li>
+<li>ditto for <code>$&quot;&quot;</code></li>
+</ul>
+</li>
+<li>then we could disallow those pattern in double quotes?
+<ul>
+<li>they would have to be quoted like &amp;sq; or something</li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sat, 30 Aug 2025 21:10:31 -0400</i>
+    </div>
+  </body>
+</html>
