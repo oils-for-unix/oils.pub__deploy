@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH FAQ</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-faq.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH FAQ</h1>
+<p>Here are some common questions about <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.  Many of the answers boil
+down to the fact that YSH is a <strong>smooth upgrade</strong> from <a href="/cross-ref.html?tag=bash#bash">bash</a>.</p>
+<p>Old and new constructs exist side-by-side.  New constructs have fewer
+&quot;gotchas&quot;.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#can-i-freely-mix-osh-and-ysh-code">Can I freely mix OSH and YSH code?</a></div>
+  <div class="toclevel1"><a href="#whats-the-difference-myvar-myvar-and-myvar">What's the difference <code>myvar</code>, <code>$myvar</code>, and <code>&quot;$myvar&quot;</code> ?</a></div>
+  <div class="toclevel1"><a href="#how-do-i-write-src-or-bobgit-in-a-ysh-assignment">How do I write <code>~/src</code> or <code>~bob/git</code> in a YSH assignment?</a></div>
+  <div class="toclevel1"><a href="#how-do-i-write-the-equivalent-of-echo-e-or-echo-n">How do I write the equivalent of <code>echo -e</code> or <code>echo -n</code>?</a></div>
+  <div class="toclevel2"><a href="#why-were-e-and-n-removed">Why Were <code>-e</code> and <code>-n</code> Removed?</a></div>
+  <div class="toclevel2"><a href="#how-do-i-write-a-string-literal-with-both-myvar-and-n">How do I write a string literal with both <code>$myvar</code> and <code>\n</code>?</a></div>
+  <div class="toclevel2"><a href="#how-do-i-find-all-the-echo-invocations-i-need-to-change-when-using-ysh">How do I find all the <code>echo</code> invocations I need to change when using YSH?</a></div>
+  <div class="toclevel1"><a href="#whats-the-difference-between-dirname-x-and-lenx">What's the difference between <code>$(dirname $x)</code> and <code>$[len(x)]</code> ?</a></div>
+  <div class="toclevel1"><a href="#why-doesnt-a-raw-string-work-here-arrayr">Why doesn't a raw string work here: <code>${array[r'\']}</code> ?</a></div>
+  <div class="toclevel1"><a href="#how-do-i-combine-conditional-commands-and-expressions-if-myvar-and-if-test-f">How do I combine conditional commands and expressions: <code>if (myvar)</code> and <code>if test -f</code>?</a></div>
+  <div class="toclevel1"><a href="#why-do-i-lose-the-value-of-p-in-myproc-p-grep-foo">Why do I lose the value of <code>p</code> in <code>myproc (&amp;p) | grep foo</code>?</a></div>
+  <div class="toclevel1"><a href="#why-are-dict-and-obj-different-types">Why are <code>Dict</code> and <code>Obj</code> different types?</a></div>
+  <div class="toclevel1"><a href="#why-are-command-and-proc-different-types">Why are <code>Command</code> and <code>Proc</code> different types?</a></div>
+  <div class="toclevel1"><a href="#why-are-byte-escapes-spelled-yff-and-not-xff-as-in-c">Why are byte escapes spelled <code>\yff</code>, and not <code>\xff</code> as in C?</a></div>
+  <div class="toclevel1"><a href="#how-do-i-append-to-a-string-is-there-a-or-operator">How do I append to a string?  Is there a <code>+=</code> or <code>++=</code> operator?</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="can-i-freely-mix-osh-and-ysh-code"></a>
+<h2>Can I freely mix OSH and YSH code?</h2>
+<p><em>If YSH is equivalent to OSH with <code>shopt --set ysh:all</code>, it seems like this
+could be possible?</em></p>
+<p>Currently we recommend only combining OSH and YSH when they're in <strong>different
+processes</strong>.</p>
+<p>While you may be able to source OSH from YSH like this:</p>
+<pre><code>shopt --unset ysh:all {
+  source lib.osh
+}
+</code></pre>
+<p>and perhaps source YSH from OSH like this:</p>
+<pre><code>shopt --set ysh:all
+source lib.ysh
+</code></pre>
+<p>... actually calling shell functions and procs is <strong>a problem</strong>.  This is
+because the <code>shopt</code> options are <strong>global</strong>, and you can end up with &quot;mixed
+stacks&quot;.</p>
+<p>For example, consider a call stack that looks like :</p>
+<pre><code>OSH -&gt; YSH -&gt; OSH -&gt; YSH
+</code></pre>
+<p>Reasoning about code mixed this way is difficult.</p>
+<p>Instead, you may want limited mixing, where you &quot;shell out&quot; to OSH from YSH, or
+vice versa.  This is similar to shelling out to <code>awk</code> from <code>sh</code>, for example.</p>
+<p>(The <a href="/cross-ref.html?tag=0-dispatch#0-dispatch">$0 Dispatch Pattern</a> may be useful.)</p>
+<a name="whats-the-difference-myvar-myvar-and-myvar"></a>
+<h2>What's the difference <code>myvar</code>, <code>$myvar</code>, and <code>&quot;$myvar&quot;</code> ?</h2>
+<p>YSH is more like Python/JavaScript rather than PHP/Perl, so it doesn't use the
+<code>$</code> sigil as much.</p>
+<p>Never use <code>$</code> on the left-hand side:</p>
+<pre><code>var mystr = &quot;foo&quot;   <span class="sh-comment"># not var $mystr</span>
+</code></pre>
+<p>Use <code>$</code> to <strong>substitute</strong> vars into commands:</p>
+<pre><code>echo $mystr
+echo $mystr/subdir  <span class="sh-comment"># no quotes in commands</span>
+</code></pre>
+<p>or quoted strings:</p>
+<pre><code>echo &quot;$mystr/subdir&quot;
+var x = &quot;$mystr/subdir&quot;
+</code></pre>
+<p>Rarely use <code>$</code> on the right-hand side:</p>
+<pre><code>var x = mystr       <span class="sh-comment"># preferred</span>
+var x = $mystr      <span class="sh-comment"># ILLEGAL -- use remove $</span>
+var x = ${mystr:-}  <span class="sh-comment"># occasionally useful</span>
+
+var x = $?          <span class="sh-comment"># allowed</span>
+</code></pre>
+<p>See <a href="command-vs-expression-mode.html">Command vs. Expression Mode</a> for more
+details.</p>
+<a name="how-do-i-write-src-or-bobgit-in-a-ysh-assignment"></a>
+<h2>How do I write <code>~/src</code> or <code>~bob/git</code> in a YSH assignment?</h2>
+<p>This should cover 80% of cases:</p>
+<pre><code>var path = &quot;$HOME/src&quot;  <span class="sh-comment"># equivalent to ~/src</span>
+</code></pre>
+<p>The old shell style will cover the remaining cases:</p>
+<pre><code>declare path=~/src
+readonly other=~bob/git
+</code></pre>
+<hr />
+<p>This is only in issue in <em>expressions</em>.  The traditional shell idioms work in
+<em>command</em> mode:</p>
+<pre><code>echo ~/src ~bob/git
+<span class="sh-comment"># =&gt; /home/alice/src /home/bob/git</span>
+</code></pre>
+<p>The underlying design issue is that the YSH expression <code>~bob</code> looks like a
+unary operator and a variable, not some kind of string substitution.</p>
+<p>Also, quoted <code>&quot;~&quot;</code> is a literal tilde, and shells disagree on what <code>~&quot;&quot;</code> means.
+The rules are subtle, so we avoid inventing new ones.</p>
+
+<a name="how-do-i-write-the-equivalent-of-echo-e-or-echo-n"></a>
+<h2>How do I write the equivalent of <code>echo -e</code> or <code>echo -n</code>?</h2>
+<p>To echo special characters denoted by backslash escapes, use a
+statically-parsed string literal, not <code>echo -e</code>:</p>
+<pre><code>echo u'tab \t newline \n'       <span class="sh-comment"># YES: J8 style string is recommended in YSH</span>
+echo $'tab \t newline \n'       <span class="sh-comment">#      bash-style string is also accepted</span>
+</code></pre>
+<p>These styles don't work in YSH:</p>
+<pre><code>echo -e &quot;tab \\t newline \\n&quot;   <span class="sh-comment"># NO: -e is printed literally</span>
+echo -e &quot;tab \t newline \n&quot;     <span class="sh-comment">#     Error: Invalid char escape</span>
+</code></pre>
+<p>To omit the trailing newline, use the <code>write</code> builtin:</p>
+<pre><code>write -n       -- $prefix       <span class="sh-comment"># YES</span>
+write --end '' -- $prefix       <span class="sh-comment"># synonym</span>
+
+echo -n $prefix                 <span class="sh-comment"># NO: -n is printed literally</span>
+</code></pre>
+<a name="why-were-e-and-n-removed"></a>
+<h3>Why Were <code>-e</code> and <code>-n</code> Removed?</h3>
+<p>The idioms with <code>u''</code> and <code>write</code> are more powerful and consistent.</p>
+<p>Moreover, shell's <code>echo</code> is the <em>only</em> builtin that doesn't accept <code>--</code> to stop
+flag processing.</p>
+<p>That is, <code>echo &quot;$flag&quot;</code> always has a few bugs: when <code>$flag</code> is <code>-e</code>, <code>-n</code>,
+<code>-en</code>, or <code>-ne</code>. There's <strong>no</strong> way to fix this bug in POSIX shell.</p>
+<p>So portable shell scripts use:</p>
+<pre><code>printf '%s\n' &quot;$x&quot;  <span class="sh-comment"># print $x &quot;unmolested&quot; in POSIX shell</span>
+</code></pre>
+<p>We could have chosen to respect <code>echo -- $x</code>, but YSH already has:</p>
+<pre><code>write -- $x         <span class="sh-comment"># print $x &quot;unmolested&quot; in YSH</span>
+</code></pre>
+<p>That means YSH has:</p>
+<pre><code>echo $x             <span class="sh-comment"># an even shorter way</span>
+</code></pre>
+<p>So <code>echo</code> is technically superfluous in YSH, but it's also short, familiar, and
+correct.</p>
+<p>YSH isn't intended to be compatible with POSIX shell; only OSH is.</p>
+<a name="how-do-i-write-a-string-literal-with-both-myvar-and-n"></a>
+<h3>How do I write a string literal with both <code>$myvar</code> and <code>\n</code>?</h3>
+<p>In YSH, either use <code>$[ \n ]</code> inside a double-quoted string:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo &quot;$myvar $[ \n ] two&quot;</span>  <span class="sh-comment"># expression sub wraps \n</span>
+value_of_myvar
+two
+</code></pre>
+<p>Or use the concatenation operator <code>++</code> with two styles of string literal:</p>
+<pre><code>echo $[u'newline \n' ++ &quot; $year/$month/$day&quot;]
+</code></pre>
+<p>This POSIX shell behavior is probably not what you want:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">echo &quot;\n&quot;</span>
+\n  <span class="sh-comment"># not a newline!</span>
+</code></pre>
+<a name="how-do-i-find-all-the-echo-invocations-i-need-to-change-when-using-ysh"></a>
+<h3>How do I find all the <code>echo</code> invocations I need to change when using YSH?</h3>
+<p>A search like this can statically find most usages:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">egrep -n 'echo (-e|-n|-en|-ne)' *.sh</span>
+test/syscall.sh:58: echo -n hi
+test/syscall.sh:76: echo -e '\t'
+</code></pre>
+<a name="whats-the-difference-between-dirname-x-and-lenx"></a>
+<h2>What's the difference between <code>$(dirname $x)</code> and <code>$[len(x)]</code> ?</h2>
+<p>Superficially, both of these syntaxes take an argument <code>x</code> and return a
+string.  But they are different:</p>
+<ul>
+<li><code>$(dirname $x)</code> is a shell command substitution that returns a string, and
+<strong>starts another process</strong>.</li>
+<li><code>$[len(x)]</code> is an expression sub containing a function call expression.
+<ul>
+<li>It doesn't need to start a process.</li>
+<li>Note that <code>len(x)</code> evaluates to an integer, and <code>$[len(x)]</code> converts it to
+a string.</li>
+</ul>
+</li>
+</ul>
+
+<a name="why-doesnt-a-raw-string-work-here-arrayr"></a>
+<h2>Why doesn't a raw string work here: <code>${array[r'\']}</code> ?</h2>
+<p>This boils down to the difference between OSH and YSH, and not being able to
+mix the two.  Though they look similar, <code>${array[i]}</code> syntax (with braces) is
+fundamentally different than <code>$[array[i]]</code> syntax (with brackets).</p>
+<ul>
+<li>OSH supports <code>${array[i]}</code>.
+<ul>
+<li>The index is legacy/deprecated shell arithmetic like <code>${array[i++]}</code> or
+<code>${assoc[&quot;$key&quot;]}</code>.</li>
+<li>The index <strong>cannot</strong> be a raw string like <code>r'\'</code>.</li>
+</ul>
+</li>
+<li>YSH supports both, but <a href="ref/chap-expr-lang.html#expr-sub">expression substitution</a> syntax
+<code>$[array[i]]</code> is preferred.
+<ul>
+<li>It accepts YSH expressions like <code>$[array[i + 1]</code> or <code>$[mydict[key]]</code>.</li>
+<li>A raw string like <code>r'\'</code> is a valid key, e.g.  <code>$[mydict[r'\']]</code>.</li>
+</ul>
+</li>
+</ul>
+<p>Of course, YSH style is preferred when compatibility isn't an issue.</p>
+<p>No:</p>
+<pre><code>echo ${array[r'\']}
+</code></pre>
+<p>Yes:</p>
+<pre><code>echo $[array[r'\']]
+</code></pre>
+<p>A similar issue exists with arithmetic.</p>
+<p>Old:</p>
+<pre><code>echo $((1 + 2))   <span class="sh-comment"># shell arithmetic</span>
+</code></pre>
+<p>New:</p>
+<pre><code>echo $[1 + 2]     <span class="sh-comment"># YSH expression</span>
+</code></pre>
+
+<a name="how-do-i-combine-conditional-commands-and-expressions-if-myvar-and-if-test-f"></a>
+<h2>How do I combine conditional commands and expressions: <code>if (myvar)</code> and <code>if test -f</code>?</h2>
+<p>You can use the <code>--true</code> and <code>--false</code> flags to the <a href="ref/chap-builtin-cmd.html#ysh-test">YSH test</a>
+builtin:</p>
+<pre><code>if test --true $[myvar] &amp;&amp; test --file x {
+    echo ok
+}
+</code></pre>
+<p>They test if their argument is literally the string <code>&quot;true&quot;</code> or <code>&quot;false&quot;</code>.</p>
+<p>This works because the boolean <code>true</code> <em>stringifies</em> to <code>&quot;true&quot;</code>, and likewise
+with <code>false</code>.</p>
+<a name="why-do-i-lose-the-value-of-p-in-myproc-p-grep-foo"></a>
+<h2>Why do I lose the value of <code>p</code> in <code>myproc (&amp;p) | grep foo</code>?</h2>
+<p>In a pipeline, most components are <strong>forked</strong>.  This means that <code>myproc (&amp;p)</code>
+runs in a different process from the main shell.</p>
+<p>The main shell can't see the memory of a subshell.</p>
+<hr />
+<p>In general, you have to restructure your code to avoid this.  You could use a proc with multiple outputs:</p>
+<pre><code>myproc (&amp;p, &amp;grepped_output)
+</code></pre>
+<p>Or you could use a function:</p>
+<pre><code>var out1, out2 = myfunc(io)
+</code></pre>
+<hr />
+<p><a href="process-model.html">The Unix Shell Process Model - When Are Processes
+Created?</a> may help.</p>
+<p>This issue is similar to the <code>shopt -s lastpipe</code> issue:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">bash -c 'echo hi | read x; echo x=$x'</span>
+x=
+
+<span class="sh-prompt">$</span> <span class="sh-command">zsh -c 'echo hi | read x; echo x=$x'</span>
+x=hi
+</code></pre>
+<p>In bash, <code>read</code> runs in a subshell, but in <code>zsh</code> and OSH, it runs in the main
+shell.</p>
+<a name="why-are-dict-and-obj-different-types"></a>
+<h2>Why are <code>Dict</code> and <code>Obj</code> different types?</h2>
+<p><em>JavaScript has a single Object type, while Python has separate dicts and
+objects.</em></p>
+<p>In YSH, we draw a line between data and code.</p>
+<ul>
+<li>A <code>Dict</code> is pure <strong>data</strong>, and may correspond to JSON from untrusted sources.</li>
+<li>An <code>Obj</code> bundles both data and <strong>code</strong>, and can't be serialized by default.</li>
+</ul>
+<p>You can create an <code>Obj</code> from a <code>Dict</code> with the <code>Obj</code> constructor.  Conversely,
+you can get the first Dict in an object with <a href="ref/chap-builtin-func.html#first">first(myobj)</a>.</p>
+<p>There is no special <code>__proto__</code> or <code>prototype</code> name, which reduces the
+likelihood of &quot;prototype pollution&quot; vulnerabilities.</p>
+<hr />
+<p>This is essentially the <a href="https://www.oilshell.org/blog/2023/06/ysh-design.html">Interior vs. Exterior</a> distinction:
+An Obj lives inside the shell process, while a Dict may come from outside the
+process (user input).</p>
+<a name="why-are-command-and-proc-different-types"></a>
+<h2>Why are <code>Command</code> and <code>Proc</code> different types?</h2>
+<p><em>Could a <code>Command</code> be a <code>Proc</code> with no arguments?  Similarly, could an <code>Expr</code> be a
+<code>Func</code> with no arguments?</em></p>
+<p>Procs and Funcs both push a new stack frame, and bind arguments to declared
+parameters.</p>
+<p>On the other hand, <code>Command</code> and <code>Expr</code> are more &quot;raw&quot; and flexible:</p>
+<ul>
+<li>They can be evaluated in different stack frames —
+e.g. <code>io-&gt;eval(b, in_captured_frame)</code></li>
+<li>They can have &quot;undeclared&quot; variable bindings —
+e.g. <code>io-&gt;eval(b, vars={x: 42})</code>.</li>
+</ul>
+<p>In other words, they're low-level, reflective types that allow users to create
+expressive APIs, like:</p>
+<pre><code>cd /tmp {                    <span class="sh-comment"># Command literal (block)</span>
+  ls -l
+}
+my-table | where [size &gt; 3]  <span class="sh-comment"># Expr literal</span>
+</code></pre>
+<hr />
+<p>Another way to think about it: we could have removed procs from the core YSH
+language, and implemented them in terms of command blocks and <code>io-&gt;eval()</code>.
+But that seems too low-level!</p>
+<a name="why-are-byte-escapes-spelled-yff-and-not-xff-as-in-c"></a>
+<h2>Why are byte escapes spelled <code>\yff</code>, and not <code>\xff</code> as in C?</h2>
+<p>The <a href="j8-notation.html#faq">J8 Notation FAQ</a> answers this question.</p>
+<a name="how-do-i-append-to-a-string-is-there-a-or-operator"></a>
+<h2>How do I append to a string?  Is there a <code>+=</code> or <code>++=</code> operator?</h2>
+<p>You can use any of these styles:</p>
+<pre><code>var s = s ++ t      <span class="sh-comment"># like + in Python or JavaScript</span>
+
+var s = &quot;$s$t&quot;      <span class="sh-comment"># like Unix shell</span>
+
+var s = &quot;$[s]$[t]&quot;  <span class="sh-comment"># a bit easier to read</span>
+</code></pre>
+<p>However, avoid such string concatenation in a loop.  It's algorithmically
+faster to append to a <code>List</code>, and <code>join()</code> the strings at the end:</p>
+<pre><code>var parts = []
+for s in @(seq 5) {
+  call parts-&gt;append(s)
+}
+echo $[join(parts)]  <span class="sh-comment"># =&gt; '12345'</span>
+</code></pre>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="https://github.com/oilshell/oil/wiki/YSH-FAQ">YSH FAQ</a> on the wiki has more answers.  We may be migrate some of
+them here.</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

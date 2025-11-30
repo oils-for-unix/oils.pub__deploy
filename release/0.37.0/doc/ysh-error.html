@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Guide to YSH Error Handling</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-error.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Guide to YSH Error Handling</h1>
+<p>There are just a few concepts to know:</p>
+<ul>
+<li><a href="ref/chap-builtin-cmd.html#error">error</a> builtin - &quot;Throw&quot; an error, with a custom message, error code, and
+other properties.</li>
+<li><a href="ref/chap-builtin-cmd.html#try">try</a> builtin - Run a block, and set the <a href="ref/chap-special-var.html#_error">_error</a> register to a <code>Dict</code>.
+<ul>
+<li><code>_error.code</code> will be <code>0</code> on success, or non-zero if an error is thrown in
+the block.</li>
+</ul>
+</li>
+<li><a href="ref/chap-builtin-cmd.html#failed">failed</a> builtin - A handy shortcut to test for a non-zero error code.</li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#examples">Examples</a></div>
+  <div class="toclevel2"><a href="#handle-command-and-expression-errors-with-try">Handle command and expression errors with <code>try</code></a></div>
+  <div class="toclevel2"><a href="#the-failed-builtin-is-a-shortcut">The <code>failed</code> builtin is a shortcut</a></div>
+  <div class="toclevel2"><a href="#use-a-case-statement-if-its-not-just-passfail">Use a <code>case</code> statement if it's not just pass/fail</a></div>
+  <div class="toclevel2"><a href="#error-may-have-more-attributes-like-_errormessage">Error may have more attributes, like <code>_error.message</code></a></div>
+  <div class="toclevel2"><a href="#the-error-builtin-throws-custom-errors">The <code>error</code> builtin throws custom errors</a></div>
+  <div class="toclevel1"><a href="#tips">Tips</a></div>
+  <div class="toclevel2"><a href="#proc-return-status-should-be-either-ok-fail-or-true-false-fail">Proc Return Status Should Be Either OK-Fail, or True-False-Fail</a></div>
+  <div class="toclevel1"><a href="#related">Related</a></div>
+</div>
+<a name="examples"></a>
+<h2>Examples</h2>
+<a name="handle-command-and-expression-errors-with-try"></a>
+<h3>Handle command and expression errors with <code>try</code></h3>
+<p>Here's the most basic form:</p>
+<pre><code>try {
+  ls /zz
+}
+if (_error.code !== 0) {
+  echo &quot;ls failed with $[_error.code]&quot;
+} 
+<span class="sh-comment"># =&gt; ls failed with error 2</span>
+</code></pre>
+<a name="the-failed-builtin-is-a-shortcut"></a>
+<h3>The <code>failed</code> builtin is a shortcut</h3>
+<p>Instead of writing <code>if (_error.code !== 0)</code>, you can write <code>if failed</code>:</p>
+<pre><code>if failed {
+  echo &quot;ls failed with $[_error.code]&quot;
+} 
+</code></pre>
+<p>This saves you 7 punctuation characters: <code>( _ . !== )</code></p>
+<a name="use-a-case-statement-if-its-not-just-passfail"></a>
+<h3>Use a <code>case</code> statement if it's not just pass/fail</h3>
+<p>Sometimes it's nicer to use <code>case</code> rather than <code>if</code>:</p>
+<pre><code>try {
+  grep '[0-9]+' foo.txt
+}
+case (_error.code) {
+  (0)    { echo 'found' }
+  (1)    { echo 'not found' }
+  (else) { echo 'error invoking grep' }
+}
+</code></pre>
+<a name="error-may-have-more-attributes-like-_errormessage"></a>
+<h3>Error may have more attributes, like <code>_error.message</code></h3>
+<pre><code>try {
+  var x = fromJson('{')
+}
+if failed {
+  echo &quot;JSON failure: $[_error.message]&quot;
+}
+<span class="sh-comment"># =&gt; JSON failure: expected string, got EOF</span>
+</code></pre>
+<a name="the-error-builtin-throws-custom-errors"></a>
+<h3>The <code>error</code> builtin throws custom errors</h3>
+<p>A non-zero exit code results in a simple shell-style error:</p>
+<pre><code>proc simple-failure {
+  return 2
+}
+
+try {
+  simple-failure
+}
+echo &quot;status is $[_error.code]&quot;
+<span class="sh-comment"># =&gt; status is 2</span>
+</code></pre>
+<p>The <code>error</code> builtin is more informative:</p>
+<pre><code>proc better-failure {
+  error 'Custom message' (code=99, foo='zz')
+}
+
+try {
+  better-failure
+}
+echo &quot;$[_error.code] $[_error.message] foo=$[_error.foo]&quot;
+<span class="sh-comment"># =&gt; 99 Custom message foo=zz&quot;</span>
+</code></pre>
+<a name="tips"></a>
+<h2>Tips</h2>
+<a name="proc-return-status-should-be-either-ok-fail-or-true-false-fail"></a>
+<h3>Proc Return Status Should Be Either OK-Fail, or True-False-Fail</h3>
+<style>
+table {
+  margin-left: 2em;
+  background-color: #eee;
+}
+thead {
+  background-color: white;
+}
+</style>
+<p>That is, use <strong>one</strong> of these styles:</p>
+<div style="display: flex; gap: 20px;">
+<table cellpadding="10" cellspacing="5">
+<thead>
+<tr>
+  <th>Return Status</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tr>
+  <td>0</td>
+  <td>OK</td>
+</tr>
+<tr>
+  <td>1 or more</td>
+  <td>Fail</td>
+</tr>
+</table>
+<table cellpadding="10" cellspacing="5">
+<thead>
+<tr>
+  <th>Return Status</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tr>
+  <td>0</td>
+  <td>True</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>False</td>
+</tr>
+<tr>
+  <td>2 or more</td>
+  <td>Fail</td>
+</tr>
+</table>
+</div>
+<p>For example, here's a proc that does is <strong>not</strong> follow the style:</p>
+<pre><code>proc is-different (left, right) {
+  mkdir /tmp/dest            <span class="sh-comment"># may return 1 on failure</span>
+
+  cp $left $right /tmp/dest  <span class="sh-comment"># may return 1 on failure</span>
+
+  diff -u $left $right       <span class="sh-comment"># 0-true, 1-false, 2-failure</span>
+}
+</code></pre>
+<p>The exit code isn't well-defined, because <code>mkdir</code> and <code>cp</code> use the OK-fail
+paradigm, while <code>diff</code> uses the <strong>boolean</strong> paradigm:</p>
+<p>Explicitly checking for failure fixes it:</p>
+<pre><code>proc different (left, right) {
+  if ! mkdir /tmp/dest {
+    return 2                 <span class="sh-comment"># 2-failure</span>
+  }
+  if ! cp $left $right /tmp/dest {
+    return 2                 <span class="sh-comment"># 2-failure</span>
+  }
+
+  diff -u $left $right       <span class="sh-comment"># 0-true, 1-false, 2-failure</span>
+}
+</code></pre>
+<a name="related"></a>
+<h2>Related</h2>
+<ul>
+<li><a href="idioms.html#error-handling">YSH vs. Shell Idioms &gt; Error Handling</a></li>
+<li><a href="error-handling.html">YSH Fixes Shell's Error Handling (<code>errexit</code>)</a> - A
+detailed design doc</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

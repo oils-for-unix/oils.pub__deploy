@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Block Literals</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/block-literals.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>Block Literals</h1>
+<p>Procs are shell like-functions, but they can have declared parameters, and lack
+dynamic scope.</p>
+<pre><code>proc p(name, age) {
+  echo &quot;$name is $age years old&quot;
+}
+
+p alice 42  <span class="sh-comment"># =&gt; alice is 42 years old</span>
+</code></pre>
+<p>Blocks are fragments of code within <code>{ }</code> that can be passed to builtins (and
+eventually procs):</p>
+<pre><code>cd /tmp {
+  echo $PWD  <span class="sh-comment"># prints /tmp</span>
+}
+echo $PWD  <span class="sh-comment"># prints original dir</span>
+</code></pre>
+<ul>
+<li>See <a href="idioms.html">YSH Idioms</a> for examples of procs.</li>
+</ul>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#syntax">Syntax</a></div>
+  <div class="toclevel1"><a href="#semantics">Semantics</a></div>
+  <div class="toclevel2"><a href="#use-eval-to-evaluate-a-block">Use <code>eval</code> to evaluate a block</a></div>
+  <div class="toclevel2"><a href="#hay-config-blocks">Hay Config Blocks</a></div>
+  <div class="toclevel2"><a href="#errors">Errors</a></div>
+  <div class="toclevel2"><a href="#control-flow">Control Flow</a></div>
+  <div class="toclevel2"><a href="#16-use-cases-for-blocks">16 Use Cases for Blocks</a></div>
+</div>
+<a name="syntax"></a>
+<h2>Syntax</h2>
+<p>These forms work:</p>
+<pre><code>cd / {
+  echo $PWD
+}
+cd / { echo $PWD }
+cd / { echo $PWD }; cd / { echo $PWD }
+</code></pre>
+<p>These are syntax errors:</p>
+<pre><code>a=1 { echo bad };        <span class="sh-comment"># assignments can't take blocks</span>
+&gt;out.txt { echo bad };   <span class="sh-comment"># bare redirects can't take blocks</span>
+break { echo bad };      <span class="sh-comment"># control flow can't take blocks</span>
+</code></pre>
+<p>Runtime error:</p>
+<pre><code>local a=1 { echo bad };  <span class="sh-comment"># assignment builtins can't take blocks</span>
+</code></pre>
+<p>Caveat: Blocks Are Space Sensitive</p>
+<pre><code>cd {a,b}  <span class="sh-comment"># brace substitution</span>
+cd { a,b }  <span class="sh-comment"># tries to run command 'a,b', which probably doesn't exist</span>
+</code></pre>
+<p>Quoting of <code>{ }</code> obeys the normal rules:</p>
+<pre><code>echo 'literal braces not a block' \{ \}
+echo 'literal braces not a block' '{' '}'
+</code></pre>
+<a name="semantics"></a>
+<h2>Semantics</h2>
+<p>TODO: This section has to be implemented and tested.</p>
+<a name="use-eval-to-evaluate-a-block"></a>
+<h3>Use <code>eval</code> to evaluate a block</h3>
+<p>TODO: use <code>eval</code></p>
+<pre><code>proc p(&amp;block) {
+  echo '&gt;'
+  $block    <span class="sh-comment"># call it?</span>
+            <span class="sh-comment"># or maybe just 'block' -- it's a new word in the &quot;proc&quot; namespace?</span>
+  echo '&lt;'
+}
+
+<span class="sh-comment"># Invoke it</span>
+p {
+  echo 'hello'
+}
+<span class="sh-comment"># Output:</span>
+<span class="sh-comment"># &gt;</span>
+<span class="sh-comment"># hello</span>
+<span class="sh-comment"># &lt;</span>
+</code></pre>
+<a name="hay-config-blocks"></a>
+<h3>Hay Config Blocks</h3>
+<p>TODO</p>
+<a name="errors"></a>
+<h3>Errors</h3>
+<p>Generally, errors occur <em>inside</em> blocks, not outside:</p>
+<pre><code>cd /tmp {
+   cp myfile /bad   <span class="sh-comment"># error happens here</span>
+   echo 'done'
+}                   <span class="sh-comment"># not here</span>
+</code></pre>
+<a name="control-flow"></a>
+<h3>Control Flow</h3>
+<ul>
+<li><code>break</code> and <code>continue</code> are disallowed inside blocks.</li>
+<li>You can exit a block early with <code>return</code> (not the enclosing function).</li>
+<li><code>exit</code> is identical: it exits the program.</li>
+</ul>
+<a name="16-use-cases-for-blocks"></a>
+<h3>16 Use Cases for Blocks</h3>
+<p>See 16 use cases on the blog: <a href="https://www.oilshell.org/blog/2023/06/ysh-features.html">Sketches of YSH
+Features</a>.</p>
+
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

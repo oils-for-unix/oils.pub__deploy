@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Objects - Modules, Closures, and More</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/objects.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p>        <p style="background-color: mistyrose; font-size: large;
+                  text-align: center; padding: 1em;">
+
+      <b>Warning: Work in progress!</b>  Leave feedback on <a
+      href="https://oilshell.zulipchat.com">Zulip</a> or <a
+      href="https://github.com/oilshell/oil/issues">Github</a> if you'd like
+      this doc to be updated.
+    </p>
+<h1>YSH Objects - Modules, Closures, and More</h1>
+<ul>
+<li>Objects
+<ul>
+<li>Proc-like objects with <code>__invoke__</code></li>
+<li>Func-like objects with <code>__call__</code></li>
+<li>Modules are invokable, with attributes</li>
+<li>Closures TODO - callable</li>
+</ul>
+</li>
+<li>Blocks
+<ul>
+<li>These are &quot;bare&quot;</li>
+</ul>
+</li>
+</ul>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#proc-like">Proc-Like</a></div>
+  <div class="toclevel2"><a href="#stateful-proc-counter">Stateful Proc Counter</a></div>
+  <div class="toclevel1"><a href="#func-like">Func-Like</a></div>
+  <div class="toclevel2"><a href="#stateful-func-counter">Stateful Func Counter</a></div>
+  <div class="toclevel1"><a href="#examples">Examples</a></div>
+  <div class="toclevel2"><a href="#procs-modules">Procs - Modules</a></div>
+  <div class="toclevel2"><a href="#funcs-closures-in-a-loop">Funcs - Closures in a Loop</a></div>
+  <div class="toclevel2"><a href="#dsls-like-hay-flag-parser-etc">DSLs like Hay, Flag Parser, etc.</a></div>
+</div> 
+<a name="proc-like"></a>
+<h2>Proc-Like</h2>
+<a name="stateful-proc-counter"></a>
+<h3>Stateful Proc Counter</h3>
+<a name="func-like"></a>
+<h2>Func-Like</h2>
+<a name="stateful-func-counter"></a>
+<h3>Stateful Func Counter</h3>
+<a name="examples"></a>
+<h2>Examples</h2>
+<a name="procs-modules"></a>
+<h3>Procs - Modules</h3>
+<p>invokable No state</p>
+<a name="funcs-closures-in-a-loop"></a>
+<h3>Funcs - Closures in a Loop</h3>
+<p>The famous example.</p>
+<a name="dsls-like-hay-flag-parser-etc"></a>
+<h3>DSLs like Hay, Flag Parser, etc.</h3>
+<p>These use procs and value.Obj?</p>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Regex API - Convenient and Powerful</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-regex-api.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Regex API - Convenient and Powerful</h1>
+<p>YSH has <a href="eggex.html">Egg Expressions</a>, a composable and readable syntax for
+regular expressions.  You can use <em>Eggex</em> with both:</p>
+<ul>
+<li>
+<p>A convenient Perl-like operator: <code>'mystr' ~ / [a-z]+/ </code></p>
+<ul>
+<li>access submatches with global <code>_group()</code>   <code>_start()</code>   <code>_end()</code></li>
+</ul>
+</li>
+<li>
+<p>A powerful Python-like API: <code>'mystr'.search(/ [a-z]+ /)</code> and <code>leftMatch()</code></p>
+<ul>
+<li>access submatches with <code>Match</code> object methods <code>m.group()</code>  
+<code>m.start()</code>   <code>m.end()</code></li>
+</ul>
+</li>
+</ul>
+<p>You can also use plain POSIX regular expressions (<a href="/cross-ref.html?tag=ERE#ERE">ERE</a>) instead of
+Eggex.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#perl-like-operator">Perl-Like <code>~</code> operator</a></div>
+  <div class="toclevel1"><a href="#python-like-api">Python-like API</a></div>
+  <div class="toclevel2"><a href="#search-returns-a-valuematch-object"><code>search()</code> returns a value.Match object</a></div>
+  <div class="toclevel2"><a href="#leftmatch-for-iterative-matching-lexers"><code>leftMatch()</code> for Iterative matching / Lexers</a></div>
+  <div class="toclevel1"><a href="#more-features">More Features</a></div>
+  <div class="toclevel2"><a href="#named-captures">Named Captures</a></div>
+  <div class="toclevel2"><a href="#type-conversion-funcs-a-better-scanf">Type Conversion Funcs - A Better <code>scanf()</code></a></div>
+  <div class="toclevel2"><a href="#replacement-substitution">Replacement / Substitution</a></div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel1"><a href="#appendix-python-like-wrappers-around-the-api">Appendix: Python-like wrappers around the API</a></div>
+  <div class="toclevel2"><a href="#slurping-all-matches">Slurping All Matches</a></div>
+  <div class="toclevel2"><a href="#split-by-pattern">Split by Pattern</a></div>
+  <div class="toclevel1"><a href="#eggex-help-topics">Eggex Help Topics</a></div>
+</div>
+
+<a name="perl-like-operator"></a>
+<h2>Perl-Like <code>~</code> operator</h2>
+<p>The <code>~</code> operator tests if a string matches a pattern.  The captured groups are
+available through &quot;global register&quot; functions starting with <code>_</code>.</p>
+<pre><code>var s = 'days 04-01 and 10-31'
+var eggex = /&lt;capture d+ as month&gt; '-' &lt;capture d+ as day&gt;/
+
+if (s ~ eggex) {
+  = _group(1)  <span class="sh-comment"># =&gt; '04', the first capture</span>
+  = _group(2)  <span class="sh-comment"># =&gt; '01', the second capture</span>
+
+  = _start(1)  <span class="sh-comment"># =&gt; 5, start index of the first capture</span>
+  = _end(1)    <span class="sh-comment"># =&gt; 7, end index of the first capture</span>
+}
+</code></pre>
+<p>The eggex pattern has <strong>named capture</strong> <code>as month</code>, so it's more typical to
+write:</p>
+<pre><code>if (s ~ eggex) {
+  = _group('month')  <span class="sh-comment"># =&gt; '04'</span>
+  = _group('day')    <span class="sh-comment"># =&gt; '01'</span>
+
+  = _start('month')  <span class="sh-comment"># =&gt; 5</span>
+  = _end('month')    <span class="sh-comment"># =&gt; 7</span>
+}
+</code></pre>
+<p>You can test if a string does <strong>not</strong> match a pattern with <code>!~</code>:</p>
+<pre><code>if (s !~ / space /) {
+  echo 'no whitespace'
+}
+</code></pre>
+<p>The pattern can also be a string, in plain <a href="/cross-ref.html?tag=ERE#ERE">ERE</a> syntax:</p>
+<pre><code>if (s ~ '([[:digit:]]+)') {
+  = _group(1)
+}
+</code></pre>
+<p>Help topics:</p>
+<ul>
+<li><a href="ref/chap-expr-lang.html#match-ops">match-ops</a>
+<ul>
+<li><a href="ref/chap-builtin-func.html#_group"><code>_group()</code></a></li>
+<li><a href="ref/chap-builtin-func.html#_start"><code>_start()</code></a></li>
+<li><a href="ref/chap-builtin-func.html#_end"><code>_end()</code></a></li>
+</ul>
+</li>
+</ul>
+<a name="python-like-api"></a>
+<h2>Python-like API</h2>
+<a name="search-returns-a-valuematch-object"></a>
+<h3><code>search()</code> returns a value.Match object</h3>
+<p>The <code>search()</code> method is like the <code>~</code> operator, but it returns either <code>null</code> or
+a <code>Match</code> object.</p>
+<p><code>Match</code> objects have <code>group()</code>, <code>start()</code>, and <code>end()</code> methods.</p>
+<pre><code>var m = 's'.search(eggex)
+if (m) {  <span class="sh-comment"># test if it  matched</span>
+  = m.group('month')  <span class="sh-comment"># =&gt; '04'</span>
+  = m.group('day')    <span class="sh-comment"># =&gt; '01'</span>
+}
+</code></pre>
+<p>You can search from a given starting position:</p>
+<pre><code>var m = 's'.search(eggex, pos=12)
+if (m) {
+  = m.group('month')  <span class="sh-comment"># =&gt; '10', first month after pos 12</span>
+  = m.group('day')    <span class="sh-comment"># =&gt; '31', first day after pos 12</span>
+}
+</code></pre>
+<p>The <code>search()</code> method is a bit like <code>Str.find()</code>, which searches for a
+substring rather than a pattern.</p>
+<p>Help topics:</p>
+<ul>
+<li><a href="ref/chap-type-method.html#search">Str.search()</a> for a pattern
+<ul>
+<li><a href="ref/chap-type-method.html#group">Match.group()</a></li>
+<li><a href="ref/chap-type-method.html#start">Match.start()</a></li>
+<li><a href="ref/chap-type-method.html#end">Match.end()</a></li>
+</ul>
+</li>
+<li><a href="ref/chap-type-method.html#find">Str.find()</a> a substring</li>
+</ul>
+<a name="leftmatch-for-iterative-matching-lexers"></a>
+<h3><code>leftMatch()</code> for Iterative matching / Lexers</h3>
+<p>The <code>leftMatch()</code> method is like <code>search()</code>, but the string must match the
+pattern at the left-most position.</p>
+<p>It's useful for writing iterative lexers.</p>
+<pre><code>var s = 'hi 123'
+
+var Name  = / &lt;capture [a-z]+ as name&gt; /
+var Num   = / &lt;capture d+ as num&gt; /
+var Space = / &lt;capture s+ as space&gt; /
+
+<span class="sh-comment"># 3 kinds of tokens.</span>
+<span class="sh-comment"># (For CapWords variables, splicing @Name doesn't require @.)</span>
+var lexer = / Name | Num | Space /
+
+var pos = 0  <span class="sh-comment"># start at position 0</span>
+while (true) {
+  var m = s.leftMatch(lexer, pos=pos)
+  if (not m) {
+    break
+  }
+  <span class="sh-comment"># Test which subgroup matched</span>
+  var id = null
+  if (m.group('name') !== null) {
+    setvar id = 'name'
+  } elif (m.group('num') !== null) {
+    setvar id = 'num'
+  } elif (m.group('space') !== null) {
+    setvar id = 'space'
+  }
+  <span class="sh-comment"># Calculate the token value</span>
+  var end_pos = m.end(0)
+  var val = s[pos:end_pos]
+
+  echo &quot;Token $id $val&quot;
+
+  setvar pos = end_pos  <span class="sh-comment"># Advance position</span>
+}
+</code></pre>
+<p>(YSH <code>leftMatch()</code> vs. <code>search()</code> is like Python's <code>re.match()</code> vs.
+<code>re.search().</code>)</p>
+<ul>
+<li>Help topic: <a href="ref/chap-type-method.html#leftMatch">leftMatch()</a></li>
+</ul>
+<a name="more-features"></a>
+<h2>More Features</h2>
+<a name="named-captures"></a>
+<h3>Named Captures</h3>
+<p>As noted above, you can name a capture group with say <code>&lt;capture d+ as month&gt;</code>,
+and access it with either</p>
+<ul>
+<li><code>_group('month')</code> for the global match</li>
+<li><code>m.group('month')</code> when using <code>Str</code> methods</li>
+</ul>
+<a name="type-conversion-funcs-a-better-scanf"></a>
+<h3>Type Conversion Funcs - A Better <code>scanf()</code></h3>
+<p>You can also add <code>: funcName</code> to convert the captured string to a different
+value.</p>
+<pre><code>var pat = / &lt;capture d+ as month: int&gt; /
+if ('10-31' ~ pat) {
+  = _group('month')  <span class="sh-comment"># the integer 10, not the string '10'</span>
+}
+</code></pre>
+<p>The <code>func</code> should accept a string, and return any type of value.</p>
+<p>Conversion funcs also work with positional captures: <code>/&lt;capture d+ : int&gt;/</code>.</p>
+<ul>
+<li>Help topic: <a href="ref/chap-expr-lang.html#re-capture">re-capture</a></li>
+</ul>
+<a name="replacement-substitution"></a>
+<h3>Replacement / Substitution</h3>
+<p>We plan to use unevaluated string literals like <code>^&quot;hello $1&quot;</code> (&quot;quotations&quot;) as
+the replacement object.</p>
+<p>This is instead of custom Python's custom language like <code>'hello \g&lt;1&gt;</code>.</p>
+<pre><code><span class="sh-comment"># var new = s.replace(/&lt;capture d+ as month&gt;/, ^&quot;month is $month&quot;)</span>
+</code></pre>
+<ul>
+<li>Help topic: <a href="ref/chap-type-method.html#replace">replace()</a></li>
+</ul>
+
+<a name="summary"></a>
+<h2>Summary</h2>
+<p>YSH is designed to have the <strong>convenience</strong> of Perl and Awk, and the <strong>power</strong>
+of Python and JavaScript.</p>
+<p>Eggexes can be composed by <em>splicing</em>.  Splicing works on expressions, not
+strings.</p>
+<p>Replacement will use shell's string literal syntax, rather than a new
+<code>printf</code>-like mini-language.</p>
+<a name="appendix-python-like-wrappers-around-the-api"></a>
+<h2>Appendix: Python-like wrappers around the API</h2>
+<a name="slurping-all-matches"></a>
+<h3>Slurping All Matches</h3>
+<p>Python's <code>findall()</code> function can be emulated by using <code>search()</code> in a loop,
+similar to the lexer example above:</p>
+<pre><code>func findAll(s, pat) {
+  var pos = 0
+  var result = []
+  while (true) {
+    var m = s.search(pat, pos=pos)
+    if (not m) {
+      break
+    }
+    var left = m.start(0)
+    var right = m.end(0)
+    call result-&gt;append(s[left:right])
+    setvar pos = right
+  }
+  return (result)
+}
+
+var matches = findAll('days 04-01 and 10-31', / d+ '-' d+ /)
+json write (matches)  <span class="sh-comment"># =&gt; ['04-01', '10-31']</span>
+</code></pre>
+<a name="split-by-pattern"></a>
+<h3>Split by Pattern</h3>
+<p>Python's <code>re.split()</code> can also be emulated by using <code>search()</code> in a loop.</p>
+<a name="eggex-help-topics"></a>
+<h2>Eggex Help Topics</h2>
+<ul>
+<li><a href="ref/chap-expr-lang.html#re-literal">re-literal</a></li>
+<li><a href="ref/chap-expr-lang.html#re-primitive">re-primitive</a></li>
+<li><a href="ref/chap-expr-lang.html#class-literal">class-literal</a></li>
+<li><a href="ref/chap-expr-lang.html#named-class">named-class</a></li>
+<li><a href="ref/chap-expr-lang.html#re-repeat">re-repeat</a></li>
+<li><a href="ref/chap-expr-lang.html#re-compound">re-compound</a></li>
+<li><a href="ref/chap-expr-lang.html#re-capture">re-capture</a></li>
+<li><a href="ref/chap-expr-lang.html#re-splice">re-splice</a></li>
+<li><a href="ref/chap-expr-lang.html#re-flags">re-flags</a></li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

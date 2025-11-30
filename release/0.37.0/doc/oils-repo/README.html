@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Oils Source Code</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/README.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>Oils Source Code</h1>
+<p><a href="https://github.com/oils-for-unix/oils/actions/workflows/all-builds.yml"><img src="https://github.com/oils-for-unix/oils/actions/workflows/all-builds.yml/badge.svg?branch=master" alt="Build Status" /></a> <a href="https://gitpod.io/from-referrer/">
+<img src="https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod" alt="Contribute with Gitpod" />
+</a></p>
+<p><a href="https://oils.pub/">Oils</a> is our upgrade path from bash to a better language and runtime!</p>
+<ul>
+<li><a href="https://oils.pub/cross-ref.html#OSH">OSH</a> runs your existing shell scripts.</li>
+<li><a href="https://oils.pub/cross-ref.html#YSH">YSH</a> is for Python and JavaScript users who avoid shell.</li>
+</ul>
+<p><a href="https://www.oilshell.org/blog/2023/03/faq.html">Oils 2023 FAQ</a> / <a href="https://www.oilshell.org/blog/2021/01/why-a-new-shell.html">Why Create a New Unix Shell?</a></p>
+<p>It's written in Python, so the code is short and easy to change.  But we
+translate it to C++ with custom tools, to make it fast and small.  The deployed
+executable doesn't depend on Python.</p>
+<p>This README is at the root of the <a href="https://github.com/oils-for-unix/oils">git repo</a>.</p>
+<p><strong>Important</strong>: If you want to <strong>use</strong> Oils, don't clone this repo.  Instead, visit
+<a href="https://oils.pub/release/latest/">https://oils.pub/release/latest/</a>.
+See the wiki: <a href="https://github.com/oils-for-unix/oils/wiki/The-Oils-Repo-Is-Different-From-the-Tarball-Releases">The Oils Repo Is Different From the Tarball Releases</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#contributing">Contributing</a></div>
+  <div class="toclevel2"><a href="#dev-build">Dev Build</a></div>
+  <div class="toclevel2"><a href="#important-we-accept-small-contributions">Important: We Accept Small Contributions!</a></div>
+  <div class="toclevel2"><a href="#i-aim-for-24-hour-response-time">I aim for 24 hour response time</a></div>
+  <div class="toclevel1"><a href="#docs">Docs</a></div>
+  <div class="toclevel1"><a href="#links">Links</a></div>
+</div>
+<a name="contributing"></a>
+<h2>Contributing</h2>
+<ul>
+<li>Try making the <strong>dev build</strong> of Oils with the instructions on the
+<a href="https://github.com/oils-for-unix/oils/wiki/Contributing">Contributing</a> page.  This should take 1 to 5 minutes if you have a Linux
+machine.</li>
+<li>If it doesn't, let us know.  You can post on the <code>#oils-dev</code> channel of
+<a href="https://oilshell.zulipchat.com/">oilshell.zulipchat.com</a>, or file an issue on Github.</li>
+<li>Feel free to grab an <a href="https://github.com/oils-for-unix/oils/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">issue from
+Github</a>.
+Let us know what you're thinking before you get too far.</li>
+</ul>
+<a name="dev-build"></a>
+<h3>Dev Build</h3>
+<p>After following those instructions, you should have a Python program that you
+can quickly run and change!  Try it interactively:</p>
+<pre><code>bash$ bin/osh
+
+osh$ name=world
+osh$ echo &quot;hello $name&quot;
+hello world
+</code></pre>
+<ul>
+<li>Try running a shell script you wrote with <code>bin/osh myscript.sh</code>.</li>
+<li>Try <a href="https://oils.pub/cross-ref.html#YSH">YSH</a> with <code>bin/ysh</code>.</li>
+</ul>
+<p>Let us know if any of these things don't work!  <a href="https://op.oilshell.org/">The continuous
+build</a> tests them at every commit.</p>
+<hr />
+<p>Remember that this is the <strong>dev build</strong> in Python, not a released binary.  <a href="https://github.com/oils-for-unix/oils/wiki/The-Oils-Repo-Is-Different-From-the-Tarball-Releases">The
+Oils Repo Is Different From the Tarball Releases</a>.</p>
+<a name="important-we-accept-small-contributions"></a>
+<h3>Important: We Accept Small Contributions!</h3>
+<p>Oils is full of <a href="https://oils.pub/blog/">many ideas</a>, which may be
+intimidating at first.</p>
+<p>But the bar to contribution is very low.  It's basically a medium size Python
+program with many tests, and many programmers know how to change such programs.
+It's great for prototyping.</p>
+<ul>
+<li>For OSH compatibility, I often merge <strong>failing <a href="https://oils.pub/cross-ref.html#spec-test">spec
+tests</a></strong>.  You don't even
+have to write code!  The tests alone help.  I search for related tests with
+<code>grep xtrace spec/*.test.sh</code>, where <code>xtrace</code> is a shell feature.</li>
+<li>You only have to make your code work <strong>in Python</strong>.  Plain Python programs
+are easy to modify.  The semi-automated translation to C++ is a separate
+step, although it often just works.</li>
+<li>You can <strong>influence the design</strong> of <a href="https://oils.pub/cross-ref.html#YSH">YSH</a>.  If you have an itch to
+scratch, be ambitious.  For example, you might want to show us how to
+implement <a href="https://github.com/oils-for-unix/oils/issues/843">nonlinear pipelines</a>.</li>
+</ul>
+<a name="i-aim-for-24-hour-response-time"></a>
+<h3>I aim for 24 hour response time</h3>
+<p>Please feel free to ping <code>andychu</code> on Zulip or Github if you're <strong>waiting</strong> for
+a pull request review!  (or to ask questions)</p>
+<p>Usually I can respond in 24 hours. I might be traveling, in which case I'll
+respond with something like <em>I hope to look at this by Tuesday</em>.</p>
+<p>I might have also <strong>missed</strong> your Github message, so it doesn't hurt to ping
+me.</p>
+<p>Thank you for the contributions!</p>
+<a name="docs"></a>
+<h2>Docs</h2>
+<p>The <a href="https://github.com/oils-for-unix/oils/wiki">Wiki</a> has many developer docs.  Feel
+free to edit them.  If you make a major change, let us know on Zulip!</p>
+<p>If you're confused, the best thing to do is to ask on Zulip and someone should
+produce a pointer and/or improve the docs.</p>
+<p>Docs for <strong>end users</strong> are linked from each <a href="https://oils.pub/releases.html">release
+page</a>.</p>
+<a name="links"></a>
+<h2>Links</h2>
+<ul>
+<li>The <a href="https://oils.pub/">Oils Home Page</a> has all the important links.</li>
+<li>Related:
+<ul>
+<li>Repository Structure: See the <a href="doc/repo-overview.md">Oils Repo Overview</a></li>
+<li>The <a href="README-index.md">README-index.md</a> links to docs for some
+subdirectories.  For example, <a href="mycpp/README.md">mycpp/README.md</a> is pretty
+detailed.</li>
+<li>FAQ: <a href="https://github.com/oils-for-unix/oils/wiki/The-Oils-Repo-Is-Different-From-the-Tarball-Releases">The Oils Repo Is Different From the Tarball</a></li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

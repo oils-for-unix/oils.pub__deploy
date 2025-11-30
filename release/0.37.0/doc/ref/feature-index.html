@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH and OSH Topics by Feature</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/feature-index.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH and OSH Topics by Feature</h1>
+<p><span class="in-progress">(in progress)</span></p>
+<p>This page links to topics in the <a href="index.html">Oils Reference</a>.  It's organized
+differently than the <a href="toc-ysh.html">YSH Table of Contents</a> or <a href="toc-osh.html">OSH Table of
+Contents</a>.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#Where-YSH-Improves-on-OSH">Where YSH Improves on OSH</a></div>
+  <div class="toclevel2"><a href="#Errors">Errors</a></div>
+  <div class="toclevel2"><a href="#Environment-Variables">Environment Variables</a></div>
+  <div class="toclevel2"><a href="#I/O">I/O</a></div>
+  <div class="toclevel2"><a href="#Procs">Procs</a></div>
+  <div class="toclevel2"><a href="#Modules">Modules</a></div>
+  <div class="toclevel2"><a href="#Interactive-Shell">Interactive Shell</a></div>
+  <div class="toclevel2"><a href="#Job-Control">Job Control</a></div>
+  <div class="toclevel2"><a href="#Tracing-Execution">Tracing Execution</a></div>
+  <div class="toclevel2"><a href="#Introspecting-the-Call-Stack">Introspecting the Call Stack</a></div>
+  <div class="toclevel2"><a href="#Reflection">Reflection</a></div>
+  <div class="toclevel2"><a href="#Unicode">Unicode</a></div>
+  <div class="toclevel1"><a href="#YSH-Only">YSH Only</a></div>
+  <div class="toclevel2"><a href="#Objects">Objects</a></div>
+  <div class="toclevel2"><a href="#Closures">Closures</a></div>
+  <div class="toclevel2"><a href="#Funcs">Funcs</a></div>
+  <div class="toclevel2"><a href="#Namespaces">Namespaces</a></div>
+  <div class="toclevel2"><a href="#Purity">Purity</a></div>
+  <div class="toclevel1"><a href="#OSH-Features">OSH Features</a></div>
+</div>
+<a name="Where-YSH-Improves-on-OSH"></a>
+<h2>Where YSH Improves on OSH</h2>
+<a name="Errors"></a>
+<h3>Errors</h3>
+<p>YSH:</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#try"><code>try</code></a></li>
+<li><a href="chap-special-var.html#_error"><code>_error</code></a></li>
+<li>multiple processes
+<ul>
+<li><a href="chap-special-var.html#_pipeline_status"><code>_pipeline_status</code></a></li>
+<li><a href="chap-special-var.html#_process_sub_status"><code>_process_sub_status</code></a></li>
+</ul>
+</li>
+<li><a href="chap-option.html">Options</a>:
+<ul>
+<li><code>strict_errexit</code>, <code>command_sub_errexit</code>, ...</li>
+</ul>
+</li>
+</ul>
+<p>OSH:</p>
+<ul>
+<li><a href="chap-special-var.html#POSIX-special"><code>$?</code></a> - not idiomatic in YSH</li>
+<li><a href="chap-option.html">Options</a>:
+<ul>
+<li><code>errexit</code>, <code>pipefail</code>, <code>inherit_errexit</code></li>
+</ul>
+</li>
+</ul>
+<a name="Environment-Variables"></a>
+<h3>Environment Variables</h3>
+<p>YSH:</p>
+<ul>
+<li><a href="chap-special-var.html#ENV"><code>ENV</code></a></li>
+<li><a href="chap-cmd-lang.html#ysh-prefix-binding"><code>ysh-prefix-binding</code></a> - for <code>NAME=val</code> env bindings</li>
+<li><a href="chap-cmd-lang.html#simple-command"><code>simple-command</code></a> - external commands are started with an
+<code>environ</code></li>
+<li><a href="chap-option.html">Options</a>:
+<ul>
+<li><code>shopt --unset no_exported</code></li>
+<li><code>shopt --set env_obj</code></li>
+</ul>
+</li>
+</ul>
+
+<p>OSH:</p>
+<ul>
+<li><a href="chap-osh-assign.html#export"><code>export</code></a></li>
+<li><a href="chap-cmd-lang.html#prefix-binding"><code>prefix-binding</code></a> - for <code>NAME=val</code> env bindings</li>
+</ul>
+<a name="I/O"></a>
+<h3>I/O</h3>
+<p>YSH:</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#write"><code>write</code></a>
+<ul>
+<li><a href="chap-builtin-cmd.html#ysh-echo"><code>ysh-echo</code></a> is a shortcut for <code>write</code></li>
+</ul>
+</li>
+<li><a href="chap-builtin-cmd.html#ysh-read"><code>ysh-read</code></a> - <code>read --all</code>, etc.</li>
+<li><a href="chap-builtin-cmd.html#redir"><code>redir</code></a></li>
+<li>The <a href="chap-type-method.html#io"><code>io</code></a> object</li>
+</ul>
+<p>OSH:</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#printf"><code>printf</code></a></li>
+</ul>
+<a name="Procs"></a>
+<h3>Procs</h3>
+<p>YSH:</p>
+<ul>
+<li><a href="chap-ysh-cmd.html#proc"><code>proc</code></a></li>
+<li>Invokable objects: <a href="chap-type-method.html#__invoke__"><code>__invoke__</code></a>, <a href="chap-type-method.html#Obj"><code>Obj</code></a></li>
+<li><a href="chap-cmd-lang.html#simple-command"><code>simple-command</code></a> is how you invoke procs</li>
+</ul>
+<p>OSH:</p>
+<ul>
+<li><a href="chap-cmd-lang.html#sh-func"><code>sh-func</code></a></li>
+</ul>
+<a name="Modules"></a>
+<h3>Modules</h3>
+<ul>
+<li><a href="chap-builtin-cmd.html#use"><code>use</code></a></li>
+<li><a href="chap-builtin-cmd.html#is-main"><code>is-main</code></a></li>
+<li>provide (TODO)</li>
+<li><a href="chap-special-var.html#_this_dir"><code>_this_dir</code></a></li>
+<li><a href="chap-special-var.html#__provide__"><code>__provide__</code></a></li>
+<li>An imported module is an <a href="chap-type-method.html#Obj"><code>Obj</code></a> with an <a href="chap-type-method.html#__invoke__"><code>__invoke__</code></a>
+method</li>
+</ul>
+<p>OSH:</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#source"><code>source</code></a></li>
+<li><a href="chap-builtin-cmd.html#source-guard"><code>source-guard</code></a></li>
+</ul>
+<a name="Interactive-Shell"></a>
+<h3>Interactive Shell</h3>
+<ul>
+<li><a href="chap-plugin.html#renderPrompt"><code>renderPrompt()</code></a></li>
+</ul>
+<p>OSH:</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#complete"><code>complete</code></a></li>
+<li>Oils enhancements: <a href="chap-builtin-cmd.html#compexport"><code>compexport</code></a>, <a href="chap-builtin-cmd.html#compadjust"><code>compadjust</code></a></li>
+</ul>
+<a name="Job-Control"></a>
+<h3>Job Control</h3>
+<ul>
+<li><a href="chap-cmd-lang.html#ampersand"><code>ampersand &amp;</code></a>
+<ul>
+<li>YSH has <a href="chap-builtin-cmd.html#fork"><code>fork</code></a></li>
+</ul>
+</li>
+<li><a href="chap-builtin-cmd.html#wait"><code>wait</code></a>
+<ul>
+<li>YSH adds <code>--all --verbose</code>: <a href="chap-builtin-cmd.html#ysh-wait"><code>ysh-wait</code></a></li>
+</ul>
+</li>
+<li><a href="chap-builtin-cmd.html#fg"><code>fg</code></a></li>
+<li><a href="chap-builtin-cmd.html#bg"><code>bg</code></a></li>
+<li><a href="chap-special-var.html#POSIX-Special"><code>$!</code></a></li>
+</ul>
+<a name="Tracing-Execution"></a>
+<h3>Tracing Execution</h3>
+<ul>
+<li><code>set -x</code> aka <code>set -o xtrace</code></li>
+<li><a href="chap-plugin.html#PS4">PS4</a></li>
+<li><code>SHX_*</code></li>
+</ul>
+<a name="Introspecting-the-Call-Stack"></a>
+<h3>Introspecting the Call Stack</h3>
+<p>OSH Debug Stack:</p>
+<ul>
+<li><a href="chap-special-var.html#BASH_SOURCE">BASH_SOURCE</a></li>
+<li><a href="chap-special-var.html#FUNCNAME">FUNCNAME</a></li>
+<li><a href="chap-special-var.html#BASH_LINENO">BASH_LINENO</a></li>
+</ul>
+<p>YSH Debug Stack:</p>
+<ul>
+<li><a href="chap-type-method.html#DebugFrame">DebugFrame</a>
+<ul>
+<li><a href="chap-type-method.html#toString">toString()</a> method</li>
+</ul>
+</li>
+<li><a href="chap-type-method.html#getDebugStack">vm.getDebugStack()</a></li>
+</ul>
+<p>These may be combined with</p>
+<ul>
+<li><a href="chap-builtin-cmd.html#trap">trap</a> <code>ERR</code></li>
+<li><a href="chap-builtin-cmd.html#set">set</a> <code>-o errtrace</code> aka <code>set -E</code></li>
+</ul>
+<a name="Reflection"></a>
+<h3>Reflection</h3>
+<p>Other YSH reflection:</p>
+<ul>
+<li>The <a href="chap-type-method.html#io"><code>io</code></a> object has <code>eval()</code> methods, etc.</li>
+<li>The <a href="chap-type-method.html#vm"><code>vm</code></a> object for inspecting interpreter structures</li>
+</ul>
+<a name="Unicode"></a>
+<h3>Unicode</h3>
+<ul>
+<li>TODO: which functions respect Unicode?</li>
+</ul>
+<p>Also see <a href="../unicode.html">the Unicode doc</a>.</p>
+<a name="YSH-Only"></a>
+<h2>YSH Only</h2>
+<a name="Objects"></a>
+<h3>Objects</h3>
+<ul>
+<li><a href="chap-type-method.html#Obj"><code>Obj</code></a>
+<ul>
+<li><a href="chap-type-method.html#__invoke__"><code>__invoke__</code></a></li>
+<li>TODO: <code>__call__</code></li>
+<li><a href="chap-builtin-func.html#first"><code>first()</code></a> and <a href="chap-builtin-func.html#first"><code>rest()</code></a></li>
+<li><a href="chap-special-var.html#ENV"><code>ENV</code></a> is an <code>Obj</code></li>
+</ul>
+</li>
+<li>operator <code>.</code> <a href="chap-expr-lang.html#ysh-attr">ysh-attr</a></li>
+<li>operator <code>-&gt;</code> <a href="chap-expr-lang.html#thin-arrow">thin-arrow</a></li>
+</ul>
+<a name="Closures"></a>
+<h3>Closures</h3>
+<p>A <strong>closure</strong> is a way of bundling data and code.  The idea originated in Lisp,
+and is widely used in JavaScript.</p>
+<p>YSH behaves much like JavaScript.  Exception: YSH has flat function scope,
+<strong>except</strong> for the body of <code>for</code> loops.</p>
+<ul>
+<li>Types that are closures:
+<ul>
+<li><a href="chap-type-method.html#Command">Command</a> and <a href="chap-type-method.html#Expr">Expr</a></li>
+<li><a href="chap-type-method.html#Proc">Proc</a> and <a href="chap-type-method.html#Func">Func</a></li>
+</ul>
+</li>
+<li><a href="chap-cmd-lang.html#ysh-for">ysh-for</a> creates new frames, which may be captured by any of the 4 closure
+types
+<ul>
+<li>This is enabled with <code>shopt --set for_loop_frames</code>, part of option group
+<code>ysh:all</code></li>
+</ul>
+</li>
+<li><a href="chap-ysh-cmd.html#var">var</a> and <a href="chap-ysh-cmd.html#setvar">setvar</a> determine if you're creating a new variable, or
+modifying one that's &quot;closed over&quot;</li>
+</ul>
+<a name="Funcs"></a>
+<h3>Funcs</h3>
+<ul>
+<li><a href="chap-ysh-cmd.html#func"><code>func</code></a></li>
+<li>Callable objects: <a href="chap-type-method.html#__call__"><code>__call__</code></a> and <a href="chap-type-method.html#Obj"><code>Obj</code></a> (TODO)</li>
+<li><a href="chap-expr-lang.html#ysh-func-call"><code>ysh-func-call</code></a></li>
+</ul>
+<a name="Namespaces"></a>
+<h3>Namespaces</h3>
+<ul>
+<li><a href="chap-special-var.html#ENV"><code>ENV</code></a></li>
+<li><a href="chap-special-var.html#__builtins__"><code>__builtins__</code></a></li>
+</ul>
+<a name="Purity"></a>
+<h3>Purity</h3>
+<ul>
+<li><a href="chap-front-end.html#shell-flags"><code>shell-flags</code></a> for <code>--eval-pure</code></li>
+<li><a href="chap-builtin-func.html#func/eval"><code>func/eval</code></a> and
+<a href="chap-builtin-func.html#func/evalExpr"><code>func/evalExpr</code></a></li>
+<li><a href="chap-ysh-cmd.html#func"><code>func</code></a> - functions are pure</li>
+<li><a href="chap-type-method.html#io"><code>io</code></a> and <a href="chap-type-method.html#vm"><code>vm</code></a> - impure
+behavior is attached to these objects</li>
+</ul>
+<a name="OSH-Features"></a>
+<h2>OSH Features</h2>
+
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

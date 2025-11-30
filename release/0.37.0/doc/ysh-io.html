@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>YSH Input/Output</title>
+    <link rel="stylesheet" type="text/css" href="../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ysh-io.md" id="source-link">source</a> |
+      <span id="all-docs"><a href=".">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><h1>YSH Input/Output</h1>
+<p>This doc describes how YSH improves upon I/O in shell.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#summary">Summary</a></div>
+  <div class="toclevel2"><a href="#details-on-problems-with-shell">Details on Problems with Shell</a></div>
+  <div class="toclevel2"><a href="#shell-pitfall-the-exit-code-of-read">Shell Pitfall: the Exit Code of <code>read</code></a></div>
+  <div class="toclevel1"><a href="#tested-invariants">Tested Invariants</a></div>
+  <div class="toclevel2"><a href="#set-up-test-data">Set Up Test Data</a></div>
+  <div class="toclevel2"><a href="#file-string-file">File -&gt; String -&gt; File</a></div>
+  <div class="toclevel2"><a href="#file-array-of-lines-file-fast">File -&gt; Array of Lines -&gt; File (fast)</a></div>
+  <div class="toclevel2"><a href="#file-array-of-lines-file-slow">File -&gt; Array of Lines -&gt; File (slow)</a></div>
+  <div class="toclevel2"><a href="#nul-file-array-of-lines-nul-file-fast">NUL File -&gt; Array of Lines -&gt; NUL File (fast)</a></div>
+  <div class="toclevel2"><a href="#nul-file-array-of-lines-nul-file-slow">NUL File -&gt; Array of Lines -&gt; NUL File (slow)</a></div>
+  <div class="toclevel2"><a href="#j8-file-array-of-lines-j8-file">J8 File -&gt; Array of Lines -&gt; J8 File</a></div>
+  <div class="toclevel2"><a href="#array-file-of-j8-lines-array">Array -&gt; File of J8 Lines -&gt; Array</a></div>
+  <div class="toclevel1"><a href="#reference">Reference</a></div>
+  <div class="toclevel2"><a href="#three-types-of-io">Three Types of I/O</a></div>
+  <div class="toclevel1"><a href="#related-docs">Related Docs</a></div>
+  <div class="toclevel2"><a href="#help-topics">Help Topics</a></div>
+</div>
+<a name="summary"></a>
+<h2>Summary</h2>
+<ul>
+<li>The POSIX <a href="ref/chap-builtin-cmd.html#read">read</a> builtin is slow because it must read one byte at a time.
+So YSH adds faster ways to read data (<a href="ref/chap-builtin-cmd.html#ysh-read">ysh-read</a>):
+<ul>
+<li>Slurping whole files: <code>read --all</code></li>
+<li>Reading in chunks: <code>read --num-bytes</code></li>
+<li>Streaming of buffered lines: <a href="ref/chap-type-method.html#stdin">io.stdin</a></li>
+</ul>
+</li>
+<li>YSH adds <a href="j8-notation.html">J8 Notation</a> for encoding and decoding (based on JSON)
+<ul>
+<li>Writing isn't conflated with encoding (<code>echo -e</code>, <a href="ref/chap-builtin-cmd.html#printf">printf</a>)</li>
+<li>Reading isn't conflated with decoding <code>\</code> escapes (<a href="ref/chap-builtin-cmd.html#read">read</a>)</li>
+<li>YSH adds <code>@(command splice)</code>, which improves on <code>$(command sub)</code> and word
+splitting</li>
+</ul>
+</li>
+<li>YSH supports the NUL-terminated format: <code>find -print0 | xargs -0</code>
+<ul>
+<li>TODO: streaming of buffered chunks?</li>
+</ul>
+</li>
+</ul>
+<p>These YSH constructs make string processing more orthogonal to I/O:</p>
+<ul>
+<li><code>${x %.2f}</code> as a static version of the <a href="ref/chap-builtin-cmd.html#printf">printf</a> builtin (TODO)</li>
+<li><code>${x|html}</code> and <code>html&quot;&lt;p&gt;$x&lt;/p&gt;&quot;</code> for safe escaping (TODO)</li>
+</ul>
+<a name="details-on-problems-with-shell"></a>
+<h3>Details on Problems with Shell</h3>
+<ul>
+<li><code>echo $x</code> is a bug, because <code>$x</code> could be <code>-n</code>.
+<ul>
+<li>The YSH <a href="ref/chap-builtin-cmd.html#write">write</a> builtin accepts <code>--</code>, and <a href="ref/chap-builtin-cmd.html#echo">echo</a> doesn't accept any
+flags.</li>
+</ul>
+</li>
+<li>In addition to <a href="ref/chap-builtin-cmd.html#read">read</a> being slow, the <a href="ref/chap-builtin-cmd.html#mapfile">mapfile</a> builtin is also slow.</li>
+<li>The <a href="ref/chap-builtin-cmd.html#read">read</a> builtin is confusing because it respects <code>\</code> escapes, unless
+<code>-r</code> is passed.
+<ul>
+<li>These <code>\</code> escapes create a mini-language that isn't understood by other
+line-based tools like <code>grep</code> and <code>awk</code>.  The set of escapes isn't
+consistent between shells.</li>
+</ul>
+</li>
+<li>There's no way to tell if <code>$()</code> removes the trailing newline
+<ul>
+<li>YSH has <code>read --all</code>, which preserves the data exactly.</li>
+</ul>
+</li>
+<li><code>echo hi | read; echo $REPLY</code> doesn't work in bash because the last part of a
+pipeline (<code>read</code>) runs in a child process.  That is, the data is indeed read,
+but it's <strong>lost</strong> to the rest of the program.
+<ul>
+<li>In OSH and YSH, <code>echo hi | read</code> works because the last part of a pipeline
+runs in the shell process.  (This is what bash calls <code>shopt -s lastpipe</code>,
+mentioned in <a href="known-differences.html#last-pipeline-part-may-run-in-shell-process-zsh-bash-shopt-s-lastpipe">Known Differences</a>.)</li>
+</ul>
+</li>
+</ul>
+<p>Examples:</p>
+<pre><code>hostname | read --all (&amp;x)
+write -- $x
+echo $x
+</code></pre>
+<a name="shell-pitfall-the-exit-code-of-read"></a>
+<h3>Shell Pitfall: the Exit Code of <code>read</code></h3>
+<p>Suppose you have lines without a trailing <code>\n</code>:</p>
+
+<pre><code class="language-oils-sh"><span class="sh-prompt">$</span> <span class="sh-command">printf 'a\nb'</span>
+a
+b  <span class="sh-comment"># no trailing newline</span>
+</code></pre>
+<p>Then this loop doesn't print the last line, because <code>read</code> fails if it doesn't
+see the newline delimiter.</p>
+<pre><code class="language-oils-sh"><span class="sh-prompt">$</span> <span class="sh-command">printf 'a\nb' | while read -r; do echo $REPLY done</span>
+a
+</code></pre>
+<p>In contrast, a loop with YSH <code>read --raw-line</code> prints all lines:</p>
+<pre><code class="language-oils-sh"><span class="sh-prompt">$</span> <span class="sh-command">printf 'a\nb' | while read --raw-line { echo $_reply  }</span>
+a
+b
+</code></pre>
+<a name="tested-invariants"></a>
+<h2>Tested Invariants</h2>
+<p>These examples show that YSH I/O is orthogonal and composable.  You can <strong>round
+trip</strong> data between YSH data structures and the OS.</p>
+<a name="set-up-test-data"></a>
+<h3>Set Up Test Data</h3>
+<p>First, let's create files with funny names:</p>
+<pre><code>mkdir -p mydir
+touch   'mydir/file with spaces'
+touch  b'mydir/newline \n file'
+</code></pre>
+<p>And let's list these files in 3 different formats:</p>
+<pre><code><span class="sh-comment"># Line-based: one file spans multiple lines</span>
+find . &gt; lines.txt
+
+<span class="sh-comment"># NUL-terminated</span>
+find . -print0 &gt; 0.bin
+
+<span class="sh-comment"># J8 lines</span>
+redir &gt;j8-lines.txt {
+  for path in mydir/* {
+    write -- $[toJson8(path)]
+  }
+}
+
+head lines.txt j8-lines.txt
+</code></pre>
+<p>Now let's test the invariants.</p>
+<a name="file-string-file"></a>
+<h3>File -&gt; String -&gt; File</h3>
+<p>Start with a file, slurp it into a string, and write it back to an equivalent
+file.</p>
+<pre><code>cat lines.txt | read --all
+
+= _reply  <span class="sh-comment"># (Str)</span>
+
+<span class="sh-comment"># suppress trailing newline</span>
+write --end '' -- $_reply &gt; out.txt
+
+<span class="sh-comment"># files are equal</span>
+diff lines.txt out.txt
+</code></pre>
+<a name="file-array-of-lines-file-fast"></a>
+<h3>File -&gt; Array of Lines -&gt; File (fast)</h3>
+<p>Start with a file, read it into an array of lines, and write it back to an
+equivalent file.</p>
+<pre><code><span class="sh-comment"># newlines removed on reading</span>
+var lines = []
+cat lines.txt | for line in (io.stdin) {
+  call lines-&gt;append(line)
+}
+
+= lines  <span class="sh-comment"># (List)</span>
+
+<span class="sh-comment"># newlines added</span>
+write -- @lines &gt; out.txt
+
+<span class="sh-comment"># files are equal, even though one path is split across lines</span>
+diff lines.txt out.txt
+</code></pre>
+<a name="file-array-of-lines-file-slow"></a>
+<h3>File -&gt; Array of Lines -&gt; File (slow)</h3>
+<p>This idiom can be slow, since <code>read --raw-line</code> reads one byte at a time:</p>
+<pre><code><span class="sh-comment"># newlines removed on reading</span>
+var paths = []
+cat lines.txt | while read --raw-line (&amp;path) {
+  call paths-&gt;append(path)
+}
+
+= paths   <span class="sh-comment"># (List)</span>
+
+<span class="sh-comment"># newlines added</span>
+write -- @paths &gt; out.txt
+
+<span class="sh-comment"># files are equal, even though one path is split across lines</span>
+diff lines.txt out.txt
+</code></pre>
+<a name="nul-file-array-of-lines-nul-file-fast"></a>
+<h3>NUL File -&gt; Array of Lines -&gt; NUL File (fast)</h3>
+<p>Start with a file, slurp it into a string, split it into an array, and write it
+back to an equivalent file.</p>
+<pre><code>var paths = []
+read --all &lt; 0.bin
+var paths = _reply.split( \y00 )  <span class="sh-comment"># split by NUL</span>
+
+<span class="sh-comment"># last \y00 is terminator, not separator</span>
+<span class="sh-comment"># TODO: could improve this</span>
+call paths-&gt;pop()
+
+= paths
+
+<span class="sh-comment"># Use NUL separator and terminator</span>
+write --sep b'\y00' --end b'\y00' -- @paths &gt; out0.bin
+
+diff 0.bin out0.bin
+</code></pre>
+<a name="nul-file-array-of-lines-nul-file-slow"></a>
+<h3>NUL File -&gt; Array of Lines -&gt; NUL File (slow)</h3>
+<p>This idiom can be slow, since <code>read -0</code> reads one byte at a time:</p>
+<pre><code>var paths = []
+cat 0.bin | while read -0 path {
+  call paths-&gt;append(path)
+}
+
+= paths
+
+<span class="sh-comment"># Use NUL separator and terminator</span>
+write --sep b'\y00' --end b'\y00' -- @paths &gt; out0.bin
+
+diff 0.bin out0.bin
+</code></pre>
+<a name="j8-file-array-of-lines-j8-file"></a>
+<h3>J8 File -&gt; Array of Lines -&gt; J8 File</h3>
+<p>Start with a file, slurp it into an array of lines, and write it back to an
+equivalent file.</p>
+<pre><code>var paths = @(cat j8-lines.txt)
+
+= paths
+
+redir &gt;j8-out.txt {
+  for path in (paths) {
+    write -- $[toJson8(path)]
+  }
+}
+
+diff j8-lines.txt j8-out.txt
+</code></pre>
+<a name="array-file-of-j8-lines-array"></a>
+<h3>Array -&gt; File of J8 Lines -&gt; Array</h3>
+<p>Start with an array, write it to a file, and slurp it back into an array.</p>
+<pre><code>var strs = :| 'with space' b'with \n newline' |
+redir &gt;j8-tmp.txt {
+  for s in (strs) {
+    write -- $[toJson8(s)]
+  }
+}
+
+cat j8-tmp.txt
+
+<span class="sh-comment"># round-tripped</span>
+assert [strs === @(cat j8-tmp.txt)]
+</code></pre>
+<a name="reference"></a>
+<h2>Reference</h2>
+<a name="three-types-of-io"></a>
+<h3>Three Types of I/O</h3>
+<p>This table characterizes the performance of different ways to read input:</p>
+<style>
+table {
+  margin-left: 2em;
+  background-color: #eee;
+}
+table code {
+  color: green;
+}
+thead {
+  background-color: white;
+}
+td {
+  vertical-align: top;
+}
+</style>
+<table cellpadding="10" cellspacing="5">
+<thead>
+<tr>
+  <th>Performance</th>
+  <th>Shell Constructs</th>
+</tr>
+</thead>
+<tr>
+  <td>
+<p>Buffered, and therefore <strong>fast</strong></p>
+</td>
+  <td>
+<div>
+<ul>
+<li><a href="ref/chap-type-method.html#stdin">io.stdin</a> - loop over lines</li>
+</ul>
+</div>
+</td>
+</tr>
+<tr>
+  <td>
+<p>Unbuffered and <strong>fast</strong> <br/>
+(large chunks)</p>
+</td>
+  <td>
+<div>
+<ul>
+<li><a href="ref/chap-builtin-cmd.html#ysh-read">ysh-read</a>: <code>read --all</code> and <code>--num-bytes</code></li>
+<li>Shell <code>$(command sub)</code></li>
+<li>YSH <code>@(command splice)</code></li>
+</ul>
+</div>
+</td>
+</tr>
+<tr>
+  <td>
+<p>Unbuffered and <strong>slow</strong> <br/>
+(one byte at a time)</p>
+</td>
+  <td>
+<div>
+<ul>
+<li>The POSIX shell <a href="ref/chap-builtin-cmd.html#read">read</a> builtin: either without flags, or with short
+flags like <code>-r -d</code></li>
+<li>The bash <a href="ref/chap-builtin-cmd.html#mapfile">mapfile</a> builtin</li>
+<li><a href="ref/chap-builtin-cmd.html#ysh-read">ysh-read</a>:
+<ul>
+<li>YSH <code>read --raw-line</code> (replaces the idiom <code>IFS= read -r</code>)</li>
+<li>YSH <code>read -0</code> (replaces the idiom <code>read -r -d ''</code>)</li>
+</ul>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+
+<a name="related-docs"></a>
+<h2>Related Docs</h2>
+<ul>
+<li><a href="j8-notation.html">J8 Notation</a></li>
+<li><a href="json.html">JSON</a> in Oils</li>
+<li><a href="strings.html">Strings</a> †</li>
+</ul>
+<a name="help-topics"></a>
+<h3>Help Topics</h3>
+<ul>
+<li>Builtin commands that are encouraged:
+<ul>
+<li><a href="ref/chap-builtin-cmd.html#write">write</a></li>
+<li><a href="ref/chap-builtin-cmd.html#ysh-echo">ysh-echo</a></li>
+<li><a href="ref/chap-builtin-cmd.html#ysh-read">ysh-read</a></li>
+<li><a href="ref/chap-builtin-cmd.html#json">json</a></li>
+</ul>
+</li>
+<li>Builtin commands in shell:
+<ul>
+<li><a href="ref/chap-builtin-cmd.html#echo">echo</a></li>
+<li><a href="ref/chap-builtin-cmd.html#printf">printf</a></li>
+<li><a href="ref/chap-builtin-cmd.html#read">read</a></li>
+<li><a href="ref/chap-builtin-cmd.html#mapfile">mapfile</a> - this is also slow in shell</li>
+</ul>
+</li>
+<li>Types and Methods &gt; <a href="ref/chap-type-method.html#stdin">io.stdin</a></li>
+<li>Word Language
+<ul>
+<li><a href="ref/chap-word-lang.html#command-sub">command-sub</a></li>
+<li><a href="ref/chap-word-lang.html#command-splice">command-splice</a> (YSH)</li>
+</ul>
+</li>
+</ul>
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>

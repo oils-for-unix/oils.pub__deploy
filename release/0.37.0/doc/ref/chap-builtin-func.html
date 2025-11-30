@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Builtin Functions (Oils Reference)</title>
+    <link rel="stylesheet" type="text/css" href="../../web/base.css" />
+<link rel="stylesheet" type="text/css" href="../../web/manual.css" />
+<link rel="stylesheet" type="text/css" href="../../web/toc.css" />
+<link rel="stylesheet" type="text/css" href="../../web/language.css" />
+<link rel="stylesheet" type="text/css" href="../../web/code.css" />
+
+  </head>
+  <body class="width40">
+    <p id="home-link">
+      <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a></span> |
+      <a href="https://github.com/oilshell/oil/blob/master/doc/ref/chap-builtin-func.md" id="source-link">source</a> |
+      <span id="all-docs"><a href="..">all docs</a>
+        for <span id="version-in-header">version 0.37.0</span></span> |
+      <a href="/releases.html">all versions</a> |
+      <a href="/">oils.pub</a>
+      <span id="draft-warning" style="visibility: hidden;"></span>
+
+      <script type="text/javascript">
+      function showWarning(el) {
+        el.innerHTML = '<br/>This is a DRAFT.  Latest docs are at <a href="/release/latest/doc/">/release/latest/doc/</a> ';
+        el.style.visibility = "visible";
+      }
+      function removeVersion(el) {
+        el.innerHTML = '<a href=".">drafts</a>';
+      }
+
+      var url = window.location.href;
+      if (url.indexOf('/preview/') === -1) {
+        console.log("Not a draft");
+      } else {
+        showWarning(document.querySelector('#draft-warning'));
+        removeVersion(document.querySelector('#all-docs'));
+      }
+      </script>
+</p><div class="doc-ref-header">
+<p><a href="index.html">Oils Reference</a> —
+Chapter <strong>Builtin Functions</strong></p>
+</div>
+<p>This chapter describes builtin functions (as opposed to <a href="chap-builtin-cmd.html">builtin
+commands</a>.)</p>
+<p><span class="in-progress">(in progress)</span></p>
+<div id="dense-toc">
+<div id="dense-toc-title">In This Chapter</div>
+<div id="dense-toc-cols">
+<div class="dense-toc-group">
+  <a href="#Values">Values</a> <br/>
+  <a class="dense-toc-h3" href="#len">len()</a> <br/>
+  <a class="dense-toc-h3" href="#func/type">func/type()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Conversions">Conversions</a> <br/>
+  <a class="dense-toc-h3" href="#bool">bool()</a> <br/>
+  <a class="dense-toc-h3" href="#int">int()</a> <br/>
+  <a class="dense-toc-h3" href="#float">float()</a> <br/>
+  <a class="dense-toc-h3" href="#str">str()</a> <br/>
+  <a class="dense-toc-h3" href="#list">list()</a> <br/>
+  <a class="dense-toc-h3" href="#dict">dict()</a> <br/>
+  <a class="dense-toc-h3" href="#runes">runes()</a> <br/>
+  <a class="dense-toc-h3" href="#encodeRunes">encodeRunes()</a> <br/>
+  <a class="dense-toc-h3" href="#bytes">bytes()</a> <br/>
+  <a class="dense-toc-h3" href="#encodeBytes">encodeBytes()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Str">Str</a> <br/>
+  <a class="dense-toc-h3" href="#strcmp">strcmp()</a> <br/>
+  <a class="dense-toc-h3" href="#shSplit">shSplit()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#List">List</a> <br/>
+  <a class="dense-toc-h3" href="#join">join()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Dict">Dict</a> <br/>
+  <a class="dense-toc-h3" href="#keys">keys()</a> <br/>
+  <a class="dense-toc-h3" href="#values">values()</a> <br/>
+  <a class="dense-toc-h3" href="#get">get()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Float">Float</a> <br/>
+  <a class="dense-toc-h3" href="#floatsEqual">floatsEqual()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Obj">Obj</a> <br/>
+  <a class="dense-toc-h3" href="#first">first()</a> <br/>
+  <a class="dense-toc-h3" href="#rest">rest()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Word">Word</a> <br/>
+  <a class="dense-toc-h3" href="#glob">glob()</a> <br/>
+  <a class="dense-toc-h3" href="#maybe">maybe()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Serialize">Serialize</a> <br/>
+  <a class="dense-toc-h3" href="#toJson">toJson()</a> <br/>
+  <a class="dense-toc-h3" href="#fromJson">fromJson()</a> <br/>
+  <a class="dense-toc-h3" href="#toJson8">toJson8()</a> <br/>
+  <a class="dense-toc-h3" href="#fromJson8">fromJson8()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Pattern">Pattern</a> <br/>
+  <a class="dense-toc-h3" href="#_group"><code>_group()</code></a> <br/>
+  <a class="dense-toc-h3" href="#_start"><code>_start()</code></a> <br/>
+  <a class="dense-toc-h3" href="#_end"><code>_end()</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Reflection">Reflection</a> <br/>
+  <a class="dense-toc-h3" href="#func/eval">func/eval()</a> <br/>
+  <a class="dense-toc-h3" href="#func/evalExpr">func/evalExpr()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Introspect">Introspect</a> <br/>
+  <a class="dense-toc-h3" href="#shvarGet"><code>shvarGet()</code></a> <br/>
+  <a class="dense-toc-h3" href="#getVar"><code>getVar()</code></a> <br/>
+  <a class="dense-toc-h3" href="#setVar"><code>setVar()</code></a> <br/>
+  <a class="dense-toc-h3" href="#getShFunction"><code>getShFunction</code></a> <br/>
+  <a class="dense-toc-h3" href="#parseCommand"><code>parseCommand()</code></a> <br/>
+  <a class="dense-toc-h3" href="#parseExpr"><code>parseExpr()</code></a> <br/>
+  <a class="dense-toc-h3" href="#bindFrame"><code>bindFrame()</code></a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Hay-Config">Hay Config</a> <br/>
+  <a class="dense-toc-h3" href="#parseHay">parseHay()</a> <br/>
+  <a class="dense-toc-h3" href="#evalHay">evalHay()</a> <br/>
+</div>
+<div class="dense-toc-group">
+  <a href="#Hashing">Hashing</a> <br/>
+  <a class="dense-toc-h3" href="#sha1dc">sha1dc()</a> <br/>
+  <a class="dense-toc-h3" href="#sha256">sha256()</a> <br/>
+</div>
+</div>
+</div>
+<a name="Values"></a>
+<h2>Values</h2>
+<a name="len"></a>
+<h3>len()</h3>
+<p>Returns the</p>
+<ul>
+<li>number of entries in a <code>List</code></li>
+<li>number of pairs in a <code>Dict</code></li>
+<li>number of bytes in a <code>Str</code>
+<ul>
+<li>TODO: <code>countRunes()</code> can return the number of UTF-8 encoded code points.</li>
+</ul>
+</li>
+</ul>
+<a name="func/type"></a>
+<h3>func/type()</h3>
+<p>Given an arbitrary value, returns a string representing the value's runtime
+type.</p>
+<p>For example:</p>
+<pre><code>var d = {'foo': 'bar'}
+var n = 1337
+
+<span class="sh-prompt">$</span> <span class="sh-command">= type(d)</span>
+(Str)    'Dict'
+
+<span class="sh-prompt">$</span> <span class="sh-command">= type(n)</span>
+(Str)    'Int'
+</code></pre>
+<p>Similar names: <a href="chap-index.html#type">type</a></p>
+<a name="Conversions"></a>
+<h2>Conversions</h2>
+<a name="bool"></a>
+<h3>bool()</h3>
+<p>Returns the truth value of its argument. Similar to <code>bool()</code> in python, it
+returns <code>false</code> for:</p>
+<ul>
+<li><code>false</code>, <code>0</code>, <code>0.0</code>, <code>''</code>, <code>{}</code>, <code>[]</code>, and <code>null</code>.</li>
+</ul>
+<p>Returns <code>true</code> for all other values.</p>
+<a name="int"></a>
+<h3>int()</h3>
+<p>Given a float, returns the largest integer that is less than its argument (i.e. <code>floor()</code>).</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= int(1.99)</span>
+(Int)    1
+</code></pre>
+<p>Given a string, <code>Int()</code> will attempt to convert the string to a base-10
+integer. The base can be overridden by calling with a second argument.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= int('10')</span>
+(Int)   10
+
+<span class="sh-prompt">$</span> <span class="sh-command">= int('10', 2)</span>
+(Int)   2
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= Int('foo')</span>
+<span class="sh-comment"># fails with an expression error</span>
+</code></pre>
+<a name="float"></a>
+<h3>float()</h3>
+<p>Given an integer, returns the corresponding floating point representation.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= float(1)</span>
+(Float)   1.0
+</code></pre>
+<p>Given a string, <code>Float()</code> will attempt to convert the string to float.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= float('1.23')</span>
+(Float)   1.23
+
+<span class="sh-prompt">ysh$</span> <span class="sh-command">= float('bar')</span>
+<span class="sh-comment"># fails with an expression error</span>
+</code></pre>
+<a name="str"></a>
+<h3>str()</h3>
+<p>Converts a <code>Float</code> or <code>Int</code> to a string.</p>
+<a name="list"></a>
+<h3>list()</h3>
+<p>Given a list, returns a shallow copy of the original.</p>
+<p>Given an iterable value (e.g. a range or dictionary), returns a list containing
+one element for each item in the original collection.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= list({'a': 1, 'b': 2})</span>
+(List)   ['a', 'b']
+
+<span class="sh-prompt">$</span> <span class="sh-command">= list(1:5)</span>
+(List)   [1, 2, 3, 4, 5]
+</code></pre>
+<a name="dict"></a>
+<h3>dict()</h3>
+<p>Given a dictionary, returns a shallow copy of the original.</p>
+<a name="runes"></a>
+<h3>runes()</h3>
+<p>TODO</p>
+<p>Given a string, decodes UTF-8 into a List of integer &quot;runes&quot; (aka code points).</p>
+<p>Each rune is in the range <code>U+0</code> to <code>U+110000</code>, and <strong>excludes</strong> the surrogate
+range.</p>
+<pre><code>runes(s, start=-1, end=-1)
+</code></pre>
+<p>TODO: How do we signal errors?</p>
+<p>(<code>runes()</code> can be used to implement implemented Python's <code>ord()</code>.)</p>
+<a name="encodeRunes"></a>
+<h3>encodeRunes()</h3>
+<p>TODO</p>
+<p>Given a List of integer &quot;runes&quot; (aka code points), return a string.</p>
+<p>(<code>encodeRunes()</code> can be used to implement implemented Python's <code>chr()</code>.)</p>
+<a name="bytes"></a>
+<h3>bytes()</h3>
+<p>TODO</p>
+<p>Given a string, return a List of integer byte values.</p>
+<p>Each byte is in the range 0 to 255.</p>
+<a name="encodeBytes"></a>
+<h3>encodeBytes()</h3>
+<p>TODO</p>
+<p>Given a List of integer byte values, return a string.</p>
+<a name="Str"></a>
+<h2>Str</h2>
+<a name="strcmp"></a>
+<h3>strcmp()</h3>
+<p>Compares 2 strings using lexicographic order on bytes.
+Returns 0 if s1 and s2 are equal, -1 if s1 is less than s2, and 1 if s1 is greater than s2.</p>
+<a name="shSplit"></a>
+<h3>shSplit()</h3>
+<p>Split a string into a List of strings, using the shell algorithm that respects
+<code>$IFS</code>.</p>
+<p>Prefer <code>split()</code> to <code>shSplit()</code>.</p>
+<a name="List"></a>
+<h2>List</h2>
+<a name="join"></a>
+<h3>join()</h3>
+<p>Given a List, stringify its items, and join them by a separator.  The default
+separator is the empty string.</p>
+<pre><code>var x = ['a', 'b', 'c']
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo $[join(x)]</span>
+abc
+
+<span class="sh-prompt">$</span> <span class="sh-command">echo $[join(x, ' ')]</span>  <span class="sh-comment"># optional separator</span>
+a b c
+</code></pre>
+<p>As a reminder, you can call it with the <a href="chap-expr-lang.html#fat-arrow">fat-arrow</a> operator <code>=&gt;</code> for function chaining:</p>
+<pre><code>var items = [1, 2, 3]
+
+json write (items =&gt; join())      <span class="sh-comment"># =&gt; &quot;123&quot;</span>
+json write (items =&gt; join(' '))   <span class="sh-comment"># =&gt; &quot;1 2 3&quot;</span>
+json write (items =&gt; join(', '))  <span class="sh-comment"># =&gt; &quot;1, 2, 3&quot;</span>
+</code></pre>
+<a name="Dict"></a>
+<h2>Dict</h2>
+<a name="keys"></a>
+<h3>keys()</h3>
+<p>Returns all existing keys from a dict as a list of strings.</p>
+<pre><code>var en2fr = {
+  hello: &quot;bonjour&quot;,
+  friend: &quot;ami&quot;,
+  cat: &quot;chat&quot;
+}
+= keys(en2fr)
+<span class="sh-comment"># =&gt; (List 0x4689)   [&quot;hello&quot;,&quot;friend&quot;,&quot;cat&quot;]</span>
+</code></pre>
+<a name="values"></a>
+<h3>values()</h3>
+<p>Similar to <code>keys()</code>, but returns the values of the dictionary.</p>
+<pre><code>var person = {
+  name: &quot;Foo&quot;,
+  age: 25,
+  hobbies: :|walking reading|
+}
+= values(en2fr)
+<span class="sh-comment"># =&gt; (List 0x4689)   [&quot;Foo&quot;,25,[&quot;walking&quot;,&quot;reading&quot;]]</span>
+</code></pre>
+<a name="get"></a>
+<h3>get()</h3>
+<p>Return value for given key, falling back to the default value if the key
+doesn't exist.</p>
+<pre><code>var book = {
+  title: &quot;Hitchhiker's Guide&quot;,
+  published: 1979,
+}
+
+var published = get(book, 'published', null)
+= published
+<span class="sh-comment"># =&gt; (Int)   1979</span>
+
+var author = get(book, 'author', &quot;???&quot;)
+= author
+<span class="sh-comment"># =&gt; (Str)   &quot;???&quot;</span>
+</code></pre>
+<p>If not specified, the default value is <code>null</code>:</p>
+<pre><code>var author = get(book, 'author')
+= author
+<span class="sh-comment"># =&gt; (Null)   null</span>
+</code></pre>
+<a name="Float"></a>
+<h2>Float</h2>
+<a name="floatsEqual"></a>
+<h3>floatsEqual()</h3>
+<p>Check if two floating point numbers are equal.</p>
+<pre><code>= floatsEqual(42.0, 42.0)
+(Bool)   true
+</code></pre>
+<p>It's usually better to make an approximate comparison:</p>
+<pre><code>= abs(float1 - float2) &lt; 0.001
+(Bool)   false
+</code></pre>
+<a name="Obj"></a>
+<h2>Obj</h2>
+<a name="first"></a>
+<h3>first()</h3>
+<p>Get the Dict that contains an object's properties.</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">= first(obj)</span>
+(Dict)  {x: 42}
+</code></pre>
+<p>The Dict and Obj share the same storage.  So if the Dict is modified, the
+object is too.</p>
+<p>If you want a copy, use <code>dict(obj)</code>.</p>
+<a name="rest"></a>
+<h3>rest()</h3>
+<p>Get the &quot;prototype&quot; of an Obj, which is another Obj, or null:</p>
+<pre><code><span class="sh-prompt">ysh$</span> <span class="sh-command">= rest(obj)</span>
+(Null)  null
+</code></pre>
+<a name="Word"></a>
+<h2>Word</h2>
+<a name="glob"></a>
+<h3>glob()</h3>
+<p>See <code>glob-pat</code> topic for syntax.</p>
+<a name="maybe"></a>
+<h3>maybe()</h3>
+<a name="Serialize"></a>
+<h2>Serialize</h2>
+<a name="toJson"></a>
+<h3>toJson()</h3>
+<p>Convert an object in memory to JSON text:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= toJson({name: &quot;alice&quot;})</span>
+(Str)   '{&quot;name&quot;:&quot;alice&quot;}'
+</code></pre>
+<p>Add indentation by passing the <code>space</code> param:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= toJson([42], space=2)</span>
+(Str)   &quot;[\n  42\n]&quot;
+</code></pre>
+<p>Turn non-serializable types into <code>null</code>, instead of raising an error:</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">= toJson(/d+/, type_errors=false)</span>
+(Str)   'null'
+</code></pre>
+<p>The <code>toJson()</code> function is to <code>json write (x)</code>, except the default value of
+<code>space</code> is 0.</p>
+<p>See <a href="chap-errors.html#err-json-encode">err-json-encode</a> for errors.</p>
+<a name="fromJson"></a>
+<h3>fromJson()</h3>
+<p>Convert JSON text to an object in memory:</p>
+<pre><code>= fromJson('{&quot;name&quot;:&quot;alice&quot;}')
+(Dict)   {&quot;name&quot;: &quot;alice&quot;}
+</code></pre>
+<p>Similar to <code>json read &lt;&lt;&lt; '{&quot;name&quot;: &quot;alice&quot;}'</code>.</p>
+<p>See <a href="chap-errors.html#err-json-decode">err-json-decode</a> for errors.</p>
+<a name="toJson8"></a>
+<h3>toJson8()</h3>
+<p>Like <code>toJson()</code>, but it also converts binary data (non-Unicode strings) to
+J8-style <code>b'foo \yff'</code> strings.</p>
+<p>In contrast, <code>toJson()</code> will do a lossy conversion with the Unicode replacement
+character.</p>
+<p>See <a href="chap-errors.html#err-json8-encode">err-json8-encode</a> for errors.</p>
+<a name="fromJson8"></a>
+<h3>fromJson8()</h3>
+<p>Like <code>fromJson()</code>, but it also accepts binary data denoted by J8-style <code>b'foo \yff'</code> strings.</p>
+<p>See <a href="chap-errors.html#err-json8-decode">err-json8-decode</a> for errors.</p>
+<a name="Pattern"></a>
+<h2>Pattern</h2>
+<a name="_group"></a>
+<h3><code>_group()</code></h3>
+<p>Like <code>Match.group()</code>, but accesses the global match created by <code>~</code>:</p>
+<pre><code>if ('foo42' ~ / d+ /) {
+  echo $[_group(0)]  <span class="sh-comment"># =&gt; 42</span>
+}
+</code></pre>
+<a name="_start"></a>
+<h3><code>_start()</code></h3>
+<p>Like <code>Match.start()</code>, but accesses the global match created by <code>~</code>:</p>
+<pre><code>if ('foo42' ~ / d+ /) {
+  echo $[_start(0)]  <span class="sh-comment"># =&gt; 3</span>
+}
+</code></pre>
+<a name="_end"></a>
+<h3><code>_end()</code></h3>
+<p>Like <code>Match.end()</code>, but accesses the global match created by <code>~</code>:</p>
+<pre><code>if ('foo42' ~ / d+ /) {
+  echo $[_end(0)]  <span class="sh-comment"># =&gt; 5</span>
+}
+</code></pre>
+<a name="Reflection"></a>
+<h2>Reflection</h2>
+<a name="func/eval"></a>
+<h3>func/eval()</h3>
+<p>This function is like <a href="chap-type-method.html#io/eval"><code>io-&gt;eval()</code></a>, but it disallows I/O.</p>
+<p>Example:</p>
+<pre><code>var cmd = ^(const x = 42)
+var d = eval(cmd, to_dict=true)  <span class="sh-comment"># {x: 42}</span>
+</code></pre>
+<a name="func/evalExpr"></a>
+<h3>func/evalExpr()</h3>
+<p>This function is like <a href="chap-type-method.html#io/evalExpr"><code>io-&gt;evalExpr()</code></a>, but it disallows I/O.</p>
+<p>Example:</p>
+<pre><code>var x = 42
+var expr = ^[x + 1]
+var val = evalExpr(expr)  <span class="sh-comment"># 43</span>
+</code></pre>
+<a name="Introspect"></a>
+<h2>Introspect</h2>
+<a name="shvarGet"></a>
+<h3><code>shvarGet()</code></h3>
+<p>Given a variable name, return its value.  It uses the &quot;dynamic scope&quot; rule,
+which looks up the stack for a variable.</p>
+<p>It's meant to be used with <code>shvar</code>:</p>
+<pre><code>proc proc1 {
+  shvar PATH=/tmp {  <span class="sh-comment"># temporarily set PATH in this stack frame</span>
+    my-proc
+  }
+
+  proc2
+}
+
+proc proc2 {
+  proc3
+}
+
+proc proc3 {
+  var path = shvarGet('PATH')  <span class="sh-comment"># Look up the stack (dynamic scoping)</span>
+  echo $path  <span class="sh-comment"># =&gt; /tmp</span>
+}
+
+proc1
+</code></pre>
+<p>Note that <code>shvar</code> is usually for string variables, and is analogous to <code>shopt</code>
+for &quot;booleans&quot;.</p>
+<p>If the variable isn't defined, <code>shvarGet()</code> returns <code>null</code>.  So there's no way
+to distinguish an undefined variable from one that's <code>null</code>.</p>
+<a name="getVar"></a>
+<h3><code>getVar()</code></h3>
+<p>Given a variable name, return its value.</p>
+<pre><code><span class="sh-prompt">$</span> <span class="sh-command">var x = 42</span>
+<span class="sh-prompt">$</span> <span class="sh-command">echo $[getVar('x')]</span>
+42
+</code></pre>
+<p>The variable may be local or global.  (Compare with <code>shvarGet()</code>.) the &quot;dynamic
+scope&quot; rule.)</p>
+<p>If the variable isn't defined, <code>getVar()</code> returns <code>null</code>.  So there's no way to
+distinguish an undefined variable from one that's <code>null</code>.</p>
+<a name="setVar"></a>
+<h3><code>setVar()</code></h3>
+<p>Bind a name to a value, in the local scope.  Returns nothing.</p>
+<pre><code>call setVar('myname', 42)
+</code></pre>
+<p>This is like</p>
+<pre><code>setvar myname = 42
+</code></pre>
+<p>except the name can is a string, which can be constructed at runtime.</p>
+<hr />
+<p>You can also bind globals:</p>
+<pre><code>call setVar('myname', 42, global=true)
+</code></pre>
+<p>which is like</p>
+<pre><code>setglobal myname = 42
+</code></pre>
+<a name="getShFunction"></a>
+<h3><code>getShFunction</code></h3>
+<p>Given the name of a shell function, return the corresponding <a href="chap-type-method.html#Proc">Proc</a> value, or
+<code>null</code> if it's not found.</p>
+<a name="parseCommand"></a>
+<h3><code>parseCommand()</code></h3>
+<p>Given a code string, parse it as a command (with the current parse options).</p>
+<p>Returns a <code>value.Command</code> instance, or raises an error.</p>
+<a name="parseExpr"></a>
+<h3><code>parseExpr()</code></h3>
+<p>TODO:</p>
+<p>Given a code string, parse it as an expression.</p>
+<p>Returns a <code>value.Expr</code> instance, or raises an error.</p>
+<a name="bindFrame"></a>
+<h3><code>bindFrame()</code></h3>
+<p>TODO</p>
+<a name="Hay-Config"></a>
+<h2>Hay Config</h2>
+<a name="parseHay"></a>
+<h3>parseHay()</h3>
+<a name="evalHay"></a>
+<h3>evalHay()</h3>
+<a name="Hashing"></a>
+<h2>Hashing</h2>
+<a name="sha1dc"></a>
+<h3>sha1dc()</h3>
+<p>Git's algorithm.</p>
+<a name="sha256"></a>
+<h3>sha256()</h3>
+
+    <div id="build-timestamp">
+      <i>Generated on Sun, 30 Nov 2025 13:00:06 -0500</i>
+    </div>
+  </body>
+</html>
