@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Four More Blog Posts from Contributors</title>
+  <meta name="twitter:title" content="Four More Blog Posts from Contributors">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Four More Blog Posts from Contributors</h1>
+<div class="date">
+  2026-03-22
+</div>
+<p>Picking up where we left off <a href="writing.html">a few days ago</a>, here are <strong>four</strong> more articles by contributors.  They show how we improved <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> compatibility.</p>
+<style>
+.blog-link {
+  background-color: #D6E4F0;  /* this goes with pre gray; Gemini suggested */
+  padding: 1em;
+  margin: 1em 0;
+}
+</style>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#january">January</a></div>
+  <div class="toclevel2"><a href="#gdbm-package-failure-osh-tries-to-execute-directories-on-path"><code>gdbm</code> package failure → OSH tries to execute directories on <code>$PATH</code></a></div>
+  <div class="toclevel2"><a href="#oily-pine-2">Oily Pine 2</a></div>
+  <div class="toclevel2"><a href="#implementing-globignore">Implementing <code>GLOBIGNORE</code></a></div>
+  <div class="toclevel1"><a href="#february">February</a></div>
+  <div class="toclevel2"><a href="#dev-guide-zephyr-asdl">Dev Guide: Zephyr ASDL</a></div>
+  <div class="toclevel1"><a href="#thanks-to-all-contributors">Thanks to All Contributors</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+</div> 
+<a name="january"></a>
+<h2>January</h2>
+<a name="gdbm-package-failure-osh-tries-to-execute-directories-on-path"></a>
+<h3><code>gdbm</code> package failure → OSH tries to execute directories on <code>$PATH</code></h3>
+<div class=blog-link>
+<p><a href="https://aolsen.ca/writings/lets-write-a-path-traverser"><strong>Let's Write A PATH Traverser</strong></a> (<code>aolsen.ca</code>) by Aidan Olsen</p>
+</div>
+<p>We encountered an <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> disagreement building the Alpine <code>gdbm</code> package, and reduced it to a bug in the <code>$PATH</code> lookup logic.</p>
+<p>In this post, Aidan explains how <code>$PATH</code> works, including some quirks that surprised me!</p>
+<p>We often referred to the source code of other shells — the <a href="/cross-ref.html?tag=posix-shell-spec#posix-shell-spec">POSIX shell spec</a> is generally not sufficient.</p>
+<ul>
+<li>More notes: <a href="https://oilshell.zulipchat.com/#narrow/channel/503208-bug-post-mortem/topic/gdbm.20failure.20-.20OSH.20tries.20to.20execute.20directories.20on.20PATH/with/543184392">#bug-post-mortem &gt; gdbm failure - OSH tries to execute directories on PATH</a></li>
+</ul>
+<p>(<a href="https://gebdev.net/blog/pathological-path/">The article by Gabe</a> linked in the previous post is also related.)</p>
+<a name="oily-pine-2"></a>
+<h3>Oily Pine 2</h3>
+<div class=blog-link>
+<ul>
+<li><a href="https://yosemitesam.ch/oily-pine-02/"><strong>Oily Pine 2 - Throwing log-files at ChatGPT</strong></a> (<code>yosemitesam.ch</code>) by Samuel Hierholzer</li>
+</ul>
+</div>
+<p>Samuel continues with part 2 of the series on Oily Pine, the test harness that inspired our work on the 4th grant.  I mentioned this in December: <a href="../../2025/12/links.html">Links to Explain Oils in 2025</a>.</p>
+<a name="implementing-globignore"></a>
+<h3>Implementing <code>GLOBIGNORE</code></h3>
+<div class=blog-link>
+<p><a href="https://daveads.github.io/note/implementing-globignore/"><strong>Implementing GLOBIGNORE</strong></a> (<code>daveads.github.io</code>) by Daveads</p>
+</div>
+<p>Daveads wrote notes on implementing the <a href="/cross-ref.html?tag=bash#bash">bash</a> <code>$GLOBIGNORE</code> feature in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, which affects globbing results like <code>*.py</code>.  It involves both parsing and evaluation, so it's yet another little language in shell!</p>
+<p>I often say that it's effective when one person writes the tests, and another writes the code.  Two people may &quot;converge&quot; on a higher quality solution than one:</p>
+<ul>
+<li><a href="https://github.com/#narrow/channel/202008-documentation/topic/One.20person.20writes.20the.20tests.3B.20another.20person.20writes.20the.20code/with/575397820">#documentation &gt; One person writes the tests; another person writes the code</a></li>
+</ul>
+<p>In this case, Ellen Potter wrote comprehensive <a href="/cross-ref.html?tag=spec-test#spec-test">spec tests</a> for <code>$GLOBIGNORE</code> <strong>two years</strong> ago, in late 2023.</p>
+<p>I unfortunately didn't have time to implement this myself in the last 2 years, because we were busy with <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> and more.  But Daveads pushed it forward, and Ellen's work ended up being essential for that!</p>
+
+
+<a name="february"></a>
+<h2>February</h2>
+<a name="dev-guide-zephyr-asdl"></a>
+<h3>Dev Guide: Zephyr ASDL</h3>
+<div class=blog-link>
+<p><a href="https://aolsen.ca/writings/asdl-in-oils-for-unix"><strong>ASDL for Oils for UNIX Contributors, Algebraic Datatypes in Python (and C++)</strong></a>  (<code>aolsen.ca</code>) by Aidan Olsen</p>
+</div>
+<p>Many years ago, I wrote several <a href="https://www.oilshell.org/blog/tags.html#ASDL">blog posts tagged #ASDL</a>, explaining our DSL for algebraic data types.</p>
+<p>We continue to use Zephyr ASDL, and this post is a great <strong>introduction</strong> to it.  It's concise, and covers the most important usage patterns.</p>
+<hr />
+<p>ASDL is also still <strong>evolving</strong>.  While reviewing this post, I posted some thoughts on Zulip:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/208950-zephyr-asdl/topic/Notes.20on.20some.20holes.20in.20ASDL/with/580933494">#zephyr-asdl &gt; Notes on some holes in ASDL</a></li>
+</ul>
+<p>In particular, I was reminded of an issue that Koichi Murase ran into last year:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/121539-oils-dev/topic/Importing.20ASDL.20simple.20sum.20from.20frontend.2Fsyntax.2Easdl/with/580934692">#oils-dev &gt; Importing ASDL simple sum from frontend/syntax.asdl</a></li>
+</ul>
+<p>Those threads have detail, which I welcome you to read.  The key points are:</p>
+<ul>
+<li>Zephyr ASDL isn't an &quot;air tight&quot; abstraction.  It's generally simple and easy to use, but it has some <strong>holes</strong>.  We'll continue to improve it.</li>
+<li>At first, we generated only <strong>Python</strong> code from ASDL schemas.  Later, we stated generating <strong>C++</strong> too.  This adds constraints, e.g. due to the C compilation model.</li>
+</ul>
+<p>Similarly, if someone does a Rust translation of Oils, there will be issues related to the target language!  One issue I know about is due to the &quot;shared types&quot; aka &quot;shared variants&quot; feature that Aidan mentioned:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/208950-zephyr-asdl/topic/Tags.20vs.2E.20Types.20with.20Rust.20traits/with/564119848">#zephyr-asdl &gt; Tags vs. Types with Rust traits</a></li>
+</ul>
+
+<a name="future-zephyr-asdl-features"></a>
+<h4>Future Zephyr ASDL Features</h4>
+<p>What else might we add to ASDL?  Generating visitor base classes would be useful for several tools: formatter, linter, dependency walker, and translator:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/403333-tools-for-oils/topic/How.20should.20we.20generate.20tree.20walkers.3F/with/572066958">#tools-for-oils &gt; How should we generate tree walkers?</a></li>
+</ul>
+<p>I did some research on this design issue in December:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/403333-tools-for-oils/topic/How.20does.20Ruff.20walk.20trees.3F/with/565387454">#tools-for-oils &gt; How does Ruff walk trees?</a></li>
+<li><a href="https://lobste.rs/s/kqt13j/visitor_as_sum_type_2018#c_uncybx">My lobste.rs comment</a> on how <a href="https://craftinginterpreters.com">Crafting Interpreters</a> does it</li>
+</ul>
+<a name="thanks-to-all-contributors"></a>
+<h2>Thanks to All Contributors</h2>
+<p>In this post and the <a href="writing.html">previous one</a>, we reviewed <strong>12</strong> articles by contributors.  But there were many people who contributed to Oils who did <strong>not</strong> choose to publish (or haven't done so yet).  I particularly want to thank:</p>
+<p><strong>Koichi Murase</strong> (author of <a href="/cross-ref.html?tag=ble.sh#ble.sh">ble.sh</a>) — for a deep overhaul of the <code>$IFS</code> word splitting algorithm in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.</p>
+<ul>
+<li>Word splitting bugs were the most common type of disagreement last year.  Fixing these issues <strong>unlocked</strong> other bugs, and other  contributors tackled them in parallel.</li>
+<li>I mentioned the word splitting work in September: <a href="../../2025/09/releases.html">Eight Releases of Oils in 6 Months</a>.  I hope Koichi has the time to write about this work in detail!</li>
+</ul>
+<p><strong>Andriy Sultanov</strong> — for his prolific bug fixes and feature implementations, across many areas of the codebase.</p>
+<ul>
+<li>He started with some of the trickiest bugs in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, moved on to <a href="/cross-ref.html?tag=mycpp#mycpp">mycpp</a> (a metalanguage), and then <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>.</li>
+<li>I wrote about this in December: <a href="../../2025/12/release-0.37.0.html">Oils 0.37.0 - Alpine Linux, YSH, and mycpp
+</a></li>
+</ul>
+<hr />
+<p>(Koichi also overhauled <a href="/cross-ref.html?tag=bash#bash">bash</a>-compatible arrays in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, mentioned last May: <a href="../../2025/05/release-0.27.0.html">Oils 0.27.0 - Contributors and Notable Changes</a>)</p>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>Now that I re-read these posts, I'm reminded of all the <strong>excellent</strong> work from contributors!  It's also hard work.</p>
+<p>I regret that my family situation sort of &quot;killed the momentum&quot;.  I explained this in the last post: <a href="status-update.html">A Pause in the Project</a>.</p>
+<p>I will quietly work on the backlog of pull requests, and I hope to come back to the project with new energy later this year!  I also want to work on a few server-side projects that complement Oils.</p>
+
+
+<div id="post-footer">
+<ul>
+<li><a href="TODO">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=osh#osh">osh</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>

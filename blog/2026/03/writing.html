@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eight Blog Posts by Contributors</title>
+  <meta name="twitter:title" content="Eight Blog Posts by Contributors">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Eight Blog Posts by Contributors</h1>
+<div class="date">
+  2026-03-19
+</div>
+<p>Recently, contributors to Oils wrote <strong>12</strong> blog posts for our <a href="https://nlnet.nl">NLnet</a> grant, and this post introduces the first <strong>8</strong>.  Combined, I hope they'll give you a sense of the work we did.</p>
+<p>Here's some background  on the grant (which is also in the <a href="../../2025/12/links.html">December status update</a>):</p>
+<p>I posted a &quot;job ad&quot; to <a href="https://news.ycombinator.com/">Hacker News</a> and <a href="https://lobste.rs">lobste.rs</a> in October.  It was for <em>Language Engineer, Debugger of Other People's Cursed Shell Scripts, and Writer</em>.</p>
+<p>I wasn't sure how many people would be interested, but I've now gotten <strong>60</strong> responses, and most of them were credible (not &quot;resume spam&quot;).</p>
+<p>I'm sorry that the process for choosing candidates was ad hoc — it was basically the people who showed up on <a href="/cross-ref.html?tag=zulip#zulip">Zulip</a> and just started contributing!  I did respond to almost every e-mail though.</p>
+<p>In any case, these posts describe essential, excellent work on <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.  Let's go through the posts month by month.</p>
+
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#september">September</a></div>
+  <div class="toclevel2"><a href="#alpine-dtc-package-failure-octal-notation-in-printf">Alpine <code>dtc</code> package failure → Octal Notation in <code>printf</code></a></div>
+  <div class="toclevel1"><a href="#october">October</a></div>
+  <div class="toclevel2"><a href="#oily-pine-test-harness">Oily Pine Test Harness</a></div>
+  <div class="toclevel1"><a href="#november">November</a></div>
+  <div class="toclevel2"><a href="#mdev-conf-package-failure-in-here-docs"><code>mdev-conf</code> package failure → <code>\&quot;</code> in Here Docs</a></div>
+  <div class="toclevel2"><a href="#shunit2-package-failure-set-u-and-eval"><code>shUnit2</code> package failure → <code>set -u</code> and <code>eval</code></a></div>
+  <div class="toclevel1"><a href="#december">December</a></div>
+  <div class="toclevel2"><a href="#implementing-the-kill-builtin">Implementing the <code>kill</code> builtin</a></div>
+  <div class="toclevel2"><a href="#lua-aports-failure-default-path-fix"><code>lua-aports</code> failure → Default <code>$PATH</code> fix</a></div>
+  <div class="toclevel2"><a href="#fixing-in-here-docs">Fixing <code>\&quot;</code> in Here Docs</a></div>
+  <div class="toclevel2"><a href="#fixing-and-enhancing-the-trap-builtin">Fixing and enhancing the <code>trap</code> builtin</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel2"><a href="#more-bugs-on-zulip">More Bugs on Zulip</a></div>
+</div> 
+<style>
+.blog-link {
+  background-color: #D6E4F0;  /* this goes with pre gray; Gemini suggested */
+  padding: 1em;
+  margin: 1em 0;
+}
+</style>
+<a name="september"></a>
+<h2>September</h2>
+<a name="alpine-dtc-package-failure-octal-notation-in-printf"></a>
+<h3>Alpine <code>dtc</code> package failure → Octal Notation in <code>printf</code></h3>
+<div class=blog-link>
+<p><a href="https://aolsen.ca/writings/reproducing-dtc-failure"><strong>OSH Bug: Reducing dtc package test failure to a printf '%b' bug</strong></a> (<code>aolsen.ca</code>) by Aidan Olsen</p>
+</div>
+<p>Aidan kicked off the grant by going through all the steps to fix an <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> compatibility bug, from end-to-end:</p>
+<ol>
+<li>Start from a <strong>disagreement</strong> in <a href="https://op.oils.pub/aports-build/published.html">regtest/aports</a>, and <strong>reproduce</strong> it on a dev machine.</li>
+<li><strong>Reduce</strong> the bug to a small, failing test case.
+<ul>
+<li>As you can see from his post, this can be hard.  You often need multiple strategies, approaches, and a bit of luck.</li>
+</ul>
+</li>
+<li><strong>Fix</strong> the code in OSH interpreter — the <code>printf</code> builtin in this case.  (He fixed the bug, though it's not described in  the post.)</li>
+</ol>
+<p>The underlying issue is that we shared a <strong>lexer</strong> between <code>echo -e</code> and <code>printf %b</code>.  This seems logical, since they both accept similar backslash escapes:</p>
+<pre><code><span class="sh-prompt">bash$</span> <span class="sh-command">printf '%b\n' '\0141'</span>  <span class="sh-comment"># 0141 is octal for ASCII a</span>
+a
+
+<span class="sh-prompt">bash$</span> <span class="sh-command">echo -e '\0141'</span>
+a
+</code></pre>
+<p>But <code>printf %b</code> doesn't require the leading zero, while <code>echo -e</code> does:</p>
+<pre><code><span class="sh-prompt">bash$</span> <span class="sh-command">printf '%b\n' '\141'</span>  <span class="sh-comment"># \141 is like \0141</span>
+a
+
+<span class="sh-prompt">bash$</span> <span class="sh-command">echo -e '\141'      </span>  <span class="sh-comment"># Nope!</span>
+\141
+</code></pre>
+<p>Yes, we are really <strong>into the weeds</strong> of shell here, but <strong>this difference matters</strong> for running real shell scripts, like building the <code>dtc</code> package in Alpine Linux.</p>
+<p>For many of these bugs, I kept notes on Zulip:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/503208-bug-post-mortem/topic/dtc.20package.20-.20printf.20.25b.20supports.20.5C123.20as.20well.20as.20.5C0123/with/536686980">#bug-post-mortem &gt; dtc package - printf %b supports \123 as well as \0123</a></li>
+</ul>
+<p>Here's a note I wrote in the spec tests:</p>
+<pre><code>- echo -e
+  - NO  3 digit octal  - echo -e '\141' does not work
+  - YES 4 digit octal
+- printf %b
+  - YES 3 digit octal
+  - YES 4 digit octal
+- printf string (outer)
+  - YES 3 digit octal
+  - NO  4 digit octal
+- $'' and $PS1
+  - YES 3 digit octal
+  - NO  4 digit octal
+</code></pre>
+<p>That is, <a href="/cross-ref.html?tag=bash#bash">bash</a> is inconsistent about octal escape notation: in different situations, it can't decide whether it's <code>\0141</code> only, <code>\141</code> only, or <strong>both</strong>!</p>
+<a name="october"></a>
+<h2>October</h2>
+<a name="oily-pine-test-harness"></a>
+<h3>Oily Pine Test Harness</h3>
+<div class=blog-link>
+<p><a href="https://yosemitesam.ch/oily-pine-01/"><strong>Oily Pine 1 - Building Alpine Packages to test a shell</strong></a> (<code>yosemitesam.ch</code>) by Samuel Hierholzer</p>
+</div>
+<p>Can we find <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> bugs by running Alpine Linux package builds?  Samuel's Oily Pine test harness showed that we can, and it was the direct inspiration for the 4th grant, which I covered in <a href="../../2025/12/links.html">Links to Explain Oils in 2025</a>.</p>
+<a name="november"></a>
+<h2>November</h2>
+<a name="mdev-conf-package-failure-in-here-docs"></a>
+<h3><code>mdev-conf</code> package failure → <code>\&quot;</code> in Here Docs</h3>
+<div class=blog-link>
+<p><a href="https://btertoolen.eu/posts/debugging/"><strong>Debugging complicated shell scripts</strong></a> (<code>btertoolen.eu</code>) by Bram Tertoolen</p>
+</div>
+<p>In the same vein as Aidan's post, Bram describes techniques for <strong>reducing</strong> an OSH failure/disagreement when building <code>mdev-conf</code> to a small test case.</p>
+<p>The disagreement turned out to be in the interpretation of  <code>\&quot;</code> in here docs: are those characters literal, or escaped?</p>
+<p>We discovered something funny about this bug with the <a href="https://pages.oils.pub/spec-compat/2025-11-02/renamed-tmp/spec/compat/TOP.html"><code>test/spec-compat</code> harness</a>:  multiple <strong>new</strong> shells have the buggy behavior, but <strong>mature</strong> ones don't!</p>
+<p>Gabe ended up fixing the bug (described below), so <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> is now in the &quot;mature&quot; category :-)</p>
+<ul>
+<li>More notes: <a href="https://oilshell.zulipchat.com/#narrow/channel/503208-bug-post-mortem/topic/mdev-conf.20-.20.5C.22.20should.20not.20be.20escape.20sequence.20in.20here.20docs/with/563957302">#bug-post-mortem &gt; mdev-conf - \&quot; should not be escape sequence in here docs</a></li>
+</ul>
+<a name="shunit2-package-failure-set-u-and-eval"></a>
+<h3><code>shUnit2</code> package failure → <code>set -u</code> and <code>eval</code></h3>
+<div class=blog-link>
+<p><a href="https://btertoolen.eu/posts/tracing_shell_scripts/"><strong>Tracing shell scripts</strong></a> (<code>btertoolen.eu</code>) by Bram Tertoolen</p>
+</div>
+<p>Bram describes another difficult session of debugging: this time reducing a disagreement in the <code>shUnit2</code> package.</p>
+<p>He discusses the shell tracing mechanisms <code>set -x</code> and <code>$PS4</code>, which are primitive but useful.</p>
+<ul>
+<li>My notes: <a href="https://oilshell.zulipchat.com/#narrow/channel/503208-bug-post-mortem/topic/Notes.20on.20set.20-u.20.2F.20eval.20bug.20-.20shUnit2.20failure/with/558505286">#bug-post-mortem &gt; Notes on set -u / eval bug - shUnit2 failure</a>.</li>
+</ul>
+<p>After digging through these notes, I reminded myself that Gabe also ended up fixing this one: <a href="https://github.com/oils-for-unix/oils/commit/aab8f95668ca661b4b2e7622476e5d54d1a947d6">aab8f95</a>.  As with the <strong>Oily Pine</strong> experience and Samuel's work, I noticed that <strong>reducing</strong> bugs is a lot of work, AND <strong>fixing</strong> bugs is a lot of work.</p>
+<p>That is, it's often effective for 2 different people to work on the same bug, with different mindsets.  And not just that: <strong>reviewing</strong> code is a lot of work, and that's bottlenecked on me, unfortunately.  So that's one reason for <a href="status-update.html">A Pause in the Project</a> (the blog post before this one).</p>
+<a name="december"></a>
+<h2>December</h2>
+<a name="implementing-the-kill-builtin"></a>
+<h3>Implementing the <code>kill</code> builtin</h3>
+<div class=blog-link>
+<p><a href="https://btertoolen.eu/posts/shell_help/"><strong>--help is not a specification</strong></a> (<code>btertoolen.eu</code>) by Bram Tertoolen</p>
+</div>
+<p>Bram and I implemented the <code>kill</code> builtin for <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.  This post shows that <code>help kill</code> isn't the whole story!</p>
+<p>(I just learned that, in <a href="/cross-ref.html?tag=bash#bash">bash</a>, <code>kill --help</code> as an alias for <code>help kill</code>.  <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> doesn't do this, but perhaps it should.)</p>
+<a name="lua-aports-failure-default-path-fix"></a>
+<h3><code>lua-aports</code> failure → Default <code>$PATH</code> fix</h3>
+<div class=blog-link>
+<p><a href="https://gebdev.net/blog/pathological-path/"><strong>Pathological PATH</strong></a> (<code>gebdev.net</code>) by Gabe</p>
+</div>
+<p>Even when a fix seems simple, you might need a long debugging session to get there!  In this case, Gabe debugged a disagreement when running <code>lua-aports</code>, and it led to fixing the default <code>$PATH</code> in <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.</p>
+<p>Thank you to Gabe for finding and fixing this, with commit <a href="https://github.com/oils-for-unix/oils/commit/f1483837667dc8d28e90c84ee68f02381b807e63">f148383</a>!</p>
+<p>This post is a deep dive into how <code>$PATH</code> works in shells.  It can be slightly different between shells!</p>
+<ul>
+<li>This <code>lua-aports</code> disagreement was recorded in <a href="https://github.com/oils-for-unix/oils/issues/2502">issue 2502</a></li>
+</ul>
+<a name="fixing-in-here-docs"></a>
+<h3>Fixing <code>\&quot;</code> in Here Docs</h3>
+<div class=blog-link>
+<p><a href="https://gebdev.net/blog/keeping-parsers-readable/"><strong>Patch Parsers Properly</strong></a>  (<code>gebdev.net</code>) by Gabe</p>
+</div>
+<p>In this post, Gabe wrote about a few different strategies for fixing the <code>\&quot;</code> here doc bug that Bram found.</p>
+<p>Thank you for making multiple iterations on this change!  (And sorry for my confusion in the initial review of this blog post.)</p>
+<hr />
+<p>Before the fix, Oils had these tokens IDs, making a distinction:</p>
+<ul>
+<li><code>Lit_Chars</code> - for unquoted literals like <code>foo.txt</code></li>
+<li><code>Lit_EscapedChar</code> - for escaped operators like <code>\(</code> and <code>\\</code> (and maybe more)</li>
+</ul>
+<p>To fix this bug, we added <code>Lit_BackslashDoubleQuote</code>.  This name is purposely vague, because:</p>
+<ul>
+<li><code>\&quot;</code> is an escaped char within <strong>double-quoted strings</strong>; it means <code>&quot;</code></li>
+<li><code>\&quot;</code> is <strong>not</strong> an escaped char in <strong>here docs</strong>; it means <code>\&quot;</code></li>
+</ul>
+<p>(Aside from <code>\&quot;</code>, double-quoted strings and here docs have the same escape (<code>\</code>) and subst (<code>$</code>) rules.  This is because <code>&quot;</code> terminates a string, but something like <code>EOF</code> terminates a here doc.)</p>
+<hr />
+<p>I call the <code>Lit_BackslashDoubleQuote</code> strategy <strong>pre-structuring</strong>.  Inside the lexer, we do enough work to create an &quot;ambiguous&quot; token that is resolved <strong>later</strong>, inside different parts of the parser.</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/Pre-Structuring.20in.20the.20Lexer/with/563957428">#blog-ideas &gt; Pre-Structuring in the Lexer</a></li>
+</ul>
+<p>Each parser has more knowledge about what it's recognizing, e.g. a string literal or a here doc.  In contrast, all of Oils shares the <strong>same</strong> big <a href="https://www.oilshell.org/blog/2017/12/17.html">modal lexer</a>.</p>
+<a name="fixing-and-enhancing-the-trap-builtin"></a>
+<h3>Fixing and enhancing the <code>trap</code> builtin</h3>
+<div class=blog-link>
+<p><a href="https://daveads.github.io/note/2025-18-12-implementing-traps/"><strong>Implementing <code>trap</code></strong></a> (<code>daveads.github.io</code>) by Daveads</p>
+</div>
+<p>On <a href="/cross-ref.html?tag=zulip#zulip">Zulip</a>, <code>rolfan-ish</code> noted that</p>
+<ul>
+<li><code>trap '' FOO</code> is a special case that registers <code>SIG_IGN</code> (ignore) with the given signal.  This is technically different than ...</li>
+<li><code>trap ' ' FOO</code> (note the space), which registers a handler with no source code.</li>
+</ul>
+<p>Daveads fixed this bug, and also discusses how we use <a href="/cross-ref.html?tag=adt#adt">algebraic data types</a> to make this distinction clear.</p>
+<p>We want <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> to be a more readable language, so he also added <code>trap --ignore</code>, which is consistent with <code>trap --add</code> and <code>trap --remove</code>.</p>
+<p>As mentioned in the <a href="status-update.html">last blog post</a>, I landed a few commits to <code>trap</code> after fixes from multiple people.  We continually up the code, which often <strong>enables</strong> upgrading <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> to <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>:</p>
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/266575-blog-ideas/topic/Lessons.20From.20Improving.20the.20Trap.20Builtin/with/562860818">#blog-ideas &gt; Lessons From Improving the Trap Builtin</a></li>
+</ul>
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>We reviewed 8 articles from Aidan, Samuel, Bram, Gabe, and Daveads; published from September to December 2025.</p>
+<p>The next post introduces 4 more.  (I split it in two as I wrote it, since it started to feel dense.)</p>
+<p>Let me know what you think <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Eight.20Blog.20Posts.20by.20Contributors/with/580557472">in the comments</a>!</p>
+<a name="more-bugs-on-zulip"></a>
+<h3>More Bugs on Zulip</h3>
+<p>If you want to see more, take a look at the <a href="https://oilshell.zulipchat.com/#narrow/channel/503208-bug-post-mortem">#bug-post-mortem</a> channel.  There are more valuable lessons in those threads, and we wouldn't mind if someone else wrote about them.  Reducing, fixing, reviewing, and writing are all different ways to help the Oils project!</p>
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Eight.20Blog.20Posts.20by.20Contributors/with/580557472">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=osh#osh">osh</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>
