@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang=en>
+
+<head>
+  <meta charset=utf-8>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reviewing Our NLnet Grants After 4 Years</title>
+  <meta name="twitter:title" content="Reviewing Our NLnet Grants After 4 Years">
+<meta name="twitter:site" content="oils.pub">
+<meta name="twitter:creator" content="@oilsforunix">
+<meta name="twitter:card" content="summary">
+
+
+  <link rel="stylesheet" type="text/css" href="/css/blog-bundle-v7.css" />
+  <script type="text/javascript" src="/js/bundle-v2.js"></script>
+
+  <!-- INSERT LATCH JS -->
+</head>
+
+<body onload="" class="width35">
+  <!-- INSERT LATCH HTML -->
+
+<p style="text-align: right">
+  <span id="why-sponsor"><a href="/why-sponsor.html">Why Sponsor Oils?</a> </span> |
+<a href="/blog/">blog</a> | <a href="/">oils.pub</a></p>
+<h1 class="blog-post-title">Reviewing Our NLnet Grants After 4 Years</h1>
+<div class="date">
+  2026-06-01
+</div>
+<p>We received our first <a href="https://nlnet.nl">NLnet</a> grant in June <strong>2022</strong>, and we've been awarded three more grants since then.  Four years and four grants later, it's worth looking back to see what we did.</p>
+<p>So I made some <strong>plots</strong> for this post!</p>
+<p>Unfortunately, we won't finish the fourth grant.  I wrapped it up early because of the family issues mentioned in March: <a href="../03/status-update.html">A Pause in the Project</a>.  What happened is that more contributions led to a <strong>backlog</strong> of pull requests, I haven't been able to review them all.</p>
+<p>I also share some high-level thoughts and feelings on the state of the project.</p>
+<div id="toc">
+<div id="toctitle">Table of Contents</div>
+  <div class="toclevel1"><a href="#new-plots">New Plots</a></div>
+  <div class="toclevel2"><a href="#osh-speed-and-compatibility">OSH - Speed and Compatibility</a></div>
+  <div class="toclevel2"><a href="#ysh-a-graceful-upgrade-and-a-new-language">YSH - A Graceful Upgrade, and a New Language</a></div>
+  <div class="toclevel2"><a href="#alpine-package-disagreements-139-to-11">Alpine Package Disagreements - 139 to 11</a></div>
+  <div class="toclevel1"><a href="#evaluations">Evaluations</a></div>
+  <div class="toclevel2"><a href="#did-we-meet-our-goals-for-the-grants">Did We Meet Our Goals for the Grants?</a></div>
+  <div class="toclevel2"><a href="#did-the-project-meet-its-goals">Did the Project Meet Its Goals?</a></div>
+  <div class="toclevel2"><a href="#even-bigger-goals">Even Bigger Goals</a></div>
+  <div class="toclevel1"><a href="#other-things-i-wrote-to-nlnet">Other Things I Wrote to NLnet</a></div>
+  <div class="toclevel2"><a href="#project-management">Project Management</a></div>
+  <div class="toclevel2"><a href="#design-bottleneck-decentralized-foss-model">Design Bottleneck / Decentralized FOSS Model</a></div>
+  <div class="toclevel1"><a href="#conclusion">Conclusion</a></div>
+  <div class="toclevel2"><a href="#thank-you">Thank You</a></div>
+  <div class="toclevel1"><a href="#appendices">Appendices</a></div>
+  <div class="toclevel2"><a href="#todo-list">TODO List</a></div>
+  <div class="toclevel2"><a href="#future-posts">Future Posts</a></div>
+</div> 
+
+<a name="new-plots"></a>
+<h2>New Plots</h2>
+<p>In March 2022, just before we received the first grant, I published <a href="https://www.oilshell.org/blog/2022/03/middle-out.html">Oil Is Being Implemented &quot;Middle Out&quot;</a>.</p>
+<p>It has <a href="https://www.oilshell.org/blog/2022/03/middle-out.html#plot-progress-in-two-directions">a plot</a> of our <a href="/cross-ref.html?tag=spec-test#spec-test">spec test</a> metrics.</p>
+<p>I wrote that the gray rectangle showed a <strong>&quot;fallow period&quot;</strong> in the development of <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.  <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> wasn't making progress as fast as it had, because I started working on <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> (then called the Oil language).</p>
+<p>In other words, it was clear the project got too <strong>big</strong>, and I needed help!  So what happened after we were funded, and more people helped?</p>
+<a name="osh-speed-and-compatibility"></a>
+<h3>OSH - Speed and Compatibility</h3>
+<p>I revived the code to generate that 2022 plot (shell, Python, and R scripts!).  Here's the update:</p>
+<p><img src="osh-progress.png" alt="Progress on OSH" /></p>
+<p>OK cool, I wasn't expecting the story to look this <strong>clean</strong>!</p>
+<ul>
+<li>
+<p>The blue line and red line <strong>converged in early 2023</strong>, which means that the Python implementation and C++ implementation pass all the <strong>same tests</strong>.  In other words, we finished the Python-to-C++ translation.</p>
+<ul>
+<li>That means we can &quot;just write Python&quot;, and we get a shell in fast, native code, with no dependencies.  This is just like shells written in C.</li>
+<li>We also finished the garbage collector in January 2023: <a href="https://www.oilshell.org/blog/2023/01/garbage-collector.html">Pictures of a Working Garbage Collector</a>.  This was a big achievement that doesn't appear on the plot.  We now have something <strong>better</strong> than shells written in C: garbage collection means that our code is memory safe!</li>
+</ul>
+</li>
+<li>
+<p>The <strong>slope</strong> of the converged lines increased.  That means that we made faster progress on <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> once the translation was done.</p>
+<ul>
+<li>The fallow period I mentioned is the part where the blue line was <strong>flatter</strong> — from mid-2020 to 2023.</li>
+</ul>
+</li>
+</ul>
+<p>So the funding from <a href="https://nlnet.nl">NLnet</a> really helped <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.</p>
+<a name="ysh-a-graceful-upgrade-and-a-new-language"></a>
+<h3>YSH - A Graceful Upgrade, and a New Language</h3>
+<p>But that's not all!  After the first grant, contributors were excited about <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, and I applied for another grant.  (I also <a href="https://www.oilshell.org/blog/2023/03/rename.html">renamed the project</a> in early 2023.)</p>
+<p>Here's a similar plot of YSH progress:</p>
+<p><img src="ysh-progress.png" alt="Progress on YSH" /></p>
+<p>Notice a few things:</p>
+<ul>
+<li><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> didn't really exist until <strong>after</strong> the NLnet funding.  There was no red line at all, and I did not recommend using the pure Python version.</li>
+<li><a href="/cross-ref.html?tag=YSH#YSH">YSH</a> was fully translated to native code in early 2024 — i.e. the red and blue line converged then, about a year after they converged for <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.</li>
+<li>The increased <strong>slope</strong> of the converged line shows that we made a lot of progress on <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> from mid-2023 to 2025.  That's when most of the language was developed.</li>
+</ul>
+<p>So these plots paint a clear and positive picture.  The funding helped!  Before making the plots, I wasn't sure how they would look.</p>
+<a name="alpine-package-disagreements-139-to-11"></a>
+<h3>Alpine Package Disagreements - 139 to 11</h3>
+<p>OK now let's look at what happened in the last year or so.  The goal of the fourth grant was to stress test <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, by running it as the <strong>only</strong> shell on a complete Linux system (Alpine Linux).  I described that work in December:</p>
+<ul>
+<li><a href="../../2025/12/release-0.37.0.html">Oils 0.37.0 - Alpine Linux, YSH, and mycpp</a></li>
+</ul>
+<p>Contributors wrote blog posts about some of the fixes, which I linked to in March:</p>
+<ul>
+<li><a href="../03/writing.html">Eight Blog Posts by Contributors</a></li>
+<li><a href="../03/writing2.html">Four More Blog Posts from Contributors</a></li>
+</ul>
+<p>We kept track of the work with this dashboard (made with Markdown and shell scripts):</p>
+<ul>
+<li><a href="https://op.oils.pub/aports-build/published.html">https://op.oils.pub/aports-build/published.html</a> - Results of <code>regtest/aports</code></li>
+</ul>
+<p>Here's a visualization of that data (limited to the Alpine <code>main</code> repo):</p>
+<p><img src="aports-disagree.png" alt="Progress on regtest/aports in 2025" /></p>
+<p>So we went from <strong>139</strong> disagreements building with <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> in August, to <strong>11</strong> in early December.  (There was at least 1 disagreement fixed after the last measurement of 12.)</p>
+<p>This was fantastic <strong>momentum</strong>, but there is a caveat.  I <strong>merged</strong> many pull requests, but the backlog of unreviewed pull requests also grew.</p>
+<p>And, in the same month, most of my free time evaporated.</p>
+<a name="evaluations"></a>
+<h2>Evaluations</h2>
+<p>Honestly, I was feeling a bit <strong>down</strong> about the project before writing this post.  I sent more than one e-mail to <a href="https://nlnet.nl">NLnet</a> explaining the early end of the grant, which were perhaps overly pessimistic.</p>
+<p>But now I feel pretty good about what we did.</p>
+<p>The way I framed it is that we met our goals for the <strong>grants</strong>, but that doesn't necessarily mean the overall <strong>project</strong> has been a success.  So let's talk about the grants first, and then the project.</p>
+<a name="did-we-meet-our-goals-for-the-grants"></a>
+<h3>Did We Meet Our Goals for the Grants?</h3>
+<p>Yes, the plots basically show that, but they don't tell the whole story.  I think the real story is that we did many <strong>hard</strong> things that could have failed, but ended up working.</p>
+<ul>
+<li>We could have failed to <strong>speed up</strong> the code 30x-50x by translating typed Python to C++.  But this did happen, in the first grant.</li>
+<li>We could have failed to write a garbage collector.  But we got it done, and it's been solid for a few years now.</li>
+<li>The <strong>design</strong> of <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> could have failed, e.g. due to being constrained
+by compatibility.  But that didn't happen:
+<ul>
+<li>When I started the project, many people thought upgrading shell was impossible!  But now, multiple people written thousands of lines of <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, including in professional contexts!  Thanks to Will Clardy and many others for their code and feedback.</li>
+</ul>
+</li>
+<li>It could have been that nobody wanted to work on Oils for 50 euros an hour.  But in fact I got an overwhelming number of responses.  And the contributors we chose were very skilled — more skilled than me in significant respects.</li>
+</ul>
+
+<p>So one reason I've been working on this project for <strong>10 years</strong> is that things keep working.  There have been several &quot;wrong turns&quot; and some backtracking, but we haven't gotten stuck on anything for long.</p>
+<p>And I think there's basically <strong>no risk</strong> that we don't close the gap on the remaining 11 disagreements, as long as we have time to do it right.</p>
+<a name="did-the-project-meet-its-goals"></a>
+<h3>Did the Project Meet Its Goals?</h3>
+<p>But even though we met these smaller goals, I think it's time to re-evaluate the <strong>project</strong> goals.</p>
+<p>(It's important to say that <strong>my available time</strong> colors this whole discussion.  I hope that situation will change, but it may not change soon.)</p>
+<p>So let's go back to the slogan:</p>
+<blockquote>
+<p>Our upgrade path from bash to a better language and runtime</p>
+</blockquote>
+<p>We did in fact do what many people thought was impossible: implement a POSIX- and <a href="/cross-ref.html?tag=bash#bash">bash</a>-compatible shell in a principled way; and then upgrade that to a new language <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> (with some caveats).</p>
+
+<p>But, I am not sure that this is actually an upgrade path in practice.  What I underestimated is that this strategy requires a lot of  work for <strong>distros</strong>.  And the foundations of most distros don't change a lot, for obvious reasons.  Many foundational shell scripts are in maintenance mode, and the maintainers only understand parts of them.</p>
+<p>On the other hand, I would say that e.g. <a href="https://en.wikipedia.org/wiki/Systemd">systemd</a> is evidence that the foundations can be changed, in a pretty radical way.  And distros <strong>pulled</strong> systemd, apparently because it saved them a lot of work.  But I can see that, right now, there is not a killer reason for distros to pull Oils.  It's more like we would be <strong>pushing</strong>, and I think that's somewhat fundamental, without some big changes.</p>
+<a name="even-bigger-goals"></a>
+<h3>Even Bigger Goals</h3>
+<p>So I may no longer believe in the &quot;upgrade path from bash&quot; framing.  Right now, it doesn't seem realistic.</p>
+<p>But I still believe in the <strong>even more ambitious</strong> goals of the project:</p>
+
+<ul>
+<li>
+<p>&quot;Compressing&quot; many domain-specific languages into a general purpose shell language: <a href="https://www.oilshell.org/blog/2023/06/ysh-sketches.html">Sketches of YSH Features</a> (June 2023)</p>
+<ul>
+<li>We made <strong>some</strong> progress on YSH as a host for DSLs, but not enough.</li>
+<li>Why is this still interesting?  When writing code becomes cheap, <strong>reading</strong> code becomes more valuable.  And so far I haven't found anyone who likes to read a mish-mash of shell, awk, make, CMake, YAML — that is, <a href="/ysh.html">Unix sludge and cloud sludge</a>.</li>
+</ul>
+</li>
+<li>
+<p>A distributed shell</p>
+<ul>
+<li>We're running into this problem ourselves, e.g. with <code>regtest/aports</code>, our Soil CI, and making a release in the cloud.  See the TODO list below.</li>
+<li>The complement to a distributed shell is a distributed file system.  As with <a href="/cross-ref.html?tag=j8-notation#j8-notation">J8 Notation</a>, it helps to rethink things from the perspective of <strong>data</strong> rather than computation.</li>
+<li>The <a href="https://www.oilshell.org/blog/2021/07/blog-backlog-2.html">most popular post</a> on this blog was circulated as <a href="https://news.ycombinator.com/item?id=27903720">Kubernetes Is Our Generation's Multics</a> (5 years ago, and 5 years after the project started!)</li>
+</ul>
+</li>
+<li>
+<p>Headless shell / GUIs interfaces - <a href="https://www.oilshell.org/blog/2023/12/screencasts.html#headless-protocol-oils-web_shell">Screenshots</a> and <a href="https://github.com/oils-for-unix/oils/wiki/Headless-Mode">Wiki</a></p>
+<ul>
+<li>LLM web interfaces like Claude and Gemini look a lot like a shell to me.  This fact hasn't been lost on many people, e.g. <a href="https://yoshell.ai/">yosh</a> by Filip Pizlo, and the Warp terminal.  LLMs are the biggest thing to hit programming in a decade, and they are intricately entangled with Unix shell.</li>
+</ul>
+</li>
+</ul>
+<p>But I simply don't know how to make progress on those goals, with the time I have, and the resources we have.  But I honestly have a lot of <strong>fun</strong> pursuing them.</p>
+
+<a name="other-things-i-wrote-to-nlnet"></a>
+<h2>Other Things I Wrote to NLnet</h2>
+<p>I made most of the points in this post in my mails to NLnet.  Here are some other thoughts from those mails.</p>
+<a name="project-management"></a>
+<h3>Project Management</h3>
+<p>We didn't find enough people to work on <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> itself.  Aidan implemented essential parts of <a href="/cross-ref.html?tag=YSH#YSH">YSH</a>, and provided crucial design feedback on features like <a href="https://www.oilshell.org/blog/2025/01/release-0.24.0.html">closures</a>, but we could have used more help.</p>
+<p>One way you can see this is that we never solved the problem of making progress on <a href="/cross-ref.html?tag=OSH#OSH">OSH</a> and <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> in parallel.  For example, the fourth grant was all about <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>, and we didn't make much progress on <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> during that time.</p>
+<p>The plots <strong>do</strong> show increased progress, so the grants did help.  But I think the scope of the project was always too large.</p>
+
+<a name="design-bottleneck-decentralized-foss-model"></a>
+<h3>Design Bottleneck / Decentralized FOSS Model</h3>
+<p>I also think I was a bit naive about what you can do in the FOSS model.  I didn't pay enough attention to the project's organization.  Prior to NLnet funding, I worked on the project myself for six years!  There were other contributors, but nobody approaching full time.</p>
+<p>Another way to say this is that, historically, I would be interested in working on something like Bell Labs Unix, more so than GNU/Linux.  I'm interested in new system <strong>design</strong> ideas, just as much as principled implementations of existing systems.</p>
+<p>Here's a related comment:</p>
+<div class="link-box">
+<p><a href="https://lobste.rs/s/1t0gpl/curse_knowing_how_fixing_everything#c_dlm8e7">My comment</a> on</p>
+<p><a href="https://notashelf.dev/posts/curse-of-knowing" rel="ugc noreferrer" class="u-url">The Curse of Knowing How, or; Fixing Everything</a> (<code>notashelf.dev</code> via lobste.rs) <br/>    112 points, <a role="heading" aria-level="2" href="https://lobste.rs/s/1t0gpl/curse_knowing_how_fixing_everything">              28              comments            </a> on 2025-05-06</p>
+</div>
+<blockquote>
+<p>I think Linux has an enormous design debt to Bell Labs [2]  ...</p>
+</blockquote>
+<blockquote>
+<p>I actually wonder if LLM-generated code could be a sign of a breakdown. i.e. we have this big mess of open source code, which in theory should be very valuable, but some large proportion of new programmers can only understand it by throwing LLMs at it ...</p>
+</blockquote>
+<p>In other words, I'd say that our collective software infrastructure was not in great shape, prior to the introduction of LLMs.</p>
+
+<a name="conclusion"></a>
+<h2>Conclusion</h2>
+<p>Since we are ending the 4th grant early, I thought it would be appropriate to publish my thoughts.  We made a ton of progress over the last 4 years, but the project is &quot;paused&quot; for now.  There will still be updates and releases — see the TODO list below — but it will be slow and &quot;on demand&quot;.</p>
+<p>That is, I hope people will show up on <a href="/cross-ref.html?tag=zulip#zulip">Zulip</a> to chat, but I won't &quot;push&quot; the project for quite awhile.</p>
+
+<a name="thank-you"></a>
+<h3>Thank You</h3>
+<p>Thank you to everyone who contributed!  Not just people who worked under the grant, but everyone else as well.</p>
+<ul>
+<li>Jesse Hughes, Melvin Walls, CoffeeTableEspresso</li>
+<li>Chris Watkins, Aidan Olsen, Samuel Hierholzer</li>
+<li>Justin Pombrio, Koichi Murase</li>
+<li>Andriy Sultanov, Bram Tertoolen, Gabriel Stang, Adejumo David Adewale</li>
+</ul>
+
+<p>And thank you to NLnet!</p>
+<ul>
+<li>Michiel Leenaars, Bob Goudriaan, Lwenn Bussière, Gerben, Layla Otter, and to everybody else who helped behind the scenes.</li>
+</ul>
+<hr />
+<p>Please feel to ask questions or give feedback <a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Reviewing.20Our.20NLnet.20Grants.20After.204.20Years/with/599284299">in the comments on Zulip</a>!</p>
+<a name="appendices"></a>
+<h2>Appendices</h2>
+<a name="todo-list"></a>
+<h3>TODO List</h3>
+<p>Here's what I'm thinking about right now.</p>
+<ul>
+<li>Address issues in the design of <a href="/cross-ref.html?tag=YSH#YSH">YSH</a> <code>try</code>, from Will Clardy and Samuel Hierholzer.</li>
+<li>I think we can make the Oils parser run under Python 3, for the <a href="https://github.com/abathur/resholve">resholve</a> use case (Travis Everett).</li>
+<li>I want to merge <strong>some</strong> of the pull requests, most of which are related to <a href="/cross-ref.html?tag=OSH#OSH">OSH</a>.  Changes with new tests should get priority.</li>
+<li>Make another release.
+<ul>
+<li>This brings to mind <a href="https://oilshell.zulipchat.com/#narrow/channel/308821-containers/topic/Make.20Release.20in.20the.20Cloud/with/530390147">#containers &gt; Make Release in the Cloud</a>, which is a <a href="https://oilshell.zulipchat.com/#narrow/channel/348521-distributed-shell">#distributed-shell</a> use case</li>
+</ul>
+</li>
+<li>Respond to some Github issues
+<ul>
+<li>Sorry I don't like Github anymore: <a href="https://oilshell.zulipchat.com/#narrow/channel/121540-oils-discuss/topic/Threads.20about.20Codeberg.2Fsourcehut/with/564761044">#oils-discuss &gt; Threads about Codeberg/sourcehut</a></li>
+</ul>
+</li>
+</ul>
+
+<a name="future-posts"></a>
+<h3>Future Posts</h3>
+<p>Here are some topics I cut out of this post.</p>
+<a name="llms-helped-me-with-crappy-old-languages-vimscript-and-raw-sql"></a>
+<h4>LLMs helped me with crappy old languages: VimScript and raw SQL</h4>
+<p>In early 2025, I wrote a YSH syntax definition in VimScript, which resulted in the doc <a href="https://github.com/oils-for-unix/oils.vim/blob/main/doc/algorithms.md">Three Algorithms for YSH Syntax Highlighting</a>.</p>
+<p>Based on my previous experience with VimScript around 2008 or so, I can say that this wouldn't have happened without dozens of queries to Claude.  (But you can see from the doc that it's not vibe-coded.  Instead, I learned the language by writing a program, with tests.)</p>
+<hr />
+<p>LLMs also helped me learn more raw SQL.  In the past, I've used the R language for table manipulation — for example, the plots above were generated with R and <code>ggplot2</code> (grammar of graphics).</p>
+<p>But for the <a href="https://op.oils.pub/aports-build/published.html">regtest/aports</a> reports above, I used <code>sqlite</code>, which means I had to learn raw SQL.  Again I leaned on Claude for that, because SQL has bad syntax, and is hard to learn.  (Related: <a href="https://www.scattered-thoughts.net/writing/against-sql/">Against SQL</a>)</p>
+
+<a name="stories-about-personal-agency"></a>
+<h4>Stories About Personal Agency</h4>
+<p>Here's another excerpt from my comment above:</p>
+<blockquote>
+<p>Maybe future programmers will actually want some control back - to build systems that are understandable, reliable and secure, use hardware in a reasonable way, etc.</p>
+</blockquote>
+<p>So that comment is about personal <strong>agency</strong>, and that's basically what the Oils project is about:</p>
+<ul>
+<li>I like the <strong>shell interface</strong> because I tell the computer what to do!  Not the other way around.  I don't get pop-up notifications  and dark patterns while using shell.</li>
+<li>I also like to have the <strong>source code</strong> of the software I run.  And turning source into machine code invariably evolves thousands of lines of shell scripts (and related glue, aka <em>Unix sludge</em>).</li>
+</ul>
+<p>So shell still very much aligns with my interests, and it aligns the future of computing.  So I hope I'll again have time to work on these ideas — perhaps from a different angle, and putting to use some of the things I learned about both engineering and project management.</p>
+
+
+<div id="post-footer">
+<ul>
+<li><a href="https://oilshell.zulipchat.com/#narrow/channel/392989-blog-comments/topic/Reviewing.20Our.20NLnet.20Grants.20After.204.20Years/with/599284299">Discuss This Post on Zulip</a></li>
+  <li>Get notified about new posts via
+  <a href="https://twitter.com/oilsforunix">@oilsforunix on Twitter</a></li>
+<li>Read Posts Tagged: &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=project-updates#project-updates">project-updates</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=comments#comments">comments</a> &nbsp;&nbsp;<a class="blog-tag" href="/blog/tags.html?tag=zulip-links#zulip-links">zulip-links</a> </li>
+  <li><a href="../..">Back to the Blog Index</a></li>
+</ul>
+</div>
+</body>
+</html>
