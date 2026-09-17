@@ -204,7 +204,7 @@ by compatibility.  But that didn't happen:
 
 <a name="conclusion"></a>
 <h2>Conclusion</h2>
-<p>Since we are ending the 4th grant early, I thought it would be appropriate to publish my thoughts.  We made a ton of progress over the last 4 years, but the project is &quot;paused&quot; for now.  There will still be updates and releases — see the TODO list below — but it will be slow and &quot;on demand&quot;.</p>
+<p>Since we are ending the 4th grant early, I thought it would be appropriate to publish my thoughts.  We made a ton of progress over the last 4 years, but the project is &quot;paused&quot; for now.  There will still be updates and releases — see the TODO list below — but it will be slow and on-demand.</p>
 <p>That is, I hope people will show up on <a href="/cross-ref.html?tag=zulip#zulip">Zulip</a> to chat, but I won't &quot;push&quot; the project for quite awhile.</p>
 
 <a name="thank-you"></a>
@@ -235,6 +235,7 @@ by compatibility.  But that didn't happen:
 <li>Make another release.
 <ul>
 <li>This brings to mind <a href="https://oilshell.zulipchat.com/#narrow/channel/308821-containers/topic/Make.20Release.20in.20the.20Cloud/with/530390147">#containers &gt; Make Release in the Cloud</a>, which is a <a href="https://oilshell.zulipchat.com/#narrow/channel/348521-distributed-shell">#distributed-shell</a> use case</li>
+<li>I want people other than me to be able to make releases.</li>
 </ul>
 </li>
 <li>Respond to some Github issues
@@ -249,11 +250,11 @@ by compatibility.  But that didn't happen:
 <p>Here are some topics I cut out of this post.</p>
 <a name="llms-helped-me-with-crappy-old-languages-vimscript-and-raw-sql"></a>
 <h4>LLMs helped me with crappy old languages: VimScript and raw SQL</h4>
-<p>In early 2025, I wrote a YSH syntax definition in VimScript, which resulted in the doc <a href="https://github.com/oils-for-unix/oils.vim/blob/main/doc/algorithms.md">Three Algorithms for YSH Syntax Highlighting</a>.</p>
+<p>In early 2025, I wrote a YSH syntax definition in <strong>VimScript</strong>, which resulted in the doc <a href="https://github.com/oils-for-unix/oils.vim/blob/main/doc/algorithms.md">Three Algorithms for YSH Syntax Highlighting</a>.</p>
 <p>Based on my previous experience with VimScript around 2008 or so, I can say that this wouldn't have happened without dozens of queries to Claude.  (But you can see from the doc that it's not vibe-coded.  Instead, I learned the language by writing a program, with tests.)</p>
 <hr />
-<p>LLMs also helped me learn more raw SQL.  In the past, I've used the R language for table manipulation — for example, the plots above were generated with R and <code>ggplot2</code> (grammar of graphics).</p>
-<p>But for the <a href="https://op.oils.pub/aports-build/published.html">regtest/aports</a> reports above, I used <code>sqlite</code>, which means I had to learn raw SQL.  Again I leaned on Claude for that, because SQL has bad syntax, and is hard to learn.  (Related: <a href="https://www.scattered-thoughts.net/writing/against-sql/">Against SQL</a>)</p>
+<p>LLMs also helped me learn more <strong>SQL</strong>.  In the past, I've used the R language for table manipulation — for example, the plots above were generated with <code>ggplot2</code> (the grammar of graphics).</p>
+<p>But for the table manipulation in <a href="https://op.oils.pub/aports-build/published.html">regtest/aports</a>, I used <code>sqlite</code>.  I remember starting a similar project with raw SQL in 2014, and it was hard for me.   So again I used dozens of queries to Claude to learn SQL.   (I like the analysis in <a href="https://www.scattered-thoughts.net/writing/against-sql/">Against SQL</a>.)</p>
 
 <a name="stories-about-personal-agency"></a>
 <h4>Stories About Personal Agency</h4>
@@ -266,7 +267,7 @@ by compatibility.  But that didn't happen:
 <li>I like the <strong>shell interface</strong> because I tell the computer what to do!  Not the other way around.  I don't get pop-up notifications  and dark patterns while using shell.</li>
 <li>I also like to have the <strong>source code</strong> of the software I run.  And turning source into machine code invariably evolves thousands of lines of shell scripts (and related glue, aka <em>Unix sludge</em>).</li>
 </ul>
-<p>So shell still very much aligns with my interests, and it aligns the future of computing.  So I hope I'll again have time to work on these ideas — perhaps from a different angle, and putting to use some of the things I learned about both engineering and project management.</p>
+<p>So shell still very much aligns with my interests, and it aligns the future of computing.  I hope I'll again have time to work on these ideas — perhaps from a different angle, and putting to use some of the things I learned about both engineering and project management.</p>
 
 
 <div id="post-footer">
